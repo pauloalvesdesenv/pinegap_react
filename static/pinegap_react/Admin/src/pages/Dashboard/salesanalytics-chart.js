@@ -1,7 +1,6 @@
 import React from "react";
 import ReactApexChart from "react-apexcharts";
-import { Card, CardBody, UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem, CardTitle } from "reactstrap";
-import CountUp from 'react-countup';
+import { Card, CardBody, CardTitle, DropdownItem, DropdownMenu, UncontrolledDropdown } from "reactstrap";
 
 const SalesAnalyticsChart = () => {
 
@@ -85,9 +84,6 @@ const SalesAnalyticsChart = () => {
                 <CardBody>
                     <div className="float-end">
                         <UncontrolledDropdown>
-                            <DropdownToggle tag="a" className="text-reset" id="dropdownMenuButton5" caret href="#">
-                                <span className="fw-semibold">Sort By:</span> <span className="text-muted">Yearly<i className="mdi mdi-chevron-down ms-1"></i></span>
-                            </DropdownToggle>
                             <DropdownMenu className="dropdown-menu-end">
                                 <DropdownItem href="#">Monthly</DropdownItem>
                                 <DropdownItem href="#">Yearly</DropdownItem>
@@ -95,22 +91,7 @@ const SalesAnalyticsChart = () => {
                             </DropdownMenu>
                         </UncontrolledDropdown>
                     </div>
-                    <CardTitle className="mb-4 h4">Sales Analytics</CardTitle>
-                    <div className="mt-1">
-                        <ul className="list-inline main-chart mb-0">
-                            <li className="list-inline-item chart-border-left me-0 border-0">
-                                <h3 className="text-primary"><span><CountUp end={2371} separator="," prefix="$" /></span><span className="text-muted d-inline-block font-size-15 ms-3">Income</span></h3>
-                            </li>{" "}
-                            <li className="list-inline-item chart-border-left me-0">
-                                <h3><span data-plugin="counterup"><CountUp end={258} /></span><span className="text-muted d-inline-block font-size-15 ms-3">Sales</span>
-                                </h3>
-                            </li>{" "}
-                            <li className="list-inline-item chart-border-left me-0">
-                                <h3><span data-plugin="counterup"><CountUp end={3.6} decimals={1} suffix="%" /></span><span className="text-muted d-inline-block font-size-15 ms-3">Conversation Ratio</span></h3>
-                            </li>
-                        </ul>
-                    </div>
-
+                    <CardTitle className="mb-4 h4">Matriz de Risco Qualitativo</CardTitle>
                     <div className="mt-3">
                         <ReactApexChart
                             options={options}

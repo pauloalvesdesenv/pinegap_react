@@ -1,22 +1,20 @@
 import React from "react";
-import { Container, Row, Col, CardBody, Card } from "reactstrap";
-import { Link } from "react-router-dom";
+import { Col, Container, Row } from "reactstrap";
 
 
 //Import Breadcrumb
 import Breadcrumbs from "../../components/Common/Breadcrumb";
 
 //Import Components
+import LatestTransaction from "./latest-transaction";
 import MiniWidget from "./mini-widget";
+import RecentActivity from "./recent-activity";
 import SalesAnalyticsChart from "./salesanalytics-chart";
+import SocialSource from "./socialsource";
 import TopProduct from "./topselling-product";
 import TopUser from "./topuser";
-import RecentActivity from "./recent-activity";
-import SocialSource from "./socialsource";
-import LatestTransaction from "./latest-transaction";
 
 //Import Image
-import setupanalytics from "../../assets/images/setup-analytics-amico.svg";
 
 const series1 = [{
   data: [25, 66, 41, 89, 63, 25, 44, 20, 36, 40, 54]
@@ -171,20 +169,20 @@ const options4 = {
 
 const Dashboard = () => {
 
-  document.title=" Dashboard | Minible - Responsive Bootstrap 5 Admin Dashboard"
+  document.title = " Dashboard | Minible - Responsive Bootstrap 5 Admin Dashboard"
 
 
   const reports = [
     {
       id: 1,
       icon: "mdi mdi-arrow-up-bold",
-      title: "Total Revenue",
+      title: "Ranking Ativos",
       value: 34152,
       prefix: "$",
       suffix: "",
       badgeValue: "2.65%",
       decimal: 0,
-      charttype: "bar",
+      charttype: "line",
       chartheight: 40,
       chartwidth: 70,
       color: "success",
@@ -196,10 +194,10 @@ const Dashboard = () => {
     {
       id: 2,
       icon: "mdi mdi-arrow-down-bold",
-      title: "Orders",
+      title: "Ranking de Grupos Ativos",
       value: 5643,
       decimal: 0,
-      charttype: "radialBar",
+      charttype: "line",
       chartheight: 45,
       chartwidth: 45,
       prefix: "",
@@ -250,7 +248,7 @@ const Dashboard = () => {
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          <Breadcrumbs title="Minible" breadcrumbItem="Dashboard" />
+          <Breadcrumbs title="Pinegap" breadcrumbItem="Dashboard" />
           <Row>
             <MiniWidget reports={reports} />
           </Row>
@@ -260,23 +258,7 @@ const Dashboard = () => {
               <SalesAnalyticsChart />
             </Col>
             <Col xl={4}>
-              <Card className="bg-primary">
-                <CardBody>
-                  <Row className="align-items-center">
-                    <Col sm={8}>
-                      <p className="text-white font-size-18">Enhance your <b>Campaign</b> for better outreach <i className="mdi mdi-arrow-right"></i></p>
-                      <div className="mt-4">
-                        <Link to="#" className="btn btn-success waves-effect waves-light">Upgrade Account!</Link>
-                      </div>
-                    </Col>
-                    <Col sm={4}>
-                      <div className="mt-4 mt-sm-0">
-                        <img src={setupanalytics} className="img-fluid" alt="" />
-                      </div>
-                    </Col>
-                  </Row>
-                </CardBody>
-              </Card>
+
               <TopProduct />
             </Col>
           </Row>

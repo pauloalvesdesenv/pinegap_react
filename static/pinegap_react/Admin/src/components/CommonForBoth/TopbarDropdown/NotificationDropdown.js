@@ -52,7 +52,7 @@ const NotificationDropdown = props => {
               <div className="d-flex align-items-start">
                 <div className="avatar-xs me-3">
                   <span className="avatar-title bg-primary rounded-circle font-size-16">
-                  <i className="uil-shopping-basket"></i>
+                    <i className="uil-shopping-basket"></i>
                   </span>
                 </div>
                 <div className="flex-1">
@@ -64,7 +64,7 @@ const NotificationDropdown = props => {
                       {props.t("If several languages coalesce the grammar")}
                     </p>
                     <p className="mb-0">
-                    <i className="mdi mdi-clock-outline"></i>{" "}
+                      <i className="mdi mdi-clock-outline"></i>{" "}
                       {props.t("3 min ago")}{" "}
                     </p>
                   </div>
@@ -85,7 +85,7 @@ const NotificationDropdown = props => {
                       {props.t("It will seem like simplified English") + "."}
                     </p>
                     <p className="mb-0">
-                      <i className="mdi mdi-clock-outline"/>
+                      <i className="mdi mdi-clock-outline" />
                       {props.t("1 hours ago")}{" "}
                     </p>
                   </div>
@@ -96,7 +96,7 @@ const NotificationDropdown = props => {
               <div className="d-flex align-items-start">
                 <div className="avatar-xs me-3">
                   <span className="avatar-title bg-success rounded-circle font-size-16">
-                    <i className="bx bx-badge-check"/>
+                    <i className="bx bx-badge-check" />
                   </span>
                 </div>
                 <div className="flex-1">
@@ -108,7 +108,7 @@ const NotificationDropdown = props => {
                       {props.t("If several languages coalesce the grammar")}
                     </p>
                     <p className="mb-0">
-                      <i className="mdi mdi-clock-outline"/>{" "}
+                      <i className="mdi mdi-clock-outline" />{" "}
                       {props.t("3 min ago")}
                     </p>
                   </div>
@@ -132,7 +132,7 @@ const NotificationDropdown = props => {
                       ) + "."}
                     </p>
                     <p className="mb-0">
-                      <i className="mdi mdi-clock-outline"/>
+                      <i className="mdi mdi-clock-outline" />
                       {props.t("1 hours ago")}{" "}
                     </p>
                   </div>
