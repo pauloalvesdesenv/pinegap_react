@@ -1,0 +1,44 @@
+from django import forms
+
+#class FileFieldForm(forms.Form):
+#    file_field = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}))
+
+#from django import forms
+from .models import settings
+#from .models import Whitelabel
+from django.forms import ModelForm
+
+#DataFlair #File_Upload
+
+#class WhitelabelForm(ModelForm):
+#	form = AgentForm(request.POST, request.FILES)
+#    class Meta:
+#        model = Whitelabel
+#        fields = [
+#        'site_name',
+#        'browser_icon',
+#        'interface_icon',
+#        'interface_logo',
+#        'report_logo',
+#        'academy_link'
+#        ]
+
+#class WhitelabelForm(forms.ModelForm):
+#    class Meta:
+#        model = Whitelabel
+#        fields = ['site_name', 'browser_icon', 'interface_icon', 'interface_logo', 'report_logo', 'academy_link']
+#        widgets = {
+#            'comments': forms.Textarea
+#        }
+#	academy_link = forms.URLField()
+#        site_name = forms.CharField()
+#        file = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': False}))
+
+#    def __init__(self, *args, **kwargs):
+#        super(WhitelabelForm, self).__init__(*args, **kwargs)
+
+
+#class BusinessForm(forms.Form):
+#    name = forms.CharField( required = True, max_length=256)
+#    image = forms.ImageField()
+

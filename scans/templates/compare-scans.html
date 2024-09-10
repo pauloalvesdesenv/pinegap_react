@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% block content %}
+
+<style>
+.dl-horizontal dt { width: 80px; }
+.dl-horizontal dd { margin-left: 90px; }
+</style>
+
+<div class="container-fluid" style="padding:0;">
+	
+	
+<section class="content-header">
+      <h1>
+        Scanners
+        <small> Comparação de Scans</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboad</a></li>
+        <li class="active">Comparação de Scans</li>
+      </ol>
+    </section>	
+    
+    
+      <div id="menu_tabs" class="container-fluid" style="padding:15px 15px;">
+
+
+			<div class="nav-tabs-custom">
+				
+			<ul class="nav nav-tabs">
+			 <li>
+				<a href="/scans/defs/add">
+					<i class="fa fa-plus"></i>&nbsp; Criar Novo Scan	
+				</a>
+			  </li>
+              <li>
+				<a href="/scans/list">
+					<i class="fa fas fa-bullseye"></i>&nbsp; Scans Realizados	
+				</a>
+			  </li>
+			  <li>
+				<a href="/scans/defs/list">
+					<i class="fa fa-list"></i>&nbsp; Scans Parametrizados	
+				</a>
+			  </li>
+			  <li class="active">
+				<a href="#">
+					&nbsp; Comparação de scans
+				</a>
+			  </li>
+			  <li class="dropdown pull-right">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                  <i class="fa fa-gear"></i>&nbsp; Ações <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                  <li role="presentation"><a class="btn-compare-selected" role="menuitem" tabindex="-1" href="#"><i class="fas fa-exchange-alt"></i>&nbsp; Comparar Selecionados</a></li>
+                </ul>
+              </li>
+            </ul>
+
+  <div class="row details-tab" style="padding:40px 20px;">
+    <div class="col-md-6">
+      {% with scan=scan_a %}
+      <div class="row">
+        <div class="col-md-6">
+          <dl class="dl-horizontal">
+            <dt>Scan</dt>
+            <dd><a href="/scans/defs/details/{{scan.scan_definition_id}}">{{ scan.title }}</a></dd>
+            <dt>Pol&iacute;tica</dt>
+            <dd><a href="/engines/policies/edit/{{scan.engine_policy.id}}">{{ scan.engine_policy.name }}</a></dd>
+            <dt>Iniciado </dt>
+            <dd>{{ scan.started_at|date:"d/m/Y\-H:i:s" }}</dd>
+            <dt>Finalizado </dt>
+            <dd>{{ scan.finished_at|date:"d/m/Y\-H:i:s" }}</dd>
+            <dt>Status</dt>
+            {% if scan.status == "finished" %}
+            <dd>Finalizado</dd>
+            {% elif scan.status == "error" %}
+            <dd>Mal Sucedido</dd>
+            {% endif %}
+            <dt>Sensor</dt>
+            <dd>{{ scan.engine_type.name }} / {{ scan.engine.name }}</dd>
+          </dl>
+        </div>
+        <div class="col-md-6">
+          <p class="text-center"><b>Ocorr&ecirc;ncias por Severidade:</b></p>
+          <div>
+            <canvas id="chart-findings-summary-a" scan-id="{{ scan.id }}"></canvas>
+          </div>
+        </div>
+      </div>
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Ativo</th>
+            <th>Descri&ccedil;&atilde;o das Ocorr&ecirc;ncias </th>
+            <th>Severidade</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for finding in scan.rawfinding_set.all|sort_by:'severity,asset_name,title' %}
+          {% if finding in scan_b_missing_findings%}
+          <tr style="border: 1px solid #18bc9c">
+            <td class="bg-success">
+          {% else %}
+          <tr>
+            <td>
+          {% endif %}
+              <input type="checkbox" class="radio" name="finding" value="{{ finding.id }}"/>
+            </td>
+            <td>{{finding.asset.value}}</td>
+            <td><a href="/findings/details/{{finding.id}}?raw=true">{{finding.title}}</a></td>
+            <td>
+              {% if finding.severity == 'critical' %}
+              <span class="label label-danger">Crítica</span>
+              {if finding.severity == 'high' %}
+              <span class="label label-danger">Alta</span>
+              {% elif finding.severity == 'medium' or finding.severity == 'moderate' %}
+              <span class="label label-warning">Média</span>
+              {% elif finding.severity == 'low' %}
+              <span class="label label-primary">Baixa</span>
+              {% else %}
+              <span class="label label-default">Desconhecida</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% endwith %}
+    </div>
+    <div class="col-md-6">
+      {% with scan=scan_b %}
+        <div class="row">
+          <div class="col-md-6">
+            <dl class="dl-horizontal">
+              <dt>Scan</dt>
+              <dd><a href="/scans/defs/details/{{scan.scan_definition_id}}">{{ scan.title }}</a></dd>
+              <dt>Pol&iacute;tica</dt>
+              <dd><a href="/engines/policies/edit/{{scan.engine_policy.id}}">{{ scan.engine_policy.name }}</a></dd>
+              <dt>Iniciado </dt>
+              <dd>{{ scan.started_at|date:"d/m/Y\-H:i:s" }}</dd>
+              <dt>Finalizado </dt>
+              <dd>{{ scan.finished_at|date:"d/m/Y\-H:i:s" }}</dd>
+              <dt>Status</dt>
+            {% if scan.status == "finished" %}
+            <dd>Finalizado</dd>
+            {% elif scan.status == "error" %}
+            <dd>Mal Sucedido</dd>
+            {% endif %}
+              <dt>Sensor</dt>
+              <dd>{{ scan.engine_type.name }} / {{ scan.engine.name }}</dd>
+            </dl>
+          </div>
+          <div class="col-md-6">
+            <p class="text-center"><b>Ocorr&ecirc;ncias por Severidade:</b></p>
+            <div>
+              <canvas id="chart-findings-summary-b" scan-id="{{ scan.id }}"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Ativo</th>
+              <th>Descri&ccedil;&atilde;o das Ocorr&ecirc;ncias</th>
+              <th>Severidade</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for finding in scan.rawfinding_set.all|sort_by:'severity,asset_name,title' %}
+
+            {% if finding in scan_a_missing_findings%}
+            <tr style="border: 1px solid #18bc9c">
+              <td class="bg-success">
+            {% else %}
+            <tr>
+              <td>
+            {% endif %}
+                <input type="checkbox" class="radio" name="finding" value="{{ finding.id }}"/>
+              </td>
+              <td>{{finding.asset.value}}</td>
+              <td><a href="/findings/details/{{finding.id}}?raw=true">{{finding.title}}</a></td>
+              <td>
+                {% if finding.severity == 'critical' %}
+              <span class="label label-danger">Crítica</span>
+                {% elif finding.severity == 'high' %}
+              <span class="label label-danger">Alta</span>
+                {% elif finding.severity == 'medium' or finding.severity == 'moderate' %}
+                <span class="label label-warning">Média</span>
+                {% elif finding.severity == 'low' %}
+                <span class="label label-primary">Baixa</span>
+                {% else %}
+                <span class="label label-default">Desconhecida</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+      {% endwith %}
+    </div>
+  </div>
+
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+</div>
+</div>
+<script>
+
+  scan_id_a = $("#chart-findings-summary-a").attr('scan-id');
+  scan_id_b = $("#chart-findings-summary-b").attr('scan-id');
+  getfindings_severities_url_a = "/findings/api/v1/stats?scope=scan&scan_id="+scan_id_a
+  getfindings_severities_url_b = "/findings/api/v1/stats?scope=scan&scan_id="+scan_id_b
+  chart_fs_config = {
+    type: 'doughnut',
+    data: {
+        datasets: [{
+            backgroundColor: [
+                "#FF0000", // High - RED
+                "#FF8000", // Medium - ORANGE
+                "#FFFF00", // Low - YELLOW
+                "#66D2FF"  // Info - BLUE
+            ],
+        }],
+        labels: ["High", "Medium", "Low", "Info"]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      legend: {
+        display: false
+      },
+      animation: {
+        animateScale: true,
+        animateRotate: true
+      }
+    }
+  };
+  xhr_a = $.get(getfindings_severities_url_a, function(resp) {
+    config = jQuery.extend(true, {}, chart_fs_config);
+    config["data"]["datasets"][0]["data"] = new Array(resp["nb_high"], resp["nb_medium"], resp["nb_low"], resp["nb_info"])
+    ctx = $("#chart-findings-summary-a");
+    ctx.attr('width', 100);
+    ctx.attr('height',100);
+    window.chart_a = new Chart(ctx, config);
+  });
+  xhr_b = $.get(getfindings_severities_url_b, function(resp) {
+    config = jQuery.extend(true, {}, chart_fs_config);
+    config["data"]["datasets"][0]["data"] = new Array(resp["nb_high"], resp["nb_medium"], resp["nb_low"], resp["nb_info"])
+    ctx = $("#chart-findings-summary-b");
+    ctx.attr('width', 100);
+    ctx.attr('height',100);
+    window.chart_b = new Chart(ctx, config);
+  });
+
+  // jQuery functions
+  $(function(){
+    // Compare findings
+    $("a.btn-compare-selected").on('click', function (e) {
+      findings_to_compare = []
+      $("input[name='finding']").each(function(cbx){
+        if (this.checked) {
+          findings_to_compare.push(this.value)
+        }
+      });
+      if(findings_to_compare.length == 2){
+        window.location.href ="/findings/compare?raw=true&finding_a_id="+findings_to_compare[0]+"&finding_b_id="+findings_to_compare[1];
+      }
+    });
+  });
+
+
+</script>
+
+{% endblock %}

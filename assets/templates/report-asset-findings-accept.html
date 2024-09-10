@@ -1,0 +1,1370 @@
+{% load staticfiles %}
+{% load pinegap_tags %}
+{% load i18n %}
+{% load humanize %}
+{% load l10n %}
+{% load currency %}
+{% currency_context %}
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'staticv2/reports/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'staticv2/reports/css/reports.css' %}">
+
+    <title>{{site_name}} | Ativo - Carta de Aceite de Risco</title>
+  </head>
+  <body>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <button onclick="javascript:pdfGen()" class="btn btn-primary ">Salvar PDF</button>
+      <a class="back" href="javascript:history.back()"><i class="fas fa-arrow-left"></i> Voltar</a>
+    </div>
+
+    <!-- Loading modal -->
+    <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modal" aria-hidden="true">
+      <div class="modal-dialog" id="modal" role="document">
+        <div class="modal-content">
+          <div class="modal-header"></div>
+          <div class="modal-body">
+            <h5 class="modal-title">Estamos gerando o seu PDF</h5>
+            <img src="{% static 'staticv2/reports/img/loader.gif' %}" />
+          </div>
+          <div class="modal-footer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Blob buffer -->
+    <div class="pdf" filename="Relatorio-Carta-Aceite.pdf" quality="2">
+      <!--empty-->
+    </div>
+
+    <!-- document -->
+    <div class="document">
+
+        <!-- a4 model -->
+        <div class="a4-model">
+
+          <div class="a4">
+            <div class="container-fluid">
+              <!-- row -->
+              <div class="row header">
+                  <div class="col-6">
+
+                    <img class="logo" src="/media/{{report_logo}}" />
+                  </div>
+                  <div class="col-6">
+                    <h1>Ativo / Carta de Aceite de Risco</h1>
+                    <small class="date">{% now "d" %} de {% now "F" %} de {% now "Y" %} às {% now "H:i" %}</small>
+                  </div>
+              </div>
+              <br class="space-10" />
+              <br class="space-10" />
+
+              <div class="a4-loop-content" mm="240"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="a4-loop">
+
+          <!--loop- asset-->
+          <div class="a4-loop-model" loop-item="asset-finding" mm="55">
+
+            <div class="row finding-item">
+              <div class="col-12">
+                <span class="finding-##severity##"></span>
+                <p>##type## / ##title##</p>
+
+                <table class="table table-borderless table-sm">
+                  <tbody>
+                    <tr>
+                      <td><b>Descrição</b></td>
+                      <td class="more-container">##description## <div class="more-content">##description_complete##</div></td>
+                    </tr>
+
+                    <tr after="risk_info">
+                      <td><b>Avaliação do Risco</b></td>
+                      <td></td><!-- subitems ##risk_info## -->
+                    </tr>
+                    <tr>
+                      <td style="padding-left:20px !important;">Severidade</td>
+                      <td class="finding-severity">##severity##</td>
+                    </tr>
+                    <tr after="vuln_refs">
+                      <td><b>Detalhe CPE</b></td>
+                      <td></td><!-- subitems ##vuln_refs## -->
+                    </tr>
+                    <tr>
+                      <td><b>Tags</b></td>
+                      <td>##tags##</td>
+                    </tr>
+                    <tr>
+                      <td><b>Status</b></td>
+                      <td class="finding-status">##status##</td>
+                    </tr>
+
+                    <tr>
+                      <td><b>Parecer Técnico</b></td>
+                      <td>##solution_complete##</td>
+                    </tr>
+
+                    <tr class="comments-complete">
+                      <td style="width:120px !important;"><b>Parecer DPO</b></td>
+                      <td class="comments-content">##comments_complete##</td>
+                    </tr>
+
+                    <tr after="links" class="links">
+                      <td><b>Informações Relacionadas</b></td>
+                      <td class="links-content"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="a4-loop-model asset-finding-comments-complete" loop-item="asset-finding-comments-complete" mm="55">
+
+            <div class="row finding-item">
+              <div class="col-12">
+                <table class="table table-borderless table-sm">
+                  <tbody>
+                    <tr class="comments-container"></tr>
+                    <tr class="links-container"></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- a4-prepend -->
+        <div class="a4-prepend">
+
+          <!-- a4 -->
+          <div class="a4">
+            <div class="container-fluid">
+
+              <!-- row -->
+              <div class="row header">
+                  <div class="col-6">
+
+                    <img class="logo" src="/media/{{report_logo }}" />
+                  </div>
+                  <div class="col-6">
+                    <h1>Ativo / Carta de Aceite de Risco</h1>
+                    <small class="date">{% now "d" %} de {% now "F" %} de {% now "Y" %} às {% now "H:i" %}</small>
+                  </div>
+              </div>
+
+              <br class="space-10" />
+              <br class="space-10" />
+
+              <div class="row">
+                <div class="col-5">
+                  <h3>Informações do Ativo</h3>
+
+                  <br class="space-10" />
+
+                  <table class="table table-sm table-borderless" style="width:250px; table-layout: fixed;">
+                    <tr>
+                      <td style="text-align:right; padding-right:10px !important; width:120px;"><b>Nome</td>
+                      <td style="overflow-wrap: break-word;">{{ asset.name }}</td>
+                    </tr>
+                    <tr>
+                      <td style="text-align:right; padding-right:10px !important;"><b>Valor</td>
+                      <td style="overflow-wrap: break-word;">{{ asset.value }} ({{ asset.type }})</td>
+                    </tr>
+                    <tr>
+                      <td style="text-align:right; padding-right:10px !important;"><b>Descrição</b></td>
+                      <td class="more-container">{{ asset.description|truncatechars:50 }}<div> <div class="more-content more-content-left">{{ asset.description }}</div></td>
+                    </tr>
+                    <tr>
+                      <td style="text-align:right; padding-right:10px !important;"><b>Criticidade</b></td>
+                      <td class="asset-criticity">{{ asset.criticity }}</td>
+                    </tr>
+                    <tr>
+                      <td style="text-align:right; padding-right:10px !important;"><b>Valor em Risco</b></td>
+                      <td>{{ asset.financeiro|floatformat:2|intcomma|default:"0,00" }}</td>
+                    </tr>
+                    <tr>
+                      <td style="text-align:right; padding-right:10px !important;"><b>Risco Qualitativo</b></td>
+                      {% if  asset.get_risk_grade|keyvalue:"-" == '-' %}
+                                    <td>Imponderável</td>
+                                  </tr>
+                      {% endif %}
+                      {% if asset.criticity == 'low' and  asset.get_risk_grade  == 'A' %}
+                                    <td>Trivial</td>
+                                  </tr>
+                      {% endif %}
+                           {% if asset.criticity == 'low' and  asset.get_risk_grade == 'B' %}
+                                    <td>Trivial</td>
+                                  </tr>
+                      {% endif %}
+                      {% if asset.criticity == 'medium' and asset.get_risk_grade == 'A' %}
+                                    <td>Trivial</td>
+                                  </tr>
+                      {% endif %}
+                      {% if asset.criticity == 'high' and asset.get_risk_grade == 'A' %}
+                                    <td>Trivial</td>
+                                  </tr>
+                      {% endif %}
+                      {% if asset.criticity == 'high' and asset.get_risk_grade == 'B' %}
+                                    <td>Aceitável</td>
+                                  </tr>
+                      {% endif %}
+                      {% if asset.criticity == 'medium' and asset.get_risk_grade == 'B' %}
+                                    <td>Aceitável</td>
+                                  </tr>
+                      {% endif %}
+                      {% if asset.criticity == 'medium' and asset.get_risk_grade == 'C' %}
+                                    <td>Aceitável</td>
+                                  </tr>
+                      {% endif %}
+                      {% if asset.criticity == 'low' and  asset.get_risk_grade == 'C' %}
+                                    <td>Aceitável</td>
+                                  </tr>
+                      {% endif %}
+                      {% if asset.criticity == 'low' and asset.get_risk_grade == 'D' %}
+                                    <td>Aceitável</td>
+                                  </tr>
+                      {% endif %}
+                      {% if asset.criticity == 'low' and  asset.get_risk_grade == 'E'  %}
+                                    <td>Moderado</td>
+                                  </tr>
+                      {% endif %}
+                      {% if asset.criticity == 'medium' and asset.get_risk_grade == 'D' %}
+                                    <td>Moderado</td>
+                                  </tr>
+                      {% endif %}
+                      {% if asset.criticity == 'high' and asset.get_risk_grade == 'C' %}
+                                    <td>Moderado</td>
+                                  </tr>
+                      {% endif %}
+                      {% if asset.criticity == 'high' and asset.get_risk_grade == 'D'  %}
+                                    <td>Substancial</td>
+                                  </tr>
+                      {% endif %}
+                      {% if asset.criticity == 'medium' and  asset.get_risk_grade == 'E'  %}
+                                    <td>Substancial</td>
+                                  </tr>
+                      {% endif %}
+                           {% if asset.criticity == 'low' and asset.get_risk_grade == 'F' %}
+                                    <td>Substancial</td>
+                                  </tr>
+                           {% endif %}
+                      {% if asset.criticity == 'medium' and asset.get_risk_grade == 'F' %}
+                                    <td>Intolerável</td>
+                                  </tr>
+                           {% endif %}
+                      {% if asset.criticity == 'high' and  asset.get_risk_grade == 'E' %}
+                                    <td>Intolerável</td>
+                                  </tr>
+                      {% endif %}
+                      {% if asset.criticity == 'high' and asset.get_risk_grade == 'F' %}
+                                    <td>Extremo</td>
+                                  </tr>
+                      {% endif %}
+                    <tr>
+                      <td style="text-align:right; padding-right:10px !important;"><b>Nota de Segurança</b></td>
+                      <td><b>{{ asset.get_risk_grade }}</b></td>
+                    </tr>
+                    <tr>
+                      <td style="text-align:right; padding-right:10px !important;"><b>Chances de um Incidente</b></td>
+                      <td class="asset-probability">{{ asset.get_risk_grade }}</td>
+                    </tr>
+                    <tr>
+                      <td style="text-align:right; padding-right:10px !important;"><b>Tags</b></td>
+                      <td>
+                      	{% for tag in asset.categories.all %}
+							<span style="background:#eee; padding:2px 5px; margin-right:5px;">{{tag.value|lower}}</span>
+						{% endfor %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align:right; padding-right:10px !important;"><b>Data da Criação</b></td>
+                      <td>{{ asset.created_at|date:"d/m/Y\-H:i:s" }}</td>
+                    </tr>
+                  </table>
+                </div>
+
+                <div class="col-7">
+                  <h3>Resumo das Ocorrências</h3>
+                  <div class="progress-vertical">
+                    <div class="progress">
+                      <div class="progress-bar bg-danger" role="progressbar" style="height:{{ findings_stats.critical | perc:findings_stats.total | floatformat:'0' }}%; background:#8a0000 !important;" aria-valuenow="{{ findings_stats.critical | perc:findings_stats.total | floatformat:'0' }}%" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                   <div class="progress" style="left: 80px;">
+                     <div class="progress-bar bg-primary" role="progressbar" style="height:{{ findings_stats.high | perc:findings_stats.total | floatformat:'0' }}%; background:#d13624 !important;" aria-valuenow="{{ findings_stats.high | perc:findings_stats.total | floatformat:'0' }}" aria-valuemin="0" aria-valuemax="100"></div>
+                   </div>
+                   <div class="progress" style="left: 160px;">
+                      <div class="progress-bar bg-blue" role="progressbar" style="height:{{ findings_stats.medium | perc:findings_stats.total | floatformat:'0' }}%; background:#ef8225 !important;" aria-valuenow="{{ findings_stats.medium | perc:findings_stats.total | floatformat:'0' }}" aria-valuemin="0" aria-valuemax="100"></div>
+                   </div>
+                   <div class="progress" style="left: 240px;">
+                      <div class="progress-bar bg-success" role="progressbar" style="height:{{ findings_stats.low | perc:findings_stats.total | floatformat:'0' }}%; background:#fdfc01 !important;" aria-valuenow="{{ findings_stats.low | perc:findings_stats.total | floatformat:'0' }}" aria-valuemin="0" aria-valuemax="100"></div>
+                   </div>
+                   <div class="progress" style="left: 320px;">
+                      <div class="progress-bar bg-success" role="progressbar" style="height:{{ findings_stats.info | perc:findings_stats.total | floatformat:'0' }}%; background:#3598db !important;" aria-valuenow="{{ findings_stats.info | perc:findings_stats.total | floatformat:'0' }}" aria-valuemin="0" aria-valuemax="100"></div>
+                   </div>
+                  <ul>
+                     <li style="left:0px;">Crítica ({{ findings_stats.critical }})</li>
+                     <li style="left:87px;">Alta ({{ findings_stats.high }})</li>
+                     <li style="left:163px;">Média ({{ findings_stats.medium }})</li>
+                     <li style="left:245px;">Baixa ({{ findings_stats.low }})</li>
+                     <li style="left:325px;">Desc. ({{ findings_stats.info }})</li>
+                 </ul>
+                </div>
+                </div>
+              </div>
+
+              <!-- row -->
+              <!-- row -->
+              <div class="row">
+                <div class="col-2">
+                  <br class="space-10" />
+                  <h3 class="history">Histórico</h3>
+                  <h4 class="history" style="text-align:center !important;">Ocorrências nos últimos 6 meses</h4>
+                  <span class="history-line" style="height:73%;"></span>
+                </div>
+                <div class="col-10">
+                  <br class="space-20" />
+                  <canvas class="my-4" id="findings_chart" width="900" height="330"></canvas>
+                </div>
+              </div>
+
+              <!-- row
+              <div class="row">
+                <div class="col-2">
+                  <span class="history-line" style="height:130px;"></span>
+                  <h4 class="history" style="top:130px !important; text-align:center !important;">Nota de Segurança nos Últimos 6 meses</h4>
+                </div>
+                <div class="col-10">
+                  <canvas class="my-4" id="risk_grade_chart" width="900" height="440"></canvas>
+                </div>
+              </div>
+              -->
+
+              <div class="row">
+                <div class="col-12">
+
+                  <h3>Matriz de Risco Qualitativo</h3>
+                  <br class="space-10">
+                  <table class="table table-sm table-borderless matriz">
+                      <tbody>
+                      <tr>
+                        <th></th>
+                        <th style="text-align: right; padding-right:15px !important;">Impacto Negócio</th>
+                        <th style="text-align: center; font-weight: normal;">Baixo</th>
+                        <th style="text-align: center; font-weight: normal;">Médio</th>
+                        <th style="text-align: center; font-weight: normal;">Alto</th>
+                      </tr>
+                      <tr>
+                        <th>Risco Negócio </th>
+                        <th style="text-align: right; padding-right:15px !important;">Probabilidade </th>
+                        <td><i class="icon-arrow-down"></i></td>
+                        <td><i class="icon-arrow-down"></i></td>
+                        <td><i class="icon-arrow-down"></i></td>
+                      </tr>
+                      <!--############################### line 1 #################################-->
+                      <tr>
+                            <td class="bg-grade---low" style="position:relative;">
+                                <a>Imponderável
+                                  {% if  asset.get_risk_grade == '-' %}
+                                  <span class="matriz-bullet"></span>
+                                  {% endif %}
+                                </a>
+                            </td>
+                            <td style="text-align: right; padding-right:15px !important;">Imponderável</td>
+                            {% if  asset.criticity == 'low' and asset.get_risk_grade == '-' %}
+                            <td class="bg-grade---low" style="position:relative;">
+                              <span class="matriz-bullet" style="left:45%;">
+                                  <div class="matriz-pointer" style="width:67px; height:16px;"></div>
+                              </span>
+                            </td>
+                            {% else %}
+                            <td class="bg-grade---low"><!--empty--></td>
+                            {% endif %}
+
+                            {% if  asset.criticity == 'medium' and asset.get_risk_grade == '-' %}
+                            <td class="bg-grade---medium" style="position:relative;">
+                                <span class="matriz-bullet" style="left:45%;">
+                                    <div class="matriz-pointer" style="width:197px; height:16px;"></div>
+                                </span>
+                            </td>
+                            {% else %}
+                            <td class="bg-grade---medium"><!--empty--></td>
+                            {% endif %}
+
+                            {% if asset.criticity == 'high' and  asset.get_risk_grade == '-' %}
+                            <td class="bg-grade---high" style="position:relative;">
+                                <span class="matriz-bullet" style="left:45%;">
+                                    <div class="matriz-pointer" style="width:323px; height:16px;"></div>
+                                </span>
+                            </td>
+                            {% else %}
+                            <td class="bg-grade---high"><!--empty--></td>
+                            {% endif %}
+                      </tr>
+
+
+                      <!--############################### line 2 #################################-->
+                      <tr>
+                         <td class="bg-grade-A-low" style="position:relative;">
+                           <a>Trivial
+                            {% if asset.criticity == 'low' and  asset.get_risk_grade  == 'A' %}
+                                <span class="matriz-bullet"></span>
+                            {% elif asset.criticity == 'medium' and  asset.get_risk_grade == 'A' %}
+                                <span class="matriz-bullet"></span>
+                            {% elif asset.criticity == 'high' and  asset.get_risk_grade == 'A' %}
+                                <span class="matriz-bullet"></span>
+                            {% elif asset.criticity == 'low' and  asset.get_risk_grade == 'B' %}
+                                <span class="matriz-bullet"></span>
+                            {% endif %}
+                           </a>
+                         </td>
+                         <td style="text-align: right; padding-right:15px !important;">Improvável</td>
+
+                         {% if asset.criticity == 'low' and asset.get_risk_grade == 'A' %}
+                         <td class="bg-grade-A-low" style="position:relative;">
+                              <span class="matriz-bullet" style="left:45%;">
+                                  <div class="matriz-pointer" style="width:67px; height:39px;"></div>
+                              </span>
+                         </td>
+                         {% else %}
+                         <td class="bg-grade-A-low"></td>
+                         {% endif %}
+
+                         {% if asset.criticity == 'medium' and asset.get_risk_grade == 'A' %}
+                         <td class="bg-grade-A-medium" style="position:relative;">
+                              <span class="matriz-bullet" style="left:45%;">
+                                  <div class="matriz-pointer" style="width:197px; height:39px;"></div>
+                              </span>
+                         </td>
+                         {% else %}
+                         <td class="bg-grade-A-medium"><!--empty--></td>
+                         {% endif %}
+
+                         {% if asset.criticity == 'high' and asset.get_risk_grade == 'A' %}
+                         <td class="bg-grade-A-high" style="position:relative;">
+                              <span class="matriz-bullet" style="left:45%;">
+                                  <div class="matriz-pointer" style="width:323px; height:39px;"></div>
+                              </span>
+                         </td>
+                         {% else %}
+                         <td class="bg-grade-A-high"><!--empty--></td>
+                         {% endif %}
+                      </tr>
+
+
+                      <!--############################### line 3 #################################-->
+                      <tr>
+                            <td class="bg-grade-B-medium" style="position:relative;">
+                              <a>Aceitável
+                                {% if asset.criticity == 'medium' and  asset.get_risk_grade == 'B' %}
+                                  <span class="matriz-bullet"></span>
+                                {% elif asset.criticity == 'high' and asset.get_risk_grade == 'B' %}
+                                  <span class="matriz-bullet"></span>
+                                {% elif asset.criticity == 'low' and asset.get_risk_grade == 'C' %}
+                                  <span class="matriz-bullet"></span>
+                                {% elif asset.criticity == 'medium' and asset.get_risk_grade == 'C' %}
+                                  <span class="matriz-bullet"></span>
+                                {% elif asset.criticity == 'low' and asset.get_risk_grade == 'D' %}
+                                    <span class="matriz-bullet"></span>
+                                {% endif %}
+                              </a>
+                            </td>
+                            <td style="text-align: right; padding-right:15px !important;">Rara </td>
+
+                            {% if asset.criticity == 'low' and  asset.get_risk_grade == 'B' %}
+                            <td class="bg-grade-B-low" style="position:relative;">
+                                <span class="matriz-bullet" style="left:45%;">
+                                    <div class="matriz-pointer" style="width:67px; height:66px;"></div>
+                                </span>
+                            </td>
+                            {% else %}
+                            <td class="bg-grade-B-low"><!--empty--></td>
+                            {% endif %}
+
+
+                            {% if asset.criticity == 'medium' and asset.get_risk_grade == 'B' %}
+                            <td class="bg-grade-B-medium" style="position:relative;">
+                                <span class="matriz-bullet" style="left:45%;">
+                                  <div class="matriz-pointer" style="width:197px; height:66px;"></div>
+                                </span>
+                            </td>
+                            {% else %}
+                            <td class="bg-grade-B-medium"><!--empty--></td>
+                            {% endif %}
+
+                            {% if asset.criticity == 'high' and asset.get_risk_grade == 'B' %}
+                            <td class="bg-grade-B-high" style="position:relative;">
+                                <span class="matriz-bullet" style="left:45%;"><!--empty-->
+                                    <div class="matriz-pointer" style="width:323px; height:66px;"></div>
+                                </span>
+                            </td>
+                            {% else %}
+                            <td class="bg-grade-B-high"><!--empty--></td>
+                            {% endif %}
+                      </tr>
+
+
+
+                      <!--############################### line 4 #################################-->
+                      <tr>
+                          <td class="bg-grade-C-high" style="position:relative;">
+                            <a>Moderado
+                              {% if asset.criticity == 'high' and  asset.get_risk_grade == 'C'  %}
+                                  <span class="matriz-bullet"></span>
+                              {% elif asset.criticity == 'medium' and  asset.get_risk_grade == 'D'  %}
+                                  <span class="matriz-bullet"></span>
+                              {% elif asset.criticity == 'low' and  asset.get_risk_grade == 'E'  %}
+                                  <span class="matriz-bullet"></span>
+                              {% endif %}
+                            </a>
+                          </td>
+                          <td style="text-align: right; padding-right:15px !important;">Pouco Provável </td>
+
+                          {% if asset.criticity == 'low' and  asset.get_risk_grade == 'C'  %}
+                          <td class="bg-grade-C-low" style="position:relative;">
+                            <span class="matriz-bullet" style="left:45%;"><!--empty-->
+                                <div class="matriz-pointer" style="width:67px; height:92px;"></div>
+                            </span>
+                          </td>
+                          {% else %}
+                          <td class="bg-grade-C-low"><!--empty--></td>
+                          {% endif %}
+
+                          {% if asset.criticity == 'medium' and  asset.get_risk_grade == 'C'  %}
+                          <td class="bg-grade-C-medium" style="position:relative;">
+                            <span class="matriz-bullet" style="left:45%;"><!--empty-->
+                                <div class="matriz-pointer" style="width:197px; height:92px;"></div>
+                            </span>
+                          </td>
+                          {% else %}
+                          <td class="bg-grade-C-medium"><!--empty--></td>
+                          {% endif %}
+
+                          {% if asset.criticity == 'high' and  asset.get_risk_grade == 'C'  %}
+                          <td class="bg-grade-C-high" style="position:relative;">
+                            <span class="matriz-bullet" style="left:45%;"><!--empty-->
+                                <div class="matriz-pointer" style="width:323px; height:92px;"></div>
+                            </span>
+                          </td>
+                          {% else %}
+                          <td class="bg-grade-C-high"><!--empty--></td>
+                          {% endif %}
+                      </tr>
+
+
+                      <!--############################### line 5 #################################-->
+                      <tr>
+                          <td class="bg-grade-D-high" style="position:relative;">
+                            <a>Substancial
+                              {% if asset.criticity == 'high' and  asset.get_risk_grade == 'D'  %}
+                                  <span class="matriz-bullet"></span>
+                              {% elif asset.criticity == 'medium' and  asset.get_risk_grade == 'E'  %}
+                                  <span class="matriz-bullet"></span>
+                              {% elif asset.criticity == 'low' and  asset.get_risk_grade == 'F'  %}
+                                  <span class="matriz-bullet"></span>
+                              {% endif %}
+                            </a>
+                          </td>
+                          <td style="text-align: right; padding-right:15px !important;">Possível </td>
+
+                          {% if asset.criticity == 'low' and asset.get_risk_grade == 'D' %}
+                            <td class="bg-grade-D-low" style="position:relative;">
+                              <span class="matriz-bullet" style="left:45%;"><!--empty-->
+                                  <div class="matriz-pointer" style="width:67px; height:116px;"></div>
+                              </span>
+                            </td>
+                          {% else %}
+                            <td class="bg-grade-D-low"><!--empty--></td>
+                          {% endif %}
+
+                          {% if asset.criticity == 'medium' and asset.get_risk_grade == 'D' %}
+                            <td class="bg-grade-D-medium" style="position:relative;">
+                              <span class="matriz-bullet" style="left:45%;"><!--empty-->
+                                  <div class="matriz-pointer" style="width:197px; height:116px;"></div>
+                              </span>
+                            </td>
+                          {% else %}
+                            <td class="bg-grade-D-medium"><!--empty--></td>
+                          {% endif %}
+
+                          {% if asset.criticity == 'high' and asset.get_risk_grade == 'D' %}
+                            <td class="bg-grade-D-high" style="position:relative;">
+                              <span class="matriz-bullet" style="left:45%;"><!--empty-->
+                                  <div class="matriz-pointer" style="width:323px; height:116px;"></div>
+                              </span>
+                            </td>
+                          {% else %}
+                            <td class="bg-grade-D-high"><!--empty--></td>
+                          {% endif %}
+                      </tr>
+
+
+                      <!--############################### line 6 #################################-->
+                      <tr>
+                          <td class="bg-grade-E-high" style="position:relative;">
+                            <a>Intolerável
+                              {% if asset.criticity == 'high' and  asset.get_risk_grade == 'E'  %}
+                                  <span class="matriz-bullet"></span>
+                              {% elif asset.criticity == 'medium' and  asset.get_risk_grade == 'F'  %}
+                                  <span class="matriz-bullet"></span>
+                              {% endif %}
+                            </a>
+                          </td>
+                            <td style="text-align: right; padding-right:15px !important;">Provável</td>
+
+                            {% if asset.criticity == 'low' and asset.get_risk_grade == 'E' %}
+                              <td class="bg-grade-E-low" style="position:relative;">
+                                <span class="matriz-bullet" style="left:45%;"><!--empty-->
+                                    <div class="matriz-pointer" style="width:67px; height:156px;"></div>
+                                </span>
+                              </td>
+                            {% else %}
+                              <td class="bg-grade-E-low"><!--empty--></td>
+                            {% endif %}
+
+
+                            {% if asset.criticity == 'medium' and asset.get_risk_grade == 'E' %}
+                              <td class="bg-grade-E-medium" style="position:relative;">
+                                <span class="matriz-bullet" style="left:45%;"><!--empty-->
+                                    <div class="matriz-pointer" style="width:197px; height:156px;"></div>
+                                </span>
+                              </td>
+                            {% else %}
+                              <td class="bg-grade-E-medium"><!--empty--></td>
+                            {% endif %}
+
+
+                            {% if asset.criticity == 'high' and asset.get_risk_grade == 'E' %}
+                              <td class="bg-grade-E-high" style="position:relative;">
+                                <span class="matriz-bullet" style="left:45%;"><!--empty-->
+                                    <div class="matriz-pointer" style="width:323px; height:136px;"></div>
+                                </span>
+                              </td>
+                            {% else %}
+                            <td class="bg-grade-E-high"></td>
+                            {% endif %}
+                      </tr>
+
+                      <!--############################### line 7 #################################-->
+                      <tr>
+                          <td class="bg-grade-F-high" style="position:relative;">
+                            <a>Extremo
+                              {% if asset.criticity == 'high' and  asset.get_risk_grade == 'F'  %}
+                                  <span class="matriz-bullet"></span>
+                              {% endif %}
+                            </a>
+                          </td>
+                          <td style="text-align: right; padding-right:15px !important;">Quase Certa</td>
+
+                          {% if asset.criticity == 'low' and asset.get_risk_grade == 'F' %}
+                            <td class="bg-grade-F-low" style="position:relative;">
+                              <span class="matriz-bullet" style="left:45%;"><!--empty-->
+                                  <div class="matriz-pointer" style="width:67px; height:164px;"></div>
+                              </span>
+                            </td>
+                          {% else %}
+                            <td class="bg-grade-F-low"><!--empty--></td>
+                          {% endif %}
+
+                          {% if asset.criticity == 'medium' and asset.get_risk_grade == 'F' %}
+                            <td class="bg-grade-F-medium" style="position:relative;">
+                              <span class="matriz-bullet" style="left:45%;"><!--empty-->
+                                  <div class="matriz-pointer" style="width:197px; height:164px;"></div>
+                              </span>
+                            </td>
+                          {% else %}
+                            <td class="bg-grade-F-medium"><!--empty--></td>
+                          {% endif %}
+
+                          {% if asset.criticity == 'high' and asset.get_risk_grade == 'F' %}
+                            <td class="bg-grade-F-high" style="position:relative;">
+                              <span class="matriz-bullet" style="left:45%;"><!--empty-->
+                                  <div class="matriz-pointer" style="width:323px; height:164px;"></div>
+                              </span>
+                            </td>
+                          {% else %}
+                            <td class="bg-grade-F-high"><!--empty--></td>
+                          {% endif %}
+
+                      </tr>
+                      </tbody>
+                  </table>
+                  <span class="box">
+                    O <b>Risco Negócio</b> da <b>Matriz Qualitativa</b> indica o quanto as áreas de negócio da empresa precisam se preocupar com a segurança do ativo. É indicado fortemente que não haja nenhum ativo com risco negócio maior que Moderado.
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <br />
+
+          <!-- a4 preped 2-->
+          <div class="a4">
+            <div class="container-fluid">
+
+              <!-- row -->
+              <div class="row header">
+                <div class="col-6">
+
+                  <img class="logo" src="/media/{{report_logo}}" />
+                </div>
+                <div class="col-6">
+                  <h1>Ativo / Carta de Aceite de Risco</h1>
+                  <small class="date">{% now "d" %} de {% now "F" %} de {% now "Y" %} às {% now "H:i" %}</small>
+                </div>
+              </div>
+
+              <br class="space-10" />
+              <br class="space-10" />
+
+              <!-- row -->
+              <div class="row">
+                <div class="col-12">
+                  <h3>Ocorrências / Resultados Detalhados</h3>
+                  <br class="space-10" />
+                </div>
+              </div>
+
+              <div class="a4-loop-content" mm="240">
+
+              </div>
+
+            </div>
+          </div>
+          <br />
+        </div>
+
+        <div class="a4-append">
+          <!-- a4 a4-4 -->
+          <div class="a4">
+            <div class="container-fluid">
+
+              <!-- row -->
+              <div class="row header">
+                <div class="col-6">
+
+                  <img class="logo" src="/media/{{report_logo}}" />
+                </div>
+                <div class="col-6">
+                  <h1>Ativo / Carta de Aceite de Risco</h1>
+                  <small class="date">{% now "d" %} de {% now "F" %} de {% now "Y" %} às {% now "H:i" %}</small>
+                </div>
+              </div>
+
+              <br class="space-10" />
+              <br class="space-10" />
+
+              <!-- row -->
+              <div class="row">
+                <div class="col-12">
+                  <h3>Glossário</h3>
+                </div>
+              </div>
+
+              <br class="space-5" />
+
+              <!-- row-->
+              <div class="row">
+                <div class="col-12">
+                  <table class="table table-borderless table-sm glossary">
+                    <tr>
+                      <td style="width:120px;"><b>Ativo</b></td>
+                      <td><p>Qualquer coisa que tenha IP e tenha valor para a empresa, como por exemplo meios de armazenamento, transmissão e processamento da informação, os equipamentos necessários a isso, os sistemas utilizados para tal, os locais onde se encontram esses meios.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Ocorrência</b></td>
+                      <td><p>Evento detectado e registrado em um ativo.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Sensor</b></td>
+                      <td><p>Mecanismo técnico que funciona como um motor para fazer Scans.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Scan</b></td>
+                      <td><p>Mecanismo técnico que faz o tipo de varredura em determinado ambiente que possui ativos e que é responsável por trazer as ocorrências e vincular aos ativos corretos.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Severidade</b></td>
+                      <td><p>Classificação qualitativa de gravidade de uma ocorrência de segurança encontrada no ativo.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Nota de Segurança</b></td>
+                      <td><p>Nota de segurança dada a um ativo. Esta nota pode ir de A até F, onde A é a melhor nota (mais seguro) e F é a pior nota (menos seguro). Esta nota é dada automaticamente pelo sistema baseado na quantidade de ocorrências e severidade das mesmas.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Nota</b></td>
+                      <td><p>É o mesmo que Nota de Segurança.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Valor</b></td>
+                      <td><p>Endereço do ativo cadastrado no sistema, como IP, domínio, etc.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Endereço</b></td>
+                      <td><p>Endereço é o mesmo que valor.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Valor em Risco</b></td>
+                      <td><p>Valor monetário que potencialmente será impactado no caso de um incidente de segurança no ativo. A denominação do Valor em Risco é dada de forma livre.</p></td>
+                    </tr>
+                    <tr>
+                      <td style="width:120px;"><b>Impacto Negócio</b></td>
+                      <td><p>Classificação de importância para o negócio que um ativo possui.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Probabilidade</b></td>
+                      <td><p>É baseada na Nota de Segurança e tem como objetivo evidenciar as chances que determinado ativo tem de sofrer um incidente de segurança. A probabilidade começa com Imponderável e pode chegar até Quase Certa.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Risco Negócio</b></td>
+                      <td><p>Resultado da matriz que correlaciona Impacto Negócio e Probabilidade, classificando o Risco do Negócio de Imponderável até Extremo.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>DPO</b></td>
+                      <td><p>O DPO (Data Protection Officer), é a pessoa responsável por garantir que a organização processe os dados pessoais da equipe, clientes, fornecedores ou quaisquer outros indivíduos (também chamados de titulares de dados), além de atuar como canal de comunicação entre o controlador, os titulares dos dados e a Autoridade Nacional de Proteção de Dados (ANPD), em conformidade com as regras de proteção de dados aplicáveis. Na Lei Geral de Proteção de Dados brasileira (LGPD), o nome do "DPO" é "Encarregado".</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>CVE</b></td>
+                      <td><p>Common Vulnerabilities and Exposures, é uma iniciativa colaborativa de diversas organizações de tecnologia e segurança que criam listas de nomes padronizados para vulnerabilidades e outras exposições de segurança. O objetivo da CVE é padronizar as vulnerabilidades e riscos conhecidos, facilitando a procura, o acesso e o compartilhamento de dados entre diversos indivíduos e empresas.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>CPE</b></td>
+                      <td><p>O CPE (Common Platform Enumeration) é um método padronizado de descrição e identificação de classes de aplicativos, sistemas operacionais e dispositivos de hardware presentes nos ativos de computação de uma empresa. </p></td>
+                    </tr>
+                    <tr>
+                      <td><b>CVSS</b></td>
+                      <td><p>Common Vulnerability Scoring System, é um padrão utilizado para qualificar e avaliar vulnerabilidades presentes nos sistemas. Usando esse modelo de numeração, fica mais fácil avaliar quais prioridades devem ser remediadas de maneira mais simples. Essa pontuação indica a gravidade do risco apontado, podendo variar entre baixa, média e alta. Baseado em uma série de critérios, o método aponta uma numeração de 0 a 10, em que, naturalmente, quanto maior a nota, maior o risco.</p></td>
+                    </tr>
+                  </table>
+              </div>
+            </div>
+          </div>
+          </div>
+
+          <br />
+          <div class="a4">
+            <div class="container-fluid">
+
+              <!-- row -->
+              <div class="row header">
+                <div class="col-5">
+
+                  <img class="logo" src="/media/{{report_logo}}">
+                </div>
+                <div class="col-7">
+                  <h1>Ativo / Carta de Aceite de Risco</h1>
+                  <small class="date">{% now "d" %} de {% now "F" %} de {% now "Y" %} às {% now "H:i" %}</small>
+                </div>
+              </div>
+
+              <br class="space-10">
+              <br class="space-10">
+
+              <!-- row -->
+              <div class="row aceite">
+                <div class="col-12">
+                  <h3>Aceite de Risco</h3>
+                  <br class="space-5">
+                  <p>Eu, _______________________________________________________, aceito os riscos de Segurança da Informação evidenciados nessa Carta de Aceite de Risco, sabendo que os mesmos podem impactar em riscos operacionais, de conformidade, conduta ou reputação da empresa __________________________________________.</p>
+                  <br>
+                  <br>
+                  <span style="margin-right:33px;">Cargo</span>
+                  <span style="margin-right:33px;">CPF</span>
+                  <span>Assinatura</span>
+                  <br>
+                  <br>
+                  <p><b>{% now "d" %} de {% now "F" %} de {% now "Y" %}, {% now "H:i" %}</b></p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <br />
+
+        </div>
+
+    </div>
+
+    <script>
+      var _dataset = [];
+      _dataset['asset-finding']=[];
+
+      //{% for finding in findings %}
+      _dataset['asset-finding'][{{ forloop.counter }}] = {
+          raw_finding_id: '{{ finding.raw_finding_id }}',
+          severity: '{{ finding.severity }}',
+          type: '{{ finding.type }}',
+          status: '{{ finding.status }}',
+          title: '{{ finding.title }}',
+          confidence: '{{ finding.confidence }}',
+          comments: ''+
+          '{% filter escapejs %}
+          {{ finding.comments|truncatechars:80 }}
+          {% endfilter %}'+
+          '',
+          comments_complete: ''+
+          '{% filter escapejs %}
+          {{ finding.comments|linebreaksbr }}
+          {% endfilter %}'+
+          '',
+          description: ''+
+          '{% filter escapejs %}
+          {{ finding.description|truncatechars:80 }}
+          {% endfilter %}'+
+          '',
+          description_complete: ''+
+          '{% filter escapejs %}
+          {{ finding.description|linebreaksbr }}
+          {% endfilter %}'+
+          '',
+          solution: ''+
+          '{% filter escapejs %}
+          {{ finding.solution|truncatechars:80 }}
+          {% endfilter %}'+
+          '',
+          solution_complete: ''+
+          '{% filter escapejs %}
+          {{ finding.solution|linebreaksbr }}
+          {% endfilter %}'+
+          '',
+          tags: '{{ finding.tags | join:", " }}',
+          //{% if not finding.links %}
+          links: [{}],
+          //{% else %}
+          links: [
+          //{% for link in finding.links %}
+              { link: '{{ link }}' },
+          //{% endfor %}
+          ],
+          //{% endif %}
+          //{% if not finding.risk_info %}
+          risk_info: [{}],
+          //{% else %}
+          risk_info: [{
+            //{% for key, value in finding.risk_info.items %}
+              '{{ key }}': '{{ value }}',
+            //{% endfor %}
+          }],
+          //{% endif %}
+          //{% if not finding.vuln_refs %}
+          vuln_refs: [{}],
+          //{% else %}
+          vuln_refs: [{
+            //{% for key, value in finding.vuln_refs.items %}
+              //{% if key == "CVE" %}
+                '{{ key }}': '{{ value|joinby:"," }}',
+              //{% else %}
+                '{{ key }}': '{{ value }}',
+              //{% endif %}
+            //{% endfor %}
+          }],
+          //{% endif %}
+      };
+      //{% endfor %}
+
+    </script>
+
+
+
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="{% static 'staticv2/reports/js/jquery-3.4.1.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/popper.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/jspdf.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/html2canvas.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/Chart.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/fontawesome.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/chartjs.showAllTooltips.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/replaceArray.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/pdfGen.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/dataProc.js' %}"></script>
+
+    <script>
+      //charts dataset
+      var _dataset = [];
+      asset_trends_chart_url = "/assets/api/v1/trends/{{asset.id|safe}}?period_by=semester&max_ticks=180";
+      jQuery.ajax({
+          url: asset_trends_chart_url,
+          success: function (resp) {
+
+            resp = resp.reverse();
+            console.log(resp);
+
+            var x=0;
+            for(i=0; i < resp.length; i++) {
+
+              var date = resp[i].date.split('-');
+              _dataset[x] = {data:[], month:''}
+
+              if(x>0) {
+                if(_dataset[x-1].month == date[1]+'-'+date[0]) {
+                  _dataset[x-1].data.push(resp[i]);
+                } else {
+                  _dataset[x].month = date[1]+'-'+date[0];
+                  _dataset[x].data.push(resp[i]);
+                  x++;
+                }
+              } else {
+                _dataset[x].month = date[1]+'-'+date[0];
+                _dataset[x].data.push(resp[i]);
+                x++;
+              }
+            }
+
+            var month_names = {
+              '01': 'Janeiro',
+              '02': 'Fevereiro',
+              '03': 'Março',
+              '04': 'Abril',
+              '05': 'Maio',
+              '06': 'Junho',
+              '07': 'Julho',
+              '08': 'Agosto',
+              '09': 'Setembro',
+              '10': 'Outubro',
+              '11': 'Novembro',
+              '12': 'Dezembro'
+            }
+
+            var _final_dataset = [];
+            for (i=0; i<_dataset.length; i++){
+
+              if(_dataset[i].data[0]){
+                  _final_dataset[i] = {data: [], month: '', year: '', label: ''};
+                  _final_dataset[i].data = _dataset[i].data[0];
+
+                  var date = _dataset[i].data[0].date.split('-');
+
+                  _final_dataset[i].month = month_names[date[1]];
+                  _final_dataset[i].year = date[0];
+                  _final_dataset[i].label = month_names[date[1]]+' de '+date[0];
+              }
+            }
+            console.log(_final_dataset);
+            makeChart(_final_dataset);
+          },
+          async: false
+      });
+
+        // Chances de um Incidente
+        var probability = {
+            '-': 'Imponderável',
+            'A': 'Improvável',
+            'B': 'Rara',
+            'C': 'Pouco Provável',
+            'D': 'Possível',
+            'E': 'Provável',
+            'F': 'Quase Certa'
+        };
+        var asset_probability = $('.asset-probability').html();
+        $('.asset-probability').html(probability[asset_probability]);
+
+		// Severidade
+		var severity = {
+			'critical': 'Crítica',
+			'high': 'Alta',
+			'medium': 'Média',
+			'low': 'Baixa',
+			'info': 'Desconhecida'
+		};
+		var finding_severity = $('.finding-severity');
+
+		for(i=0; i < finding_severity.length; i++) {
+			var finding_severity_html =  $(finding_severity[i]).html();
+			$(finding_severity[i]).html(severity[finding_severity_html]);
+		}
+
+		// Status
+		var fstatus = {
+			'new': 'Nova',
+			'ack': 'Ignorada',
+			'mitigated': 'Mitigada',
+			'confirmed': 'Confirmada',
+			'patched': 'Corrigida',
+			'closed': 'Encerrada',
+			'false-positive': 'Falso-Positivo'
+		};
+		var finding_status = $('.finding-status');
+
+		for(i=0; i < finding_status.length; i++) {
+			var finding_status_html =  $(finding_status[i]).html();
+			$(finding_status[i]).html(fstatus[finding_status_html]);
+		}
+
+
+        // Criticidade
+        var criticity = {
+            'critical': 'Crítica',
+            'high': 'Alta',
+            'medium': 'Média',
+            'low': 'Baixa',
+            'info': 'Desconhecida'
+        };
+        var asset_criticity = $('.asset-criticity').html();
+        $('.asset-criticity').html(criticity[asset_criticity]);
+
+        //Equivalencia risk_grade
+        var risk_grade = {
+            0: 'Imponderável',
+            1: 'F',
+            2: 'E',
+            3: 'D',
+            4: 'C',
+            5: 'B',
+            6: 'A',
+        };
+        /*
+        //risk_grade_chart
+        var ctx = document.getElementById("risk_grade_chart");
+        var risk_grade_chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: ["180 dias", "150 dias", "120 dias", "90 dias", "60 dias", "30 dias"],
+            datasets: [{
+              labels: [
+                  risk_grade[_dataset[180].data.risk_grade],
+                  risk_grade[_dataset[150].data.risk_grade],
+                  risk_grade[_dataset[120].data.risk_grade],
+                  risk_grade[_dataset[90].data.risk_grade],
+                  risk_grade[_dataset[60].data.risk_grade],
+                  risk_grade[_dataset[30].data.risk_grade],
+              ],
+              data: [
+                  _dataset[180].data.total,
+                  _dataset[150].data.total,
+                  _dataset[120].data.total,
+                  _dataset[90].data.total,
+                  _dataset[60].data.total,
+                  _dataset[30].data.total,
+              ],
+              lineTension: 0,
+              backgroundColor: 'transparent',
+              borderColor: '#8593A0',
+              borderWidth: 3,
+              pointBackgroundColor: '#122F49'
+            }]
+          },
+          options: {
+            legend: {
+              display: false,
+            },
+            //showAllTooltips
+            showAllTooltips: true,
+            tooltips: {
+              caret: false,
+              custom: function(tooltip) {
+                if (!tooltip) return;
+                // disable displaying the color box;
+                tooltip.displayColors = false;
+              },
+              yAlign: 'top',
+              titleAlign: 'right',
+              bodyAlign: 'left',
+              footerAlign: 'right',
+              axis: 'y',
+              //bodyFontSize: '13px',
+              bodyFontSize:10,
+              bodyFontStyle: 'bold',
+              bodyFontColor: '#fff',
+              backgroundColor: 'rgba(0, 0, 0, 0.9)',
+              xPadding: 5,
+              yPadding: 5,
+              //intersect: false,
+              callbacks: {
+                    labelColor: function(tooltipItem, chart) {
+                        return {
+                            borderColor: 'rgb(255, 0, 0)',
+                            backgroundColor: 'rgb(255, 0, 0)'
+                        };
+                    },
+                  label: function(tooltipItem, data) {
+                    var label = data.datasets[tooltipItem.datasetIndex].labels[tooltipItem.index] || '';
+
+                    //var label = '';
+                    if (label) {
+                      label = label+':  ';
+                    }
+                    label += Math.round(tooltipItem.yLabel * 100) / 100;
+                    return label;
+                  },
+                  title: function(tooltipItem) {
+                      return '';
+                  },
+              }
+            },
+            scales: {
+              yAxes: [{
+                ticks: {
+                  beginAtZero: false,
+                  stepSize: 1
+                }
+              }]
+            },
+            legend: {
+              display: false,
+              labels: {
+                  boxWidth: 20,
+              },
+            }
+          }
+        });
+
+*/
+
+
+function makeChart(_dataset){
+//findings_chart
+var ctx = document.getElementById('findings_chart');
+var findings_chart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: [
+      _dataset[5].month,
+      _dataset[4].month,
+      _dataset[3].month,
+      _dataset[2].month,
+      _dataset[1].month,
+      _dataset[0].month
+    ],
+    datasets: [
+      {
+        label: 'Desc',
+        data: [
+          _dataset[5].data.info,
+          _dataset[4].data.info,
+          _dataset[3].data.info,
+          _dataset[2].data.info,
+          _dataset[1].data.info,
+          _dataset[0].data.info
+        ],
+        backgroundColor: '#007BFF',
+      },
+      {
+        label: 'Baixa',
+        data: [
+          _dataset[5].data.low,
+          _dataset[4].data.low,
+          _dataset[3].data.low,
+          _dataset[2].data.low,
+          _dataset[1].data.low,
+          _dataset[0].data.low
+        ],
+        backgroundColor: '#FFFF00',
+      },
+      {
+        label: 'Média',
+        data: [
+          _dataset[5].data.medium,
+          _dataset[4].data.medium,
+          _dataset[3].data.medium,
+          _dataset[2].data.medium,
+          _dataset[1].data.medium,
+          _dataset[0].data.medium
+        ],
+        backgroundColor: '#FFA500',
+      },
+      {
+        label: 'Alta',
+        data: [
+          _dataset[5].data.high,
+          _dataset[4].data.high,
+          _dataset[3].data.high,
+          _dataset[2].data.high,
+          _dataset[1].data.high,
+          _dataset[0].data.high
+        ],
+        backgroundColor: '#D33724',
+      },
+      {
+        label: 'Crítica',
+        data: [
+          _dataset[5].data.critical,
+          _dataset[4].data.critical,
+          _dataset[3].data.critical,
+          _dataset[2].data.critical,
+          _dataset[1].data.critical,
+          _dataset[0].data.critical
+        ],
+        backgroundColor: '#8B0000',
+      },
+    ]
+  },
+  options: {
+    legend: {
+      display: false,
+    },
+    //showAllTooltips: true,
+    tooltips: {
+      caret: false,
+      custom: function(tooltip) {
+        if (!tooltip) return;
+        // disable displaying the color box;
+        tooltip.displayColors = true;
+      },
+      intersect:true,
+      yAlign: 'top',
+      titleAlign: 'right',
+      bodyAlign: 'left',
+      footerAlign: 'right',
+      mode: 'dataset',
+      axis: 'y',
+      //bodyFontSize: '13px',
+      bodyFontSize:10,
+      bodyFontStyle: 'bold',
+      bodyFontColor: '#fff',
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      xPadding: 5,
+      yPadding: 5,
+      mode: 'index',
+      //intersect: false,
+      callbacks: {
+          label: function(tooltipItem, data) {
+            var label = data.datasets[tooltipItem.datasetIndex].label || '';
+            //var label = '';
+            if (label) {
+              label += ': ';
+            }
+            var calc = Math.round(tooltipItem.yLabel * 100) / 100;
+
+            if (calc==0)
+              return false;
+
+            label += calc;
+            return label;
+          },
+          title: function(tooltipItem) {
+              return '';
+          },
+      }
+    },
+    scales: {
+      xAxes: [{ stacked: true }],
+      yAxes: [{
+          stacked: true,
+          ticks: {
+              //stepSize: 1
+              display:true
+          }
+      }]
+    }
+  }
+});
+}
+    </script>
+  </body>
+</html>

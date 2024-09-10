@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<ul class="breadcrumb">
+  <li><a href="{% url 'list_findings_view' %}">Ocorr&ecirc;ncias</a></li>
+  <li class="active">importar</li>
+</ul>
+
+<div class="container">
+  <form action="/findings/import" method="post" class="form-horizontal" enctype="multipart/form-data">
+    <legend>Importar Ocorr&ecirc;ncias</legend>
+      {% csrf_token %}
+      {% for field in form %}
+          {% if field.errors %}
+              <div class="form-group has-error">
+                  <label class="col-sm-2 control-label" for="id_{{ field.name }}">{{ field.label }}</label>
+                  <div class="col-sm-4">
+                      {{ field }}
+                      <span class="help-block">
+                          {% for error in  field.errors %}{{ error }}{% endfor %}
+                      </span>
+                  </div>
+              </div>
+          {% elif not field.is_hidden %}
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_{{ field.name }}">{{ field.label }}</label>
+                  <div class="col-sm-4">
+                      {{ field }}
+                      {% if field.help_text %}
+                          <p class="help-block"><small>{{ field.help_text }}</small></p>
+                      {% endif %}
+                  </div>
+              </div>
+          {% endif %}
+      {% endfor %}
+      <div class="form-group submit-div">
+        <div class="col-sm-4">
+          <input type="submit" class="btn btn-primary" value="Import Findings">
+        </div>
+        <div class="col-sm-4">
+          <button class="btn btn-primary"><a href="/findings/list">Cancelar</a></button>
+        </div>
+      </div>
+  </form>
+</div>
+
+{% endblock %}

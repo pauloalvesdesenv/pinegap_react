@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container">
+  <form action="/scans/delete/{{ scan.id }}" method="post" class="form-horizontal">
+
+    <legend>Voc&ecirc; confirma a Exclus&atilde;o?</legend>
+    {% csrf_token %}
+    <p>Scan ID: {{ scan.id }}</p>
+    <p>Nome: {{ scan.title }}</p>
+    <div class="form-group">
+      <button type="submit" class="btn btn-warning">Excluir</button>
+      <button class="btn btn-primary"><a href="/scans/list">Cancelar</a></button>
+    </div>
+  </form>
+
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+
+{% endblock %}

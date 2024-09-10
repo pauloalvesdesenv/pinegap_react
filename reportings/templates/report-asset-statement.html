@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/reports.css">
+    <title>{{site_name}} | Relatório Mensal de Ativos</title> 
+  </head>
+  <style>
+    .table-assets td { padding:7px !important; }
+    .table-assets h5 { float:right; }
+    .table-assets span { border-radius:3px; color:#fff; padding:1px 5px 2px 5px; display:inline-block; }
+    .table-assets span.ip { background:#8593A0; }
+    .table-assets span.url { background:#436582; }
+    .table-assets span.domain { background:#1A3954; }
+
+  </style>
+  <body>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <button onclick="javascript:pdfGen()" class="btn btn-primary ">Salvar PDF</button>
+      <a class="back" href="javascript:history.back()"><i class="fas fa-arrow-left"></i> Voltar</a>
+    </div>
+
+    <!-- Loading modal -->
+    <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modal" aria-hidden="true">
+      <div class="modal-dialog" id="modal" role="document">
+        <div class="modal-content">
+          <div class="modal-header"></div>
+          <div class="modal-body">
+            <h5 class="modal-title">Estamos gerando o seu PDF</h5>
+            <img src="/pinegap-reports/img/loader.gif" />
+          </div>
+          <div class="modal-footer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Blob buffer -->
+    <div class="pdf" filename="Relatorio-Ativos-Fevereiro-2020.pdf" quality="2">
+      <!--empty-->
+    </div>
+
+    <div class="document">
+
+        <!-- a4 model -->
+        <div class="a4-model">
+
+          <div class="a4">
+            <div class="container-fluid">
+              <!-- row -->
+              <div class="row header">
+                  <div class="col-5">
+                    <img class="logo" src="/media/{{report_logo}}" />
+                 </div>
+                  <div class="col-7">
+                    <h1>Ativos / Relatório de {{month}} de {{year}}</h1>
+                    <small class="date">{% now "d" %} de {% now "F" %} de {% now "Y" %} as {% now "H:i" %}</small>
+                  </div>
+              </div>
+
+              <!-- row -->
+              <div class="row">
+                  <div class="col-12 a4-loop-content" mm="240">
+                  <!--empty-->
+                  </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- a4-loop -->
+        <div class="a4-loop">
+          <!--loop areas-->
+          <div class="a4-loop-model" loop-item="areas" mm="20">
+            <h2 style="margin-bottom:30px;">##title##</h2>
+
+          </div>
+
+          <!--loop list-->
+          <div class="a4-loop-model" loop-item="list" mm="10">
+            <table>
+              <tr>
+                <td>##name##</td>
+                <td>##value##</td>
+                <td>##type##</td>
+                <td>##created_at##</td>
+              </tr>
+            </table>
+          </div>
+
+          <!--loop list-table-->
+          <div class="a4-loop-model" loop-item="list-table" mm="10">
+              <table class="table-assets table-striped finding-table table" style="width:670px; margin:30px 90px 0 0 !important;">
+                <tbody>
+                    <tr>
+                      <td><b>Nome do Ativo</b></td>
+                      <td><b>Endereço</b></td>
+                      <td><b>Tipo</b></td>
+                      <td style="width:140px;"><b>Data de Criação</td>
+                    </tr>
+                </tbody>
+              </table>
+          </div>
+
+          <!--loop list-total-->
+          <div class="a4-loop-model" loop-item="list-total" mm="15">
+            <table>
+              <tr style="background:transparent;">
+                <td class="list-total" colspan="4">
+                  <h5 style="padding-top:20px;"><!--empty--></h5>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+        </div>
+
+        <!-- a4-append -->
+        <div class="a4-append">
+
+          <!-- a4 -->
+          <div class="a4">
+            <div class="container-fluid">
+
+              <!-- row -->
+              <div class="row header">
+                <div class="col-5">
+                  <img class="logo" src="/media/{{report_logo}}" />
+                </div>
+                <div class="col-7">
+                  <h1>Ativos / Relatório de Fevereiro de 2020</h1>
+                  <small class="date">11 de Feveriro de 2020 as 20:20</small>
+                </div>
+              </div>
+
+              <!-- row -->
+              <div class="row">
+                <div class="col-12">
+                  <h2>Glossário</h2>
+                </div>
+              </div>
+
+
+              <br class="space-5" />
+
+              <!-- row-->
+              <div class="row">
+                <div class="col-12">
+                  <table class="table table-borderless table-sm glossary">
+                    <tr>
+                      <td style="width:120px;"><b>Ativo</b></td>
+                      <td><p>Qualquer coisa que tenha IP e tenha valor para a empresa, como por exemplo meios de armazenamento, transmissão e processamento da informação, os equipamentos necessários a isso, os sistemas utilizados para tal, os locais onde se encontram esses meios.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Endereço</b></td>
+                      <td><p>Endereço do ativo cadastrado no sistema, como IP, domínio, etc.</p></td>
+                    </tr>
+                  </table>
+              </div>
+            </div>
+          </div>
+          <div style="padding-left:8px;" class="page-number">2</div>
+          </div>
+        </div>
+
+    </div>
+
+    <script>
+    var _dataset = [];
+
+    _dataset['areas']=[];
+    _dataset['areas'][1] = {
+        title: 'Total de Ativos no Mês',
+        total: 'Total de Ativos no Mês'
+    };
+    _dataset['areas'][2] = {
+        title: 'Ativos Adicionados no Mês',
+        total: 'Total de Ativos Adicionados'
+    };
+    _dataset['areas'][3] = {
+        title: 'Ativos Removidos no Mês',
+        total: 'Total de Ativos Removidos'
+    };
+
+    _dataset['list']=[];
+    _dataset['list'][1]=[];
+    _dataset['list'][2]=[];
+    _dataset['list'][3]=[];
+
+    //{% for asset in assets.all %}
+    for(let d=1; d<=20; d++) {//este for de exmplo deve sair
+        _dataset['list'][1][d] = {
+        parent_id: 1,
+        parent_dataset: 'areas',
+        name: '{{ asset.name }}',
+        value: '{{ asset.value }}',
+        type: '{{ asset.type }}',
+        created_at: '{{ asset.created_at }}',
+      };
+    }
+    //{% endfor %}
+
+    //{% for asset in assets.new %}
+    for(let d=1; d<=10; d++) {//este for de exmplo deve sair
+        _dataset['list'][2][d] = {
+        parent_id: 2,
+        parent_dataset: 'areas',
+        name: '{{ asset.name }}',
+        value: '{{ asset.value }}',
+        type: '{{ asset.type }}',
+        created_at: '{{ asset.created_at }}',
+      };
+    }
+    //{% endfor %}
+
+    //{% for asset in assets.removed %}
+    for(let d=1; d<=10; d++) {//este for de exmplo deve sair
+        _dataset['list'][3][d] = {
+        parent_id: 3,
+        parent_dataset: 'areas',
+        name: '{{ asset.name }}',
+        value: '{{ asset.value }}',
+        type: '{{ asset.type }}',
+        created_at: '{{ asset.created_at }}',
+      };
+    }
+    //{% endfor %}
+
+    //{% endfor %}
+    </script>
+
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="/pinegap-reports/js/jquery-3.4.1.min.js"></script>
+    <script src="/pinegap-reports/js/popper.min.js"></script>
+    <script src="/pinegap-reports/js/bootstrap.min.js"></script>
+    <script src="/pinegap-reports/js/html2canvas.min.js"></script>
+    <script src="/pinegap-reports/js/jspdf.min.js"></script>
+    <script src="/pinegap-reports/js/Chart.min.js"></script>
+    <script src="/pinegap-reports/js/fontawesome.js"></script>
+    <script src="/pinegap-reports/js/chartjs.showAllTooltips.js"></script>
+    <script src="/pinegap-reports/js/replaceArray.js"></script>
+    <script src="/pinegap-reports/js/pdfGen.js"></script>
+    <script src="/pinegap-reports/js/dataProc.js"></script>
+
+  </body>
+</html>

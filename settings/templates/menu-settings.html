@@ -1,0 +1,768 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% block content %}
+
+<link href="/static/staticv2/dist/css/bootstrap-datetimepicker.css" rel="stylesheet">
+
+<style>
+.fileinput-button {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+}
+.fileinput-button input {
+  position: absolute;
+  top: 0;
+  -ms-filter: 'alpha(opacity=0)';
+  font-size: 200px !important;
+  direction: ltr;
+  cursor: pointer;
+}
+.bootstrap-datetimepicker-widget .active { background: #EF8224 !important; }
+
+</style>
+<div id="menu_tabs" class="container-fluid" style="padding:0;">
+<section class="content-header">
+      <h1>
+      Configurações
+      </h1>
+      <ol class="breadcrumb">
+      <li><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboad</a></li>
+      <li class="active">Configurações</li>
+      </ol>
+    </section>
+<div class="container-fluid" style="padding:15px;">
+	<div class="nav-tabs-custom">
+  	<ul class="nav nav-tabs" id="menu_tabs_ul">
+        {% if user.groups.all.0.name == 'root' or user.groups.all.0.name == 'gestor' %}
+    	<li class="active"><a data-toggle="tab"  href="#settings" ><i class="fa fa-gears"></i> &nbsp;Configura&ccedil;&otilde;es Globais</a></li>
+    	<li><a data-toggle="tab" href="#users"><i class="fa fa-user"></i> &nbsp;Usu&aacute;rios</a></li>
+	<li><a data-toggle="tab" href="#events"><i class="fa fa-calendar"></i> &nbsp;Eventos</a></li>
+      	<li><a data-toggle="tab" href="#infos_updates"><i class="fa fa-star"></i>&nbsp; Personalizar</a></li>
+        {% endif %}
+    	<li><a data-toggle="tab" href="#billing"><i class="fa fa-list"></i> &nbsp;Billing</a></li>
+	</ul>
+<div class="tab-content">
+    <div id="settings" class="tab-pane fade in active">
+	<div class="container-fluid">
+	{% if user.groups.all.0.name == 'root' or  user.groups.all.0.name == 'gestor' %}  
+      <div class="row">
+        <div class="col-sm-6">
+            <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#modal-add-setting">
+            <i class="fa fa-plus"></i> Adicionar nova Configura&ccedil;&atilde;o </button>
+            <span class="btn btn-sm btn-default fileinput-button">
+            <i class="fas fa-upload"></i>
+            <span>Importar Configura&ccedil;&otilde;es</span>
+            <input id="fileupload" type="file" name="files[]" multiple>
+            </span>
+            <a type="button" class="btn btn-default btn-sm" href="/settings/api/v1/export"> Exportar Configura&ccedil;&otilde;es </a>
+	  </div>
+          <br /><br />
+        </div>
+      </div>
+     {% endif %}
+      <div class="container-fluid">
+       <table class="table table-bordered">
+	 <th>Integrações</th>
+         <th>Endereço / Credencial</th>
+         <th>Criado em</th>
+         <th>Atualizado em</th>
+	 <th>Excluir</th>
+         </tr>
+	  {% for setting in settings|sort_by:"key" %}
+          <tr>
+          {% if setting.key == "alerts.endpoint.email" %}
+	  <td>Notificando por email</td>
+          {% elif setting.key == "alerts.endpoint.slack.webhook" %}
+          <td>Notificando para canal do slack</td>
+          {% elif setting.key == "alerts.endpoint.hostsgreen.webhook" %}
+          <td>Notificando para endpoint do Hosts Green</td>
+          {% elif setting.key == "alerts.endpoint.thehive.url" %}
+          <td>Integrado com Serviço de Resposta a Incidente Eco IT</td>
+          {% elif setting.key == "url_setting" %}
+          <td>Host</td>
+          {% endif %}
+	  <td class="value-setting" setting-id="{{ setting.id }}" id="setting_value_{{ setting.id }}">{{ setting.value }}</td>
+          <td>{{ setting.created_at|date:"d/m/Y\-H:i:s" }}</td>
+          <td>{{ setting.updated_at|date:"d/m/Y\-H:i:s" }}</td>
+	  <td style="width:60px;"><a style="margin-left:10px;" href="#" setting-id="{{ setting.id }}" setting-key="{{ setting.key }}" data-toggle="modal" data-target="#modal-delete-setting"><i class="fa fa-trash"></i></a></td>
+          </tr>
+	  {% endfor %}
+	</table>
+      </div>
+     <br/>
+     <br/>
+     <br/>
+     <br/>
+    </div>
+    <div id="infos_updates" class="tab-pane fade in">
+    <div class="col-md-12">
+    {% if user.groups.all.0.name == 'root' or  user.groups.all.0.name == 'gestor' %}
+    <h3>Personalizar</h3>
+    <br/>
+    </div>
+    {% for brand in whitelabels %}
+    {% if brand.id != '0' %}
+    <form  action="/settings/edit/{{brand.id}}" method="post" class="form-horizontal" style="margin:0;" enctype="multipart/form-data">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    <div class="row" style="position:relative;">
+    <button type="submit" class="btn btn-primary pull-right" style="position:absolute; top:-10px; right:10px;">Salvar</button>
+    <div class="col-md-4 customize-area">
+            <h3>Navegador</h3>
+            <span>
+              <h5>Título da Página&nbsp;
+              </h5>
+              <br>
+              <div class="form-group">
+              <div class="col-sm-10">
+              <input type="text" style="width:285px;" class="form-control" name="site_name" id="site_name" value="{{brand.site_name}}">
+              </div>
+              </div>
+              </span>
+
+           <!--Favicon-->
+
+	      <span>
+              <h5>Ícone &nbsp;
+              <i data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Formato: .ICO<br />Dimensões: 16 x 16 (px)" class="fa fa-question-circle">
+              </i>
+              </h5>
+              <br>
+              <div class="form-group">
+              <div class="col-sm-10">
+              <input type="file" name="browser_icon" id="browser_icon">
+              </div>
+              </div>
+              </span>
+              </div>
+          <div class="col-md-4 customize-area">
+            <h3>Interface</h3>
+
+
+             <div class="box box-solid collapsed-box">
+             <div class="box-header with-border">
+             <h3 class="box-title">Ícone Interface &nbsp; <i data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Formato: PNG<br />Dimensões: 263 x 263 (px)<br />Obs: Fundo Transparente" class="fa fa-question-circle"></i></h3>
+             <div class="box-tools pull-right">
+             <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+             </button>
+             </div>
+             <!-- /.box-tools -->
+             </div>
+
+             <!-- /.box-header -->
+             <div class="box-body" style="display: none;">
+             <div style="text-align:center;">
+             <img src="/media/{{interface_icon}}" alt="{{site_name}}" style="width:39px;">
+             </div>
+
+             <div class="form-group">
+             <div class="col-sm-10">
+             <input type="file" name="interface_icon" id="interface_icon">
+             </div>
+             </div>
+             </div>
+             <!-- /.box-body -->
+             </div>
+
+             <div class="box box-solid collapsed-box">
+             <div class="box-header with-border">
+             <h3 class="box-title">Logo Interface &nbsp; <i data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Formato: PNG<br />Dimensões: 302 x 84 (px)<br />Obs: Fundo Transparente" class="fa fa-question-circle"></i></h3>
+             <div class="box-tools pull-right">
+             <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+             </button>
+             </div>
+             <!-- /.box-tools -->
+             </div>
+
+             <!-- /.box-header -->
+             <div class="box-body" style="display: none;">
+             <div style="text-align:center;">
+             <img src="/media/{{interface_logo}}" alt="{{site_name}}" style="width:276px;">
+             </div>
+
+             <div class="form-group">
+             <div class="col-sm-10">
+             <input type="file" name="interface_logo" id="interface_logo">
+             </div>
+             </div>
+             </div>
+             <!-- /.box-body -->
+             </div>
+
+             <div class="box box-solid collapsed-box">
+             <div class="box-header with-border">
+             <h3 class="box-title">Logo Relatório &nbsp; <i data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Formato: PNG<br />Dimensões: 563 x 150 (px)<br />Obs: Fundo Transparente ou Branco" class="fa fa-question-circle"></i></h3>
+
+             <div class="box-tools pull-right">
+             <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+             </button>
+             </div>
+             <!-- /.box-tools -->
+             </div>
+
+             <!-- /.box-header -->
+             <div class="box-body" style="display: none;">
+             <div style="text-align:center;">
+             <img src="/media/{{report_logo}}" style="width:200px; background:#fff; padding:10px;">
+             </div>
+
+             <div class="form-group">
+             <div class="col-sm-10">
+             <input type="file" name="report_logo" id="report_logo">
+             </div>
+             </div>
+             </div>
+             <!-- /.box-body -->
+             </div>
+          </div>
+          <div class="col-md-4 customize-area" style="margin:0 !important;">
+          <h3>Academy</h3>
+          <span>
+          <h5>Academy Link&nbsp;
+
+          </h5>
+          <br>
+          <div class="form-group">
+          <div class="col-sm-10">
+          <input type="text" style="width:285px;" class="form-control" name="academy_link" id="academy_link" value="{{academy_link}}">
+          </div>
+
+          </div>
+          </span>
+          </div>
+          </div>
+    </form>
+{% else %}
+      <form action="{% url 'add_brand_view' %}" method="post" class="form-horizontal" style="margin:0;" enctype="multipart/form-data">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+      <div class="row" style="position:relative;">
+      <button type="submit" class="btn btn-primary pull-right" style="position:absolute; top:-10px; right:10px;">Salvar</button>
+      <div class="col-md-4 customize-area">
+
+            <h3>Navegador</h3>
+            <span>
+              <h5>Título da Página&nbsp;
+              </h5>
+              <br>
+              <div class="form-group">
+              <div class="col-sm-10">
+              <input type="text" style="width:285px;" class="form-control" name="site_name" id="site_name" value="{{site_name}}">
+              </div>
+              </div>
+              </span>
+
+           <!--Favicon-->
+
+            <span>
+              <h5>Ícone &nbsp;
+              <i data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Formato: .ICO<br />Dimensões: 16 x 16 (px)" class="fa fa-question-circle">
+              </i>
+              </h5>
+              <br>
+              <div class="form-group">
+              <div class="col-sm-10">
+              <input type="file" name="browser_icon" id="browser_icon">
+              </div>
+              </div>
+              </span>
+              </div>
+          <div class="col-md-4 customize-area">
+            <h3>Interface</h3>
+
+             <div class="box box-solid collapsed-box">
+             <div class="box-header with-border">
+             <h3 class="box-title">Ícone Interface &nbsp; <i data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Formato: PNG<br />Dimensões: 263 x 263 (px)<br />Obs: Fundo Transparente" class="fa fa-question-circle"></i></h3>
+             <div class="box-tools pull-right">
+             <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+             </button>
+             </div>
+             <!-- /.box-tools -->
+             </div>
+             <!-- /.box-header -->
+             <div class="box-body" style="display: none;">
+             <div style="text-align:center;">
+             <img src="/media/{{interface_icon}}" alt="{{site_name}}" style="width:39px;">
+             </div>
+             <div class="form-group">
+             <div class="col-sm-10">
+             <input type="file" name="interface_icon" id="interface_icon">
+             </div>
+             </div>
+             </div>
+             <!-- /.box-body -->
+             </div>
+
+             <div class="box box-solid collapsed-box">
+             <div class="box-header with-border">
+             <h3 class="box-title">Logo Interface &nbsp; <i data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Formato: PNG<br />Dimensões: 302 x 84 (px)<br />Obs: Fundo Transparente" class="fa fa-question-circle"></i></h3>
+             <div class="box-tools pull-right">
+             <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+             </button>
+             </div>
+             <!-- /.box-tools -->
+             </div>
+             <!-- /.box-header -->
+             <div class="box-body" style="display: none;">
+             <div style="text-align:center;">
+             <img src="/media/{{interface_logo}}" alt="{{site_name}}" style="width:276px;">
+             </div>
+             <div class="form-group">
+             <div class="col-sm-10">
+             <input type="file" name="interface_logo" id="interface_logo">
+             </div>
+             </div>
+             </div>
+             <!-- /.box-body -->
+             </div>
+
+             <div class="box box-solid collapsed-box">
+             <div class="box-header with-border">
+             <h3 class="box-title">Logo Relatório &nbsp; <i data-toggle="tooltip" data-placement="top" data-html="true" data-original-title="Formato: PNG<br />Dimensões: 563 x 150 (px)<br />Obs: Fundo Transparente ou Branco" class="fa fa-question-circle"></i></h3>
+
+             <div class="box-tools pull-right">
+             <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i>
+             </button>
+             </div>
+             <!-- /.box-tools -->
+             </div>
+             <!-- /.box-header -->
+             <div class="box-body" style="display: none;">
+             <div style="text-align:center;">
+             <img src="/media/{{report_logo}}" style="width:200px; background:#fff; padding:10px;">
+             </div>
+             <div class="form-group">
+             <div class="col-sm-10">
+             <input type="file" name="report_logo" id="report_logo">
+             </div>
+             </div>
+             </div>
+             <!-- /.box-body -->
+             </div>
+          </div>
+          <div class="col-md-4 customize-area" style="margin:0 !important;">
+          <h3>Academy</h3>
+          <span>
+          <h5>Academy Link&nbsp;
+          </h5>
+          <br>
+          <div class="form-group">
+          <div class="col-sm-10">
+          <input type="text" style="width:285px;" class="form-control" name="academy_link" id="academy_link" value="{{academy_link}}">
+          </div>
+          </div>
+          </span>
+          </div>
+          </div>
+    </form>
+
+{% endif %}
+{% endfor %}
+{% endif %}
+
+      <script>
+        $(function () {
+          console.log($('[data-toggle="tooltip"]').attr('data-toggle'));
+    		    $('[data-toggle="tooltip"]').tooltip();
+    	  });
+      </script>
+    </div>
+
+
+    <div id="users" class="tab-pane fade">
+      {% if user.groups.all.0.name == 'root' or  user.groups.all.0.name == 'gestor' %}
+	  {% include 'menu-users.html' with users=users %}
+      {% endif %}
+    </div>
+      {% if user.groups.all.0.name == 'root' or  user.groups.all.0.name == 'gestor' %}    <div id="events" class="tab-pane fade">
+      <!-- <table id="dt_events" class="display" cellspacing="0" width="100%">
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Severity</th>
+            <th>Message</th>
+            <th>Type</th>
+            <th>Timestamp</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tfoot>
+           <tr>
+             <th>Id</th>
+             <th>Severity</th>
+             <th>Message</th>
+             <th>Type</th>
+             <th>Timestamp</th>
+             <th>Actions</th>
+           </tr>
+       </tfoot>
+      </table> -->
+
+      <table class="table table-bordered" data-toggle="table" data-sort-name="value" data-sort-order="desc">
+        <thead>
+          <tr>
+            <th data-field="cb" style="width:10px;"><input type="checkbox" onClick="toggle(this, 'event')" /></th>
+            <th data-field="id">Id</th>
+            <th data-field="severity">Severidade</th>
+            <th data-field="message">Menssagem</th>
+            <th data-field="type">Tipo</th>
+            <th data-field="timestamp">Timestamp</th>
+            <th style="width:60px;">Ver</th>
+            {% if user.is_superuser %}
+            <th style="width:60px;">Excluir</th>
+	    {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+        {% for event in events %}
+        <tr>
+          <td><input type="checkbox" class="radio" name="event" value="{{ event.id }}"/></td>
+          <td>{{ event.id }}</td>
+          <td>{{ event.severity }}</td>
+          <td>{{ event.message }}</td>
+          <td>{{ event.type }}</td>
+          <td>{{ event.created_at|date:"d/m/Y\-H:i:s" }}</td>
+          <td>
+          <a href="#" style="margin-left:15px;"><i class="fa fa-eye"></i></a>
+          </td>
+          {% if user.is_superuser %}
+          <td>
+          <a href="#" data-toggle="modal" data-target="#modal-delete-event" event-id="{{ event.id }}" event-message="{{ event.message }}" style="margin-left:15px;"><i class="fa fa-trash"></i></a>
+          </td>
+	  {% endif %}
+         </tr>
+      {% endfor %}
+      </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div style="display: inline-flex;">
+        <ul class="pagination pagination-xs">
+          <li class="page-item">
+            <a class="page-link" href="#" onclick="gotopage(1, 'events');">&laquo;&laquo;</a>
+          </li>
+          {% if events_page_info.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href= "#" onclick="gotopage({{ events_page_info.previous_page_number }}, 'events');">&laquo;</a>
+          </li>
+          {% endif %}
+          <li class="page-item">
+         <!--input type="text" class="input-xs">{{ pn }}</input-->
+          </li>
+          {% if events.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="#" onclick="gotopage({{ events_page_info.next_page_number }}, 'events');">&raquo;</a>
+          </li>
+          {% endif %}
+          <li class="page-item">
+            <a class="page-link" href="#" onclick="gotopage('{{ events_page_info.end_cursor }}', 'events');">&raquo;&raquo;</a>
+          </li>
+        </ul>
+        <div style="margin: 21px;">
+          <select id="nb_rows_per_page" >
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="200">200</option>
+          </select>
+          eventos por p&aacute;gina
+        </div>
+      </div>
+    </div>
+{% endif %}
+      {% if user.groups.all.0.name == 'root' or  user.groups.all.0.name == 'gestor' %}     <div id="billing" class="tab-pane fade">
+      {% else %}
+     <div id="billing" class="tab-pane fade in active">
+      {% endif %}
+      <div class="col-md-12">
+        <h3>Billing</h3>
+        <br />
+      </div>
+      <div class="container">
+          <div class="col-sm-6">
+              <form class="form-vertical" action="/reportings/billing" method="get" target="_blank">
+                  <div class="form-group" style="width:270px;">
+                      <div class='input-group date' id='datetimepicker'>
+                      <input type='text' name="date" class="form-control" required>
+                      <span class="input-group-addon">
+                      <span class="glyphicon glyphicon-calendar">
+                          </span>
+                        </span>
+                      </div>
+                      <br />
+                      <button type="submit" class="btn btn-primary">Gerar Relatório</button>
+                      <br />
+                      <br />
+                      <br />
+                  </div>
+              </form>
+          </div>
+          <script type="text/javascript">
+              $(function () {
+                $('#datetimepicker').datetimepicker({
+                    viewMode: 'years',
+                    format: 'MM/YYYY',
+                    locale: 'pt'
+                  });
+              });
+          </script>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<!-- Delete setting modal -->
+<div class="modal fade" id="modal-delete-setting" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Excluir Configura&ccedil;&atilde;o</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="delete-setting">
+          <!-- Content -->
+        </div>
+        Voc&ecirc; Confirma a Exclus&atilde;o?
+        <button type="button" class="btn btn-xs btn-warning btn-delete-setting" data-dismiss="modal">Sim</button>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">N&atilde;o</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% if user.groups.all.0.name == 'root' or  user.groups.all.0.name == 'gestor' %}
+<!-- Add event modal -->
+<div class="modal fade" id="modal-add-setting" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Adicionar nova Configura&ccedil;&atilde;o</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="add-setting">
+          <!-- <form action="#" method="POST"> -->
+            <div class="form-group">
+              <label><b>Serviço</b></label>
+               <td><!-- Scope -->
+               <select id="add_setting_key" style="background:#353C42 !important; border-color:#353C42 !important;" required  class="form-control form-control-sm">
+                 <option value="alerts.endpoint.email">Notificação por email</option>
+                 <option value="alerts.endpoint.slack.webhook">Notificação Slack</option>
+                 <option value="alerts.endpoint.hostsgreen.webhook">Notificação Hosts Green</option>
+                 <!--<option value="alerts.endpoint.thehive.url">Eco IT Resposta a Incidente</option>-->
+               </select>
+               </td>
+            </div>
+            <div class="form-group">
+              <label><b>Valor</b></label>
+              <input type="text" placeholder="Insira o valor da Configuração" style="background:#353C42 !important; border-color:#353C42 !important;" id="add_setting_value" required class="form-control form-control-sm">
+            </div>
+            <button type="submit" class="btn btn-primary btn-add-setting" data-dismiss="modal">Salvar</button>
+          <!-- </form> -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+<script>
+
+  // Goto selected #tab when page loads
+  var hash = window.location.hash;
+  hash && $('ul.nav a[href="' + hash + '"]').tab('show');
+
+  // Fixing bootstrap tab issue
+  $('#menu_tabs > ul > li > a').click(function (e) {
+    $(this).removeClass('active');
+  });
+
+  // Set the url variable
+  current_url = window.location.href;
+  url = new URL(current_url);
+
+  var gotopage = function gotopage(page_num, target = "events") {
+    new_hash = "";
+    if (target == "events") {
+      url.searchParams.set("p_events", page_num);
+      new_hash = "#events";
+    }
+    window.location = url.search+new_hash;
+  };
+
+
+  $(document).ready(function() {
+    _nb_rows = url.searchParams.get("n");
+    if (typeof _nb_rows === "undefined") {
+
+    } else {
+      $('#nb_rows_per_page option:eq('+_nb_rows+')').prop('selected', true);
+    }
+
+    $('#nb_rows_per_page').change(function(e){
+      nb_rows = e.target.value;
+      url.searchParams.set("n", nb_rows);
+      window.location = url.search+"#events";
+    });
+
+    // EventTable = $('#dt_events').DataTable({
+    //   "ajax": {
+    //     "url": "/events/list",
+    //     "dataType": "json",
+    //     "type": "GET"
+    //   },
+    //   "data": [],
+    //   rowCallback: function (row, data) {},
+    //   "columns": [
+    //     { "data": "id" },
+    //     { "data": "severity" },
+    //     { "data": "message" },
+    //     { "data": "type" },
+    //     { "data": "created_at" }
+    //   ],
+    //   "aoColumnDefs":[{
+    //     "aTargets":[5],
+    //     "mData": "id",
+    //     "mRender": function (data, type, full) {
+    //         return '<button type="button" event-id="'+data+'" class="btn btn-danger btn-xs" data-toggle="modal" data-target="#modal-delete-event"><span class="glyphicon glyphicon-remove"></span></button>';
+    //     }
+    //   }],
+    //   "order": [[ 0, 'desc' ]],
+    //   initComplete: function () {
+    //     this.api().columns().every( function () {
+    //       if (this.index() == 1 || this.index() == 3){
+    //         var column = this;
+    //         var select = $('<select><option value=""></option></select>')
+    //             .appendTo( $(column.footer()).empty() )
+    //             .on( 'change', function () {
+    //                 var val = $.fn.dataTable.util.escapeRegex(
+    //                     $(this).val()
+    //                 );
+    //                 column
+    //                     .search( val ? '^'+val+'$' : '', true, false )
+    //                     .draw();
+    //             } );
+    //         column.data().unique().sort().each( function ( d, j ) {
+    //             select.append( '<option value="'+d+'">'+d+'</option>' )
+    //         } );
+    //       }
+    //     } );
+    //   }
+    // });
+  });
+
+  // $('li a[href="#events"]').on("click", function (e) {
+  //   $.ajax({
+  //     url: "/events/",
+  //     type: "GET",
+  //     dataType: "json",
+  //     }).done(function (result) {
+  //       EventTable.clear().draw();
+  //       EventTable.rows.add(result).draw();
+  //     });
+  // });
+
+  // Delete setting modal
+  $("#modal-delete-setting").on('show.bs.modal', function (e) {
+    id = e.relatedTarget.getAttribute('setting-id');
+    key = e.relatedTarget.getAttribute('setting-key');
+    $("div#delete-setting").attr('setting-id', id);
+    $("div#delete-setting").html("Setting: <b>"+key+"</b><br/><br/>");
+  });
+  $("button.btn-delete-setting").on('click', function (e) {
+    id = $("div#delete-setting").attr('setting-id');
+    var request = $.ajax({
+      url: "/settings/api/v1/delete/"+id,
+      method: "GET",
+      success: function(){
+        location.reload();
+      }
+    });
+  });
+
+  $("button.btn-add-setting").on('click', function (e) {
+    var request = $.ajax({
+      url: "/settings/api/v1/add",
+      method: "POST",
+      headers: {"X-CSRFToken": "{{ csrf_token }}"},
+      data: {
+        "setting_key": $('#add_setting_key').val(),
+        "setting_value": $('#add_setting_value').val()
+      },
+      success: function(){
+        location.reload();
+      }
+    });
+  });
+
+  // Fixing bootstrap tab issue
+  $('#menu_tabs > ul > li > a').click(function (e) {
+    $(this).removeClass('active');
+  });
+
+  // Edit setting
+  var edit_setting = function (e) {
+    setting_id=e.delegateTarget.getAttribute("setting-id");
+    setting_value=$('div#setting_value_'+setting_id+' i').text();
+    $('div#setting_value_'+setting_id).empty();
+    $('div#setting_value_'+setting_id).append("<input type='text' value='"+setting_value+"' name='setting_value' class='form-control form-control-sm'/>");
+
+    //On Enter key press, update the field
+    $('input[name="setting_value"]').keyup(function(e){
+        if(e.keyCode == 13) {
+            $(this).trigger("enterKey");
+        }
+        if(e.keyCode == 27) {
+            $(this).trigger("escapeKey");
+        }
+    });
+    $('input').bind("enterKey", function(e){
+       var request = $.ajax({
+         url: "/settings/api/v1/update",
+         method: "POST",
+         headers: {"X-CSRFToken": "{{ csrf_token }}"},
+         data: {
+           "setting_id": e.target.parentElement.getAttribute("setting-id"),
+           "setting_value": e.target.value
+         },
+         success: function(){
+           location.reload();
+           $('div#setting_value_'+setting_id).empty();
+           $('div#setting_value_'+setting_id).append("<i>"+e.target.value+"</i>");
+         }
+       });
+    });
+    $('input').bind("escapeKey", function(e){
+       setting_id = e.target.parentElement.getAttribute("setting-id");
+       setting_value = e.target.getAttribute("value");
+       $('div#setting_value_'+setting_id).empty();
+       $('div#setting_value_'+setting_id).append("<i>"+setting_value+"</i>");
+    });
+  };
+
+  $('button.btn-edit-setting').click(edit_setting);
+  $('div.value-setting').dblclick(edit_setting);
+
+
+</script>
+
+
+<script type="text/javascript" src="/static/staticv2/dist/js/moment-with-locales.min.js"></script>
+<script type="text/javascript" src="/static/staticv2/dist/js/bootstrap-datetimepicker.js"></script>
+
+
+<script>
+
+</script>
+{% endblock %}

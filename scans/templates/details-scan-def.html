@@ -1,0 +1,695 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% load i18n %}
+{% load l10n %}
+{% block content %}
+
+<div class="container-fluid" style="padding:0;">
+
+<section class="content-header">
+      <h1>
+       Scanners
+       <small> Detalhes do Scan</small>
+      </h1>
+      <ol class="breadcrumb">
+       <li><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboad</a></li>
+       <li class="active"> Detalhes do Scan</li>
+      </ol>
+</section>
+       <div id="menu_tabs" class="container-fluid" style="padding:15px 15px;">
+            <div class="nav-tabs-custom">
+	 	<ul class="nav nav-tabs">
+
+      {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+       <li>
+			<a href="/scans/defs/add">
+			<i class="fa fa-plus"></i>&nbsp; Criar Novo Scan
+			</a>
+		  </li>
+      {% endif %}
+                   <li>
+			<a href="/scans/list">
+			<i class="fa fas fa-bullseye"></i>&nbsp; Scans Realizados
+			</a>
+		  </li>
+		  <li>
+			<a href="/scans/defs/list">
+			<i class="fa fa-list"></i>&nbsp; Scans Parametrizados
+			</a>
+			   </li>
+			  <li class="active">
+		         <a href="#">
+			<i class="fa fa-eye"></i>&nbsp; Detalhes do scan
+		     </a>
+		 </li>
+            </ul>
+<div class="container-fluid">
+  <div class="col-sm-5">
+    <dl class="dl-horizontal">
+      <dt>Nome do Scan</dt>
+      <dd><a class="label label-info" href="/scans/defs/edit/{{ scan_def.id|safe }}">{{ scan_def.title }}</a></dd>
+      <dt>ID do Scan</dt>
+      <dd><a class="label label-medium" href="/scans/defs/edit/{{ scan_def.id|safe }}">{{ scan_def.id|safe }}</a></dd>
+      <dt>Ativos</dt>
+      <dd>
+        {% if scan_def.assets_list.all|join:", "|length > 128 %}
+          {{ scan_def.assets_list.all|join:", "|truncatechars:128 }} <a data-toggle="modal" data-target="#modal-showall-assets">Mostrar todos</a><br/>
+        {% elif scan_def.assets_list.all|join:", "|length > 0 %}
+          {{ scan_def.assets_list.all|join:", " }}<br/>
+        {% endif %}
+        {% if scan_def.assetgroups_list.count > 0 %}
+          {% for assetgroup in scan_def.assetgroups_list.all %}
+            {{ assetgroup.name }} (<a data-toggle="modal" data-target="#modal-showall-grouped-assets">+</a>)
+            {% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        {% endif %}
+      </dd>
+      <dt>Tipo do Scan</dt>
+      {% if scan_def.scan_type == "periodic" %}
+      <dd>Recorrente</dd>
+      {% else  %}
+      <dd>Manual</dd>
+      {% endif %}
+      <dt>Sensor</dt>
+      <dd>{{ scan_def.engine_type.name }}</dd>
+      <dt>Pol&iacute;tica</dt>
+      <dd><a class="label label-high" href="/engines/policies/edit/{{ scan_def.engine_policy_id }}">{{ scan_def.engine_policy.name }}</a></dd>
+      <dt>Criado</dt>
+      <dd>{{ scan_def.created_at | date:"d/m/Y\-H:i:s" }}</dd>
+      {% if scan_def.scheduled_at %}
+      <dt>Agendado em</dt>
+      <dd>{{ scan_def.scheduled_at | date:"d/m/Y\-H:i:s" }}</dd>
+      {% endif %}
+      <dt>Scans Realizados</dt>
+      <dd>{{ scan_def.scan_set.all.count }}
+        {% if scan_def.scan_type == "single" %}
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+          <button type="button" class="btn btn-warning btn-xs btn-run-now"
+          scan-id="{{ scan_def.id|safe }}" scan-title="{{ scan_def.title }}"
+          data-toggle="modal" data-target="#modal-run-scan">Executar</button>
+        {% endif %}
+	{% endif %}
+      </dd>
+      {% if scan_def.scan_type == "periodic" %}
+      <dt>Scan status</dt>
+      <dd>
+        {% if scan_def.enabled == True %}
+        <span class="label label-success">Habilitado</span>
+        {% else %}
+        <span class="label label-warning">Desabilitado</span>
+        {% endif %}
+      </dd>
+      <!-- Todo: for perdiodic scans, add buttons for enabling/disabling the scan -->
+      {% endif %}
+    </dl>
+  </div>
+  <select id="chart-selection">
+    <option value="5" selected>&Uacute;ltimos 5 scans</option>
+    <option value="10">&Uacute;ltimos 10 scans</option>
+    <option value="20">&Uacute;ltimos 20 scans</option>
+    <option value="40">&Uacute;ltimos 40 scans</option>
+  </select>
+  <div class="col-sm-6">
+    <canvas id="chart-findingsByScanDef"/>
+  </div>
+</div>
+
+<div class="container">
+  <div class="dropdown">
+    <button class="btn btn-primary btn-xs dropdown-toggle" type="button" id="dropdown-menu-actions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+      A&ccedil;&otilde;es
+      <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="dropdown-menu-actions">
+      <li><a class="btn-compare-selected" href="#">Comparar Scans selecionados - (2 max.)</a></li>
+      {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+      <li><a class="btn-stop-selected" href="#">Parar Scans selecionados</a></li>
+      <li><a class="btn-delete-selected" href="#">Excluir Scans Selecionado</a></li>
+      {% endif %}
+    </ul>
+  </div>
+  <table class="table table-bordered" id="table">
+    <thead>
+      <tr>
+        <th><input type="checkbox" onClick="toggle(this)" /></th>
+        <th>ID</th>
+        <th>Executado em</th>
+        <th>Ocorr&ecirc;ncias</th>
+        <th>Relat&oacute;rio</th>
+        <th>Status</th>
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <th>A&ccedil;&otilde;es</th>
+	{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for scan in scans %}
+      <tr class='dblclickable-row' data-href='/scans/details/{{scan.id|safe}}'>
+        <td><input type="checkbox" class="radio" name="scan" value="{{scan.id|safe}}"/></td>
+        <td>{{ scan.id|safe }}</td>
+        <td>{{ scan.started_at | date:"d/m/Y-H:i:s.u" }}</td>
+        <td>
+          {% if scan.summary.critical > 0 %}
+          <span class="label label-critical">{{ scan.summary.critical }}</span>
+          {% else %}
+          0
+          {% endif %}/
+
+          {% if scan.summary.high > 0 %}
+          <span class="label label-danger">{{ scan.summary.high }}</span>
+          {% else %}
+          0
+          {% endif %}/
+
+          {% if scan.summary.medium > 0 %}
+          <span class="label label-medium">{{ scan.summary.medium }}</span>
+          {% else %}
+          0
+          {% endif %}/
+
+          {% if scan.summary.low > 0 %}
+          <span class="label label-low">{{ scan.summary.low }}</span>
+          {% else %}
+          0
+          {% endif %}/
+
+          {% if scan.summary.info > 0 %}
+          <span class="label label-info">{{ scan.summary.info }}</span>
+          {% else %}
+          0
+          {% endif %}
+          (<text class="text-success">+{{ scan.summary.new }}</text>/<text class="text-warning">-{{ scan.summary.missing }}</text>)
+        </td>
+        {% if scan.status == "finished"  %}
+        <td>
+          <button type="button" class="btn btn-warning btn-xs" target="_blank" onclick="location.href='/scans/api/v1/report/json/{{ scan.id|safe }}'">json</button>
+          <button type="button" class="btn btn-warning btn-xs" target="_blank" onclick="location.href='/scans/api/v1/report/html/{{ scan.id|safe }}'">html</button>
+          <!--button type="button" class="btn btn-default btn-xs" target="_blank" onclick="#">raw</button-->
+        </td>
+        {% else %}
+        <td>Nenhum Relat&oacute;rio</td>
+        {% endif %}
+        {% if scan.status == "started" %}
+        <td><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate" style="color:orange"></span> Iniciado</td>
+        {% elif scan.status == "stopping"  %}
+        <td><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate" style="color:red"></span> Parando</td>
+        {% elif scan.status == "stopped"  %}
+        <td><span class="glyphicon glyphicon-remove" style="color:red"></span> Parado</td>
+        {% elif scan.status == "finished"  %}
+        <td><span class="glyphicon glyphicon-ok" style="color:green"></span> Finalizado</td>
+        {% elif scan.status == "scheduled"  %}
+        <td><span class="glyphicon glyphicon-time" style="color:blue"></span> Agendado</td>
+        {% elif scan.status == "enqueued"  %}
+        <td><span class="glyphicon glyphicon-pushpin" style="color:orange"></span> Na Fila</td>
+        {% elif scan.status == "error"  %}
+        <td><span class="glyphicon glyphicon-fire" style="color:red"></span> Falha</td>
+        {% else %}
+        <td>{{ scan.status }}</td>
+        {% endif %}
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <td>
+          <a href="/scans/details/{{ scan.id|safe }}" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus-sign"></span></a>
+          {% if scan.status == "enqueued" or scan.status == "started" %}
+          <button type="button" class="btn btn-danger btn-xs btn-stop-scan" title="Stop scan" scan-id="{{ scan.id|safe }}">
+            <span class="glyphicon glyphicon-stop" scan-id="{{ scan.id|safe }}"></span></button>
+          {% endif %}
+          <button type="button" class="btn btn-danger btn-xs" title="Delete scan" data-toggle="modal" data-target="#modal-delete-scan" scan-id="{{ scan.id|safe }}" scan-title="{{ scan.title }}">
+            <span class="glyphicon glyphicon-remove"></span></button>
+        </td>
+	{% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div style="display: inline-flex;">
+    <ul class="pagination pagination-xs">
+      <li class="page-item">
+        <a class="page-link" href="#" onclick="gotopage(1);">&laquo;&laquo;</a>
+      </li>
+      {% if scans.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href= "#" onclick="gotopage({{ scans.previous_page_number }});">&laquo;</a>
+      </li>
+      {% endif %}
+      {{scans.paginator.items}}
+      {% for pn in scans.paginator.page_range %}
+      {% if pn == scans.number %}
+      <li class="page-item active">
+      {% else %}
+      <li class="page-item">
+      {% endif %}
+        <a class="page-link" href="#" onclick="gotopage({{ pn }});">{{ pn }}</a>
+      </li>
+      {% endfor %}
+      {% if scans.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="#" onclick="gotopage({{ scans.next_page_number }});">&raquo;</a>
+      </li>
+      {% endif %}
+      <li class="page-item">
+        <a class="page-link" href="#" onclick="gotopage({{ scans.paginator.num_pages }});">&raquo;&raquo;</a>
+      </li>
+    </ul>
+    <!-- <div style="margin: 21px;">
+      <select id="nb_rows_per_page" >
+        <option value="10" selected>10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="200">200</option>
+      </select>
+      scans per page
+    </div> -->
+  </div>
+
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+
+</div>
+</div>
+</div>
+</div>
+
+<!-- Do not Remove -->
+<div id="chartjs-tooltip"></div>
+
+<!-- Run single scan modal -->
+<div class="modal fade" id="modal-run-scan" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Varredura Direta</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="run-scan">
+          <!-- Content -->
+        </div>
+        <a href="/scans/list">Visualziar &uacute;ltimo scan realizado</a><br/><br/>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Show all assets (if truncated) modal -->
+<div class="modal fade" id="modal-showall-assets" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Todos os ativos</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <!-- Content -->
+        <div id="showall-assets">
+          {{ scan_def.assets_list.all|join:", " }}
+        </div>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Show all assets in group (if truncated) modal -->
+<div class="modal fade" id="modal-showall-grouped-assets" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Todos os Ativos</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <!-- Content -->
+        <div id="showall-grouped-assets">
+          {% for assetgroup in scan_def.assetgroups_list.all %}
+            <strong>{{ assetgroup.name }}</strong>:<br/>
+            {% for a in assetgroup.assets.all %}
+              {{ a.value }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+            <br/><br/>
+          {% endfor %}
+        </div>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete scan modal -->
+<div class="modal fade" id="modal-delete-scan" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Excluir Scan</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="delete-scan">
+          <!-- Content -->
+        </div>
+        Voc&ecirc; Confirma a Exclus&atilde;o?
+        <button type="button" class="btn btn-xs btn-danger btn-delete-scan" data-dismiss="modal">Sim</button>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">N&atilde;o</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+// Select all scans
+function toggle(source) {
+  checkboxes = document.getElementsByName('scan');
+  for(var i=0, n=checkboxes.length;i<n;i++) {
+    checkboxes[i].checked = source.checked;
+  }
+} // End fo function toggle()
+
+// Goto paginate
+url = new URL(window.location.href);
+var gotopage = function gotopage(page_num) {
+  url.searchParams.set("page", page_num);
+  window.location = url.search;
+};
+
+var findingsByScanDef_chart;
+
+function print_chart(num_records=20){
+  if(findingsByScanDef_chart){findingsByScanDef_chart.destroy();}
+  // update the findings stat pies
+  findingsByScanDef_url = "{% url 'get_scans_stats_api' %}?scope=scan_def&scan_id={{scan_def.id|safe}}&num_records="+num_records;
+
+  data_labels_id = [];
+  data_labels_date = [];
+  data_datasets_total = [];
+  data_datasets_info = [];
+  data_datasets_low = [];
+  data_datasets_medium = [];
+  data_datasets_high = [];
+  data_datasets_critical = [];
+  data_datasets_new = [];
+
+  xhr = $.get(findingsByScanDef_url, function(resp) {
+    for (i = 0; i < resp.length; i++){
+      data_labels_id.push(resp[i]["id"]);
+      data_labels_date.push(resp[i]["created_at"]);
+      if (resp[i]["summary"]){
+        data_datasets_total.push(resp[i]["summary"]["total"]);
+        data_datasets_info.push(resp[i]["summary"]["info"]);
+        data_datasets_low.push(resp[i]["summary"]["low"]);
+        data_datasets_medium.push(resp[i]["summary"]["medium"]);
+        data_datasets_high.push(resp[i]["summary"]["high"]);
+        data_datasets_critical.push(resp[i]["summary"]["critical"]);
+        data_datasets_new.push(resp[i]["summary"]["new"]);
+      } else {
+        data_datasets_total.push(0);
+        data_datasets_info.push(0);
+        data_datasets_low.push(0);
+        data_datasets_medium.push(0);
+        data_datasets_high.push(0);
+        data_datasets_critical.push(0);
+        data_datasets_new.push(0);
+      }
+    };
+
+    findingsByScanDef_config = {
+      type: 'bar',
+      data: {
+        datasets: [],
+        borderWidth: 1
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        legend: {
+          display: true,
+          position: 'top',
+          //fullWidth: true,
+          labels: {
+            boxWidth: 20
+          }
+        },
+        scales: {
+          xAxes: [{
+            stacked: true,
+            gridLines: {
+              display: false
+            }
+          }],
+          yAxes:[{
+            stacked: true,
+            ticks: {
+              beginAtZero: true,
+              callback: function(value, index, values) {
+                if (Math.floor(value) === value) {
+                  return value;
+                }
+              }
+            }
+          }, {
+              id: "not-stacked-line",
+              stacked: false,
+              display: false,
+              ticks: {
+                beginAtZero: true,
+                callback: function(value, index, values) {
+                  if (Math.floor(value) === value) {
+                    return value;
+                  }
+                }
+              }
+          }]
+        },
+        tooltips: {
+          mode: 'index',
+          //yAlign: 'bottom',
+          position: 'nearest',
+          callbacks: {
+            title: function(tooltipItems, data) {
+              return data_labels_date[tooltipItems[0].index] + ' (id: '+data.labels[tooltipItems[0].index]+')';
+            }
+          }
+        }
+      }
+    }
+
+    config = jQuery.extend(true, {}, findingsByScanDef_config);
+    config["data"]["labels"] = data_labels_id;
+    config["data"]["datasets"].push(
+      {
+        "type": 'line',
+        "label": "Total",
+        "data": data_datasets_total,
+        "fill": false, "lineTension": 0.1, "borderColor": "#000000",
+        "yAxisID": "not-stacked-line"
+      },
+      {
+        "type": 'line',
+        "label": "Nova",
+        "data": data_datasets_new,
+        "fill": false, "lineTension": 0.1, "borderColor": "#18bc9c",
+        "yAxisID": "not-stacked-line"
+      },
+      {
+        "label": "Desc.",
+        "data": data_datasets_info,
+        "fill": false, "lineTension": 0.1, "backgroundColor": "#3498db"
+      },
+      {
+        "label": "Baixa",
+        "data": data_datasets_low,
+        "fill": false, "lineTension": 0.1, "backgroundColor": "#ffcb0d"
+      },
+      {
+        "label": "Média",
+        "data": data_datasets_medium,
+        "fill": false, "lineTension": 0.1, "backgroundColor": "#f9a009"
+      },
+      {
+        "label": "Alta",
+        "data": data_datasets_high,
+        "fill": false, "lineTension": 0.1, "backgroundColor": "#df3d03"
+      },
+      {
+        "label": "Crítica",
+        "data": data_datasets_critical,
+        "fill": false, "lineTension": 0.1, "backgroundColor": "#cc0500"
+      }
+    );
+
+    var canvas_findings = document.getElementById("chart-findingsByScanDef");
+    var ctx_findings = canvas_findings.getContext("2d");
+    findingsByScanDef_chart = new Chart(ctx_findings, config);
+
+    canvas_findings.onclick = function (evt) {
+      var activePoints = findingsByScanDef_chart.getElementsAtEvent(evt);
+      if (typeof activePoints != "undefined" && activePoints != null && activePoints.length > 0){
+        var chartData = activePoints[0]['_chart'].config.data;
+        var idx = activePoints[0]['_index'];
+        var label = chartData.labels[idx];
+        window.location = "/scans/details/"+label;
+      }
+    };
+  });
+}; // End fo function print_chart()
+
+print_chart(5);
+// jQuery
+$(function() {
+
+  $('#chart-selection').change(function(){
+    print_chart($("#chart-selection").val());
+  });
+
+  // Run direct scan now Event
+  $("#modal-run-scan").on('show.bs.modal', function (e) {
+    scan_title = e.relatedTarget.getAttribute('scan-title');
+    $("div#run-scan").html("Scan started: <b>"+scan_title+"</b><br/><br/>");
+
+    //Hide the modal 3 seconds later
+    var myModal = $(this);
+    clearTimeout(myModal.data('hideInterval'));
+    myModal.data('hideInterval', setTimeout(function(){
+        myModal.modal('hide');
+        // location.reload();
+    }, 3000));
+  });
+  $("button.btn-run-now").on('click', function(eventObject) {
+    scan_id = eventObject.target.getAttribute('scan-id');
+    // var xhr = $.get(scan_url, function(data) {
+    var request = $.ajax({
+      url: "{% url 'run_scan_def_api' 0 %}".replace("0", scan_id),
+      method: "GET",
+      timeout: 3000,
+      success: function(){
+        location.reload();
+      }
+    });
+  });
+
+  // Compare scans
+  $("a.btn-compare-selected").on('click', function (e) {
+    scans_to_compare = [];
+    $("input[name='scan']").each(function(cbx){
+      if (this.checked) {
+        scans_to_compare.push(this.value);
+      }
+    });
+    if(scans_to_compare.length == 2){
+      window.location.href ="/scans/compare?scan_a_id="+scans_to_compare[0]+"&scan_b_id="+scans_to_compare[1];
+    }
+  });
+
+  // Delete selected scans
+  $("a.btn-delete-selected").on('click', function(eventObject) {
+    scans_to_delete = [];
+    $("input[name='scan']").each(function(cbx){
+      if (this.checked) {
+        scans_to_delete.push(this.value);
+      }
+    })
+
+    if (scans_to_delete.length != 0){
+      var request = $.ajax({
+        url: "{% url 'delete_scans_api' %}",
+        method: "POST",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        data: JSON.stringify(scans_to_delete),
+        contentType: "application/json"
+      });
+      request.done(function(response){
+        if (response.status == 'success'){location.reload();}
+      });
+    }
+  });
+
+
+  // Stop selected scans
+  $("a.btn-stop-selected").on('click', function(eventObject) {
+    scans_to_stop = [];
+    $("input[name='scan']").each(function(cbx){
+      if (this.checked) {
+        scans_to_stop.push(this.value);
+      }
+    })
+
+    if (scans_to_stop.length != 0){
+      var request = $.ajax({
+        url: "{% url 'stop_scans_api' %}",
+        method: "POST",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        data: JSON.stringify(scans_to_stop),
+        contentType: "application/json"
+      });
+      request.done(function(response){
+        if (response.status == 'success'){location.reload();}
+      });
+    }
+  });
+
+  // Stop scan
+  $("button.btn-stop-scan").on('click', function (e) {
+    id = e.target.getAttribute('scan-id');
+    stop_scan_url = "{% url 'stop_scan_api' 0 %}".replace("0", id);
+    var request = $.ajax({
+      url: stop_scan_url,
+      method: "GET",
+      success: function(){
+        location.reload();
+      }
+    });
+  });
+
+  // Delete scan modal
+  $("#modal-delete-scan").on('show.bs.modal', function (e) {
+    id = e.relatedTarget.getAttribute('scan-id');
+    scan_title = e.relatedTarget.getAttribute('scan-title');
+    $("div#delete-scan").attr('scan-id', id);
+    $("div#delete-scan").html("ID: <b>"+id+"</b><br/>Title: <b>"+scan_title+"</b><br/><br/>");
+  });
+  $("button.btn-delete-scan").on('click', function (e) {
+    id = $("div#delete-scan").attr('scan-id');
+    var request = $.ajax({
+      url: "/scans/api/v1/delete/"+id,
+      method: "GET",
+      success: function(){
+        location.reload();
+      }
+    });
+  });
+
+}); // End of jQuery-ready
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% block content %}
+
+
+<div class="container-fluid" style="padding:0;">
+
+<section class="content-header">
+    <h1>
+    Sensores
+    <small> Tipos de Sensores</small>
+    </h1>
+    <ol class="breadcrumb">
+    <li><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboad</a></li>
+    <li class="active">Tipos de Sensores</li>
+    </ol>
+    </section>
+    <div id="menu_tabs" class="container-fluid" style="padding:15px 15px;">
+    <div class="nav-tabs-custom">
+    <ul class="nav nav-tabs">
+    <li class="active dropdown">
+	<a class="dropdown-toggle" data-toggle="dropdown" href="/engines/list">
+	<i class="fas fa-satellite-dish"></i>&nbsp; Sensores de Scan <span class="caret"></span>
+	</a>
+	<ul class="dropdown-menu">
+	<li role="presentation"><a role="menuitem" href="/engines/list"><i class="fa fa-list"></i> Listar Sensores</a></li>
+	{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+	<li role="presentation"><a role="menuitem" href="/engines/add"><i class="fa fa-plus"></i> Criar Novo Sensor</a></li>
+	<li role="presentation" class="divider"></li>
+	{% endif %}
+	<li role="presentation"><a role="menuitem" href="/engines/types/list"><i class="fa fa-list"></i> Tipos de Sensores</a></li>
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+	<li role="presentation"><a role="menuitem" href="/engines/types/add"><i class="fa fa-plus"></i>&nbsp; Criar Novo Tipo</a></li>
+	{% endif %}
+	</ul>
+	  </li>
+             <li class="dropdown">
+	     <a class="dropdown-toggle" data-toggle="dropdown" href="/engines/policies/list">
+	     <i class="fa fa-th-list"></i>&nbsp; Políticas de Scanner <span class="caret"></span>
+	     </a>
+	     <ul class="dropdown-menu">
+	     <li role="presentation"><a role="menuitem" href="/engines/policies/list"><i class="fa fa-list"></i> Listar Políticas</a></li>
+             {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+	     <li role="presentation"><a role="menuitem" href="/engines/policies/add"><i class="fa fa-plus"></i>&nbsp; Criar Políticas</a></li>
+             {% endif %}
+	     <li role="presentation" class="divider"></li>
+  	     {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+	     <li role="presentation"><a role="menuitem" href="/engines/policies/import"><i class="fa fa-upload"></i> Importar Políticas</a></li>
+	     <li role="presentation"><a role="menuitem" href="/engines/policies/export?all=true"><i class="fa fa-download"></i> Exportar Políticas</a></li>
+   	     {% endif %}
+             </ul>
+	     </li>
+             </ul>
+<div class="tab-content">
+ <div class="container-fluid">
+  <table class="table table-bordered" data-toggle="table" data-sort-name="value" data-sort-order="desc">
+    <thead>
+      <tr>
+        <th data-field="name">Nome</th>
+        <th data-field="allowed_asset_types">Tipo de Ativo Permitido</th>
+        <th data-field="updated_at">Atualizado</th>
+        <th style="width:60px;">Info</th>
+ 	{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <th style="width:60px;">Editar</th>
+        <th style="width:60px;">Excluir</th>
+	{% endif %}  
+    </tr>
+    </thead>
+    <tbody>
+    {% for engine in engines %}
+    <tr>
+      <td>{{ engine.name }}</td>
+      <td>{{ engine.allowed_asset_types }}</td>
+      <td>{{ engine.updated_at|date:"d/m/Y\-H:i:s" }}</td>
+      <td>
+      <a href="#" style="margin-left:15px;" class="btn-engine-info" data-toggle="modal" data-target="#modal_info_{{engine.id}}"><i class="fas fa-info"></i></a>
+	<div id="modal_info_{{engine.id}}" class="modal fade" role="dialog">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header bg-primary">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">{{ engine.name }}</h4>
+              </div>
+              <div class="modal-body">
+                <dl class="dl-horizontal">
+                  <dt>Nome</dt><dd>{{engine.name}}</dd>
+                  <dt>Descri&ccedil;&atilde;o</dt><dd>{{engine.description}}</dd>
+                  <dt>Inst&acirc;ncia do Sensor</dt><dd>{{engine.engineinstance_set.all|join:", "}}</dd>
+                  <dt>Ativos Permitidos</dt><dd>{{engine.allowed_asset_types}}</dd>
+                  <dt>Criado</dt><dd>{{engine.created_at|smartdate}}</dd>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default btn-xs" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        </td>
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <td>
+	<a href="/engines/types/edit/{{ engine.id }}" style="margin-left:15px;"><i class="fas fa-edit"></i></a>
+        </td>
+        <td>
+	<a href="/engines/types/delete/{{ engine.id }}" style="margin-left:15px;"><i class="fas fa-trash"></i></a>
+        </td>
+	{% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+  <br/>
+  <br/>
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+
+  $(function() {
+
+    // Refresh engine status
+    $("button.btn-refresh-sensor-status").on('click', function(eventObject) {
+      engine_id = eventObject.currentTarget.getAttribute('engine-id')
+      engine_url = "/engines/"+engine_id+"/refresh"
+      var xhr = $.get(engine_url, function(data) {
+        location.reload()
+        if (data.status == "success") {
+          console.log( "Status successfully refreshed!" );
+          $("div.notifications").html('<div class="alert alert-dismissible alert-success fade in"><button type="button" class="close" data-dismiss="alert">&times;</button>Scan successfully enqueued</div>');
+          $("div.notifications>div").delay(3000).fadeOut(
+            function () {
+                $("div.notifications>div").remove();
+            }
+          );
+        }
+      })
+    });
+
+  });
+</script>
+{% endblock %}

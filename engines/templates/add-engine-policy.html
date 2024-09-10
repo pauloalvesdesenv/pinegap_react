@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block content %}
+
+
+<div class="container-fluid" style="padding:0;">
+
+<section class="content-header">
+      <h1>
+        Sensores
+        <small> Criar Nova Política</small>
+      </h1>
+      <ol class="breadcrumb">
+		  
+        <li><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboad</a></li>
+        <li class="active">Criar Nova Política</li>
+      </ol>
+    </section>
+    
+    <div id="menu_tabs" class="container-fluid" style="padding:15px 15px;">	
+		
+		<div class="nav-tabs-custom">
+		
+		<ul class="nav nav-tabs">
+              <li class="dropdown">
+				<a class="dropdown-toggle" data-toggle="dropdown" href="/engines/list">
+					<i class="fas fa-satellite-dish"></i>&nbsp; Sensores de Scan <span class="caret"></span>
+				</a>
+				<ul class="dropdown-menu">
+					<li role="presentation"><a role="menuitem" href="/engines/list"><i class="fa fa-list"></i> Listar Sensores</a></li>
+					<li role="presentation"><a role="menuitem" href="/engines/add"><i class="fa fa-plus"></i>&nbsp; Criar Novo Sensor</a></li>
+					<li role="presentation" class="divider"></li>
+					<li role="presentation"><a role="menuitem" href="/engines/types/list"><i class="fa fa-list"></i> Tipos de Sensores</a></li>
+					<li role="presentation"><a role="menuitem" href="/engines/types/add"><i class="fa fa-plus"></i>&nbsp; Criar Novo Tipo</a></li>
+		        </ul>
+			  </li>
+              <li class="active dropdown">
+				  <a class="dropdown-toggle" data-toggle="dropdown" href="/engines/policies/list">
+					<i class="fa fa-th-list"></i>&nbsp; Políticas de Scanner <span class="caret"></span>
+				  </a>
+				  <ul class="dropdown-menu">
+					<li role="presentation"><a role="menuitem" href="/engines/policies/list"><i class="fa fa-list"></i> Listar Políticas</a></li>
+					<li role="presentation"><a role="menuitem" href="/engines/policies/add"><i class="fa fa-plus"></i>&nbsp; Criar Políticas</a></li>
+					<li role="presentation" class="divider"></li>
+					<li role="presentation"><a role="menuitem" href="/engines/policies/import"><i class="fa fa-upload"></i> Importar Políticas</a></li>
+					<li role="presentation"><a role="menuitem" href="/engines/policies/export?all=true"><i class="fa fa-download"></i> Exportar Políticas</a></li>
+                  </ul>
+			  </li>
+            </ul>  	
+{% csrf_token %}
+<form action="/engines/policies/add" method="post" class="form-horizontal" style="margin:0;" enctype="multipart/form-data">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+         {% for field in form %}
+          {% if field.name == 'engine' %}
+             <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_engine">Sensor</label>
+                  <div class="col-sm-4">
+                        {{ field }}
+                      {% if field.help_text %}
+                       <p class="help-block"><small>{{ field.help_text }}</small></p>
+                      {% endif %}
+                   </div>
+              </div>
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_name">Nome</label>
+                  <div class="col-sm-4">
+                      <input type="text" name="name" id="id_name" required="" class="form-control form-control-sm" maxlength="200">
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_description">Descrição</label>
+                  <div class="col-sm-4">
+                      <textarea name="description" rows="10" maxlength="200" id="id_description" required="" class="form-control form-control-sm" cols="40"></textarea>
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_options">Opções</label>
+                  <div class="col-sm-4">
+                      <textarea name="options" id="id_options" rows="10" cols="40" class="form-control form-control-sm">{}</textarea>
+                          <p class="help-block"><small>o Script da política deve estar em um formato JSON válido</small></p>
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_file">Carregar JSON</label>
+                  <div class="col-sm-4 " style="height: 20px;">
+                      <input type="file" name="file" id="id_file">
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_is_default">Definir como padrão</label>
+                  <div class="col-sm-4">
+                      <input type="checkbox" name="is_default" id="id_is_default">
+                  </div>
+              </div>
+          {% elif field.name == 'scopes' %}
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_scopes">Escopos</label>
+                  <div class="col-sm-4">
+                      {{ field }}
+                      {% if field.help_text %}
+                      <p class="help-block"><small>{{ field.help_text }}</small></p>
+                      {% endif %}
+                  </div>
+              </div>
+   {% endif %}
+   {% endfor %}
+      <div class="form-group submit-div">
+        <div class="col-sm-2">
+        </div>
+        <div class="col-sm-4">
+          <button type="submit" class="btn btn-warning col-sm-12">Criar Política</button>
+        </div>
+      </div>
+  </form>
+</div>
+</div>
+</div>
+{% endblock %}

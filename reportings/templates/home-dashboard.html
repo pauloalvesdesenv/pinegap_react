@@ -1,0 +1,591 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% load currency %}
+{% load humanize %}
+{% load l10n %}
+{% currency_context %}
+{% block content %}
+
+
+
+    <!-- Main content -->
+    <section class="content dashboard">
+
+      <!-- Main row -->
+      <div class="row">
+        <!-- Left col -->
+        <section class="col-lg-7 no-padding">
+
+		  <!-- @Ativos Críticos -->
+          <section class="col-md-6">
+			<div class="box box-default">
+				<div class="box-header with-border">
+					<h3 class="box-title">Ranking de Ativos</h3>
+					<small class="pull-right"><a href="/assets/list">Ver todos</a> &nbsp; <i style="line-height:19px; display:block; float:left;" class="pull-right fa fa-caret-right"></i></small>
+				</div>
+				<!-- /.box-header -->
+				<div class="box-body">
+
+					<table class="table table-bordered table-condensed" style="text-align:center;">
+						<thead>
+						  <tr>
+							<th style="text-align:center;">Nota</th>
+							<th style="text-align:center;">Nome</th>
+							<th style="text-align:center;">Score</th>
+						  </tr>
+						</thead>
+						<tbody class="table-limited">
+						  {% for asset in top_critical_assets %}
+                                                        <tr class='dblclickable-row' data-href='/assets/details/{{asset.id|safe}}'>
+                                                                <td><span class="badge badge-risk-grade-{{asset.risk_level|keyvalue:'grade'}}">{{asset.risk_level|keyvalue:"grade"}}</span></td>
+                                                                <td><a href="/assets/details/{{asset.id|safe}}">{{asset.name|truncatechars:25}}</a></td>
+                                                                <td>{{asset|risk_score}} &nbsp;<i class="fa fa-arrow-circle-up"></i></td>
+ 						         </tr>
+                                                      {% endfor %}
+
+						</tbody>
+					</table>
+
+				</div>
+			</div>
+			<!-- /.box -->
+          </section>
+          <!-- /.col md-->
+
+          <!-- @Grupos de Ativos Críticos -->
+    			<section class="col-md-6 no-padding-left">
+    			<div class="box box-default">
+    				<div class="box-header with-border">
+    					<h3 class="box-title">Ranking Grupos de Ativos</h3>
+    					<small class="pull-right"><a href="/assets/list?target=asset_group">Ver todos &nbsp; </a><i style="line-height:19px; display:block; float:left;" class="pull-right fa fa-caret-right"></i></small>
+    				</div>
+    				<!-- /.box-header -->
+    				<div class="box-body">
+    					<table class="table table-bordered table-condensed" style="text-align:center;">
+    						<thead>
+    						  <tr>
+    							<th style="text-align:center;">Nota</th>
+    							<th style="text-align:center;">Nome</th>
+    							<th style="text-align:center;">Score</th>
+    						  </tr>
+    						</thead>
+    						<tbody class="table-limited">
+    						   {% for assetgroup in top_critical_assetgroups %}
+    							<tr class='dblclickable-row' data-href='/assets/groups/details/{{assetgroup.id|safe}}'>
+    								<td><span class="badge badge-risk-grade-{{assetgroup.risk_level|keyvalue:'grade'}}">{{assetgroup.risk_level|keyvalue:"grade"}}</span></td>
+    								<td><a href="/assets/groups/details/{{assetgroup.id|safe}}">{{assetgroup.name}}</a></td>
+    								<td>{{assetgroup|risk_score}} &nbsp;<i class="fa fa-arrow-circle-up"></i></td>
+    							</tr>
+    							{% endfor %}
+    						</tbody>
+    					</table>
+
+    				</div>
+    			</div>
+    			<!-- /.box -->
+              </section>
+              <!-- /.col md-->
+
+                   <!-- @Matriz de Risco -->
+          <section class="col-lg-12">
+			  <div class="nav-tabs-custom">
+				<ul class="nav nav-tabs pull-right ui-sortable-handle">
+				  <li><a href="#tab2" data-toggle="tab" aria-expanded="true">Impacto Financeiro</a></li>
+				  <li class="active" class=""><a href="#tab1" data-toggle="tab" aria-expanded="false">Qualitativo</a></li>
+				  <li class="pull-left header"> Matriz de Risco</li>
+				</ul>
+
+				<div class="tab-content no-padding">
+					<div class="box tab-pane active" id="tab1">
+						<div class="box-body" style="border:0 !important;">
+
+							<table style="text-align: center; font-size: small;" class="table table-condensed">
+								<tbody>
+
+								<tr>
+								  <th></th>
+								  <th style="text-align: right;">Impacto Negócio <i class="fa fa-arrow-circle-right"></i></th>
+								  <th style="text-align: center; font-weight: normal;">Baixo</th>
+								  <th style="text-align: center; font-weight: normal;">Médio</th>
+								  <th style="text-align: center; font-weight: normal;">Alto</th>
+								</tr>
+
+								<tr>
+									<th>Risco Negócio <i class="fa fa-arrow-circle-down"></i></th>
+									<th style="text-align: right;">Probabilidade <i class="fa fa-arrow-circle-down"></i></th>
+									<td><i class="fa fa-arrow-down"></i></td>
+									<td><i class="fa fa-arrow-down"></i></td>
+									<td><i class="fa fa-arrow-down"></i></td>
+
+
+                                                             </tr>
+                                                            {% for grades in asset_grades_map %}
+                                                            {% for grade, value in grades.items %}
+							     <tr>
+								 <td class="new-grade bg-grade-{% cycle '--low' 'A-low' 'B-medium' 'C-high' 'D-high' 'E-high' 'F-high' %}"  ><a>{% cycle 'Imponderável' 'Trivial' 'Aceitável' 'Moderado' 'Substancial' 'Intolerável' 'Extremo' %}</a>
+                    					         <td style="font-weight: normal; text-align: right;">{% cycle 'Imponderável' 'Improvável' 'Rara' 'Pouco Provável' 'Possível' 'Provável' 'Quase Certa' %} </td>
+               					     		 <td class="new-grade bg-grade-{{grade}}-low" onclick="window.location='/assets/list?filter=criticity:low%20score:{{grade}}'"><a href="#" style="display:block;" data-toggle="tooltip" data-placement="top" data-html="true" title="Risco Negócio: {% cycle 'Imponderável' 'Trivial' 'Trivial' 'Aceitável' 'Aceitável' 'Moderado' 'Substancial'  %}<br />Impacto Negócio: {% cycle 'N/A' 'Baixo' 'Baixo' 'Baixo' 'Baixo' 'Baixo' 'Baixo' %}<br />Criticidade: {{asset.criticity|default:"Baixa" }}<br /> Nota de Risco: {{grade}}">{{ grades|keyvalue:grade|keyvalue:"low" }}</a></td>
+                 			                         <td class="new-grade bg-grade-{{grade}}-medium" onclick="window.location='/assets/list?filter=criticity:medium%20score:{{grade}}'"><a href="#" style="display:block;" data-toggle="tooltip" data-placement="top" data-html="true" title="Risco Negócio: {% cycle 'Imponderável' 'Trivial' 'Aceitável' 'Aceitável' 'Moderado' 'Substancial' 'Intolerável'  %}<br />Impacto Negócio: {% cycle 'N/A' 'Médio' 'Médio' 'Médio' 'Médio' 'Médio' 'Médio' %}<br />Criticidade: {{asset.criticity|default:"Média" }} <br /> Nota de Risco: {{grade}}">{{ grades|keyvalue:grade|keyvalue:"medium" }}</a></td>
+								 <td class="new-grade bg-grade-{{grade}}-high" onclick="window.location='/assets/list?filter=criticity:high%20score:{{grade}}'"><a href="#" style="display:block;" data-toggle="tooltip" data-placement="top" data-html="true" title="Risco Negócio: {% cycle 'Imponderável' 'Trivial' 'Aceitável' 'Moderado' 'Substancial' 'Intolerável' 'Extremo' %}<br />Impacto Negócio: {% cycle 'N/A'  'Alto' 'Alto' 'Alto' 'Alto' 'Alto' 'Alto' %}<br />Criticidade: {{asset.criticity|default:"Alta" }} <br /> Nota de Risco: {{grade}}">{{ grades|keyvalue:grade|keyvalue:"high" }}</a></td>
+							    </tr>
+                                                          {% endfor %}
+                                                          {% endfor %}
+
+						          </tr>
+
+							  </tbody>
+						</table>
+						</div>
+					</div>
+					<!-- /.box -->
+
+					<div class="box tab-pane" id="tab2">
+
+
+            <style>
+              td.risk-grade-A { background-color: limegreen; }
+              td.risk-grade-B { background-color: yellowgreen; }
+              td.risk-grade-C { background-color: orange; }
+              td.risk-grade-D { background-color: darkorange; }
+              td.risk-grade-E { background-color: orangered; }
+              td.risk-grade-F { background-color: red; }
+            </style>
+
+						<div class="box-body">
+
+							<h5 style="text-align:center; margin-top:0; margin-bottom:0px; padding-bottom:10px; border-bottom:solid 1px #353C42;">Expectativa Global de Perdas Financeiras</h5>
+
+
+							<section class="col-md-10" style="padding-left:0; width:564px;">
+								<table style="text-align: center; font-size: small; border-top:0;" class="table table-condensed">
+									<tbody>
+
+									<tr>
+										<th style="width:110px; text-align:right;">Probabilidade <i class="fa fa-arrow-circle-down"></i></th>
+										<th style="text-align: right; width:120px;"></th>
+										<td style="width:170px;"></td>
+										<td></td>
+
+                                                                  </tr>
+
+                                                                   <tr>
+
+                                                                         <td style="text-align: right;"><a href="/assets/list?filter=score:-">Imponderável</a></td>
+                                                                         <td><span class="white-bar">&nbsp;</span></td>
+                                                                         <td>Perdas Totais Estimadas &nbsp; <i class="fa  fa-minus"></i></td>
+                                                                         <td style="padding-bottom:0; background:gray; color:#333;"><a style="display:block;" href="/assets/list?filter=score:-"><span>R$ {{global_stats.assets.risk_value_imponderavel|floatformat:2|intcomma|default:"0,00" }}</span></a></td>
+								  </tr>
+
+								   <tr>
+									 <td style="text-align: right;"><a href="/assets/list?filter=score:A">Improvável</a></td>
+									 <td><span class="white-bar">&nbsp;</span></td>
+									 <td>Perdas Totais Estimadas &nbsp; <i class="fa  fa-minus"></i></td>
+								   <td class="risk-grade-A" style="padding-bottom:0;"><a style="display:block;" href="/assets/list?filter=score:A"><span>R$ {{global_stats.assets.risk_value_A|floatformat:2|intcomma|default:"0,00"}}</span></a></td>
+								 </tr>
+
+
+
+								   <tr>
+									 <td style="text-align: right;"><a href="/assets/list?filter=score:B">Rara</a></td>
+									 <td><span class="white-bar">&nbsp;</span></td>
+									 <td>Perdas Totais Estimadas  &nbsp; <i class="fa  fa-minus"></i></td>
+									 <td class="risk-grade-B" style="padding-bottom:0;"><a style="display:block;" href="/assets/list?filter=score:B"><span>R$ {{global_stats.assets.risk_value_B|floatformat:2|intcomma|default:"0,00" }}</span></a></td>
+								   </tr>
+
+
+
+								   <tr>
+									 <td style="text-align: right;"><a href="/assets/list?filter=score:C">Pouco Provável</a></td>
+									 <td><span class="white-bar">&nbsp;</span></td>
+									 <td>Perdas Totais Estimadas  &nbsp; <i class="fa  fa-minus"></i></td>
+									 <td class="risk-grade-C" style="padding-bottom:0;"><a style="display:block;" href="/assets/list?filter=score:C"><span>R$ {{ global_stats.assets.risk_value_C|floatformat:2|intcomma|default:"0,00" }}</span></a></td>
+								   </tr>
+
+
+
+								   <tr>
+									 <td style="text-align: right;"><a href="/assets/list?filter=score:D">Possível</a></td>
+									 <td><span class="white-bar">&nbsp;</span></td>
+									 <td>Perdas Totais Estimadas  &nbsp; <i class="fa  fa-minus"></i></td>
+									 <td class="risk-grade-D" style="padding-bottom:0;"><a style="display:block;" href="/assets/list?filter=score:D"><span>R$ {{ global_stats.assets.risk_value_D|floatformat:2|intcomma|default:"0,00" }}</span></a></td>
+								   </tr>
+
+
+
+								   <tr>
+									 <td style="text-align: right;"><a href="/assets/list?filter=score:E">Provável</a></td>
+									 <td><span class="white-bar">&nbsp;</span></td>
+									 <td>Perdas Totais Estimadas  &nbsp; <i class="fa  fa-minus"></i></td>
+									 <td class="risk-grade-E" style="padding-bottom:0;"><a style="display:block;" href="/assets/list?filter=score:E"><span>R$ {{ global_stats.assets.risk_value_E|floatformat:2|intcomma|default:"0,00" }}</span></a></td>
+								   </tr>
+
+
+
+								   <tr>
+									 <td style="text-align: right;"><a href="/assets/list?filter=score:F">Quase Certa</a></td>
+									 <td><span class="white-bar">&nbsp;</span></td>
+									 <td>Perdas Totais Estimadas  &nbsp; <i class="fa  fa-minus"></i></td>
+									 <td class="risk-grade-F" style="padding-bottom:0;"><a style="display:block;" href="/assets/list?filter=score:F"><span>R$ {{global_stats.assets.risk_value_F|floatformat:2|intcomma|default:"0,00" }}</span></a></td>
+								   </tr>
+
+
+								  </tbody>
+							</table>
+						</section>
+
+						<section class="col-md-2 no-padding-left" style="margin-top:38px; width:135px;">
+							<span class="num-matriz" style="height:198px; width:135px; text-align:center; padding-top:55px; fonnt-weight:bold; background:#181d21; border-color:#111; border:0 !important; box-shadow: inset 0 0 1em #111;">
+								<small style="color:#fff;">Potencial <br />Total de Perda</small>
+								<h4>R$ {{global_stats.assets.risk_value_total|floatformat:2|intcomma|default:"0,00"}}</h4>
+							</span>
+						</section>
+
+						</div>
+					</div>
+					<!-- /.box -->
+				</div>
+
+			  </div>
+			  <!-- /.nav-tabs-custom -->
+			</section>
+			<!-- /.col md-->
+
+			<!-- @Ocorrências por Criticidade -->
+          <section class="col-md-6">
+			  <div class="nav-tabs-custom">
+				<ul class="nav nav-tabs pull-right ui-sortable-handle">
+				  <!--<li><a href="#tab-findings2" data-toggle="tab" aria-expanded="true">Ranking CVE</a></li>
+				  <li class="active" class=""><a href="#tab-findings1" data-toggle="tab" aria-expanded="false">Geral</a></li>
+				  -->
+				  <li class="pull-left header" style="font-size:18px;"> Ocorrências por Severidade</li>
+				</ul>
+
+				<div class="tab-content no-padding">
+					<div class="box tab-pane active" id="tab-findings1">
+						<div class="box-body" style="border:0 !important;">
+							<div class="row" style="padding-right:20px; padding-left:20px; padding-top:0px; padding-bottom:0px;">
+
+								<canvas id="polarChart" width="100" height="90"></canvas>
+
+							</div>
+							  <!-- /.row -->
+						</div>
+					</div>
+					<!-- /.box -->
+
+					<div class="box tab-pane" id="tab-findings2">
+					</div>
+					<!-- /.box -->
+				</div>
+
+			  </div>
+			  <!-- /.nav-tabs-custom -->
+			</section>
+			<!-- /.col md-->
+
+
+
+      <!-- @Ocorrências Críticas -->
+      <section class="col-md-6 no-padding-left">
+  <div class="box box-default">
+    <div class="box-header with-border">
+      <h3 class="box-title">Ranking de Ocorrências</h3>
+      <small class="pull-right"><a href="/findings/list">Ver todas &nbsp; <i style="line-height:19px; display:block; float:left;" class="pull-right fa fa-caret-right"></i></a></small>
+    </div>
+    <!-- /.box-header -->
+    <div class="box-body">
+
+      <table class="table table-bordered table-condensed" style="text-align:center;">
+        <thead>
+          <tr>
+          <th style="text-align:center;">Severidade</th>
+          <th style="text-align:center;">Descrição</th>
+          <th style="text-align:center;">Ativo</th>
+          </tr>
+        </thead>
+        <tbody class="table-limited7">
+
+          {% for finding in top_critical_findings %}
+          <tr class='dblclickable-row' data-href='/findings/details/{{finding.id|safe}}'>
+          {% if finding.severity == 'critical' %}
+          <td style="text-align:center;"><span class="label label-critical">Crítica</span></td>
+          {% elif finding.severity == 'high' %}
+          <td style="text-align:center;"><span class="label label-high">Alta</span></td>
+          {% elif finding.severity == 'medium' or finding.severity == 'moderate' %}
+          <td style="text-align:center;"><span class="label label-medium">Média</span></td>
+          {% elif finding.severity == 'low' %}
+          <td style="text-align:center;"><span class="label label-low">Baixa</span></td>
+          {% else %}
+          <td style="text-align:center;"><span class="label label-info">Desconhecida</span></td>
+          {% endif %}
+          <td style="text-align:center;"><a href="/findings/details/{{finding.id|safe}}" data-toggle="tooltip" data-placement="top" data-original-title="{{finding.title|truncatechars:40}}"><i class="fa fa-eye"></i></a></td>
+          <td>{{finding.asset_name|truncatechars:30}}</td>
+          </tr>
+          {% endfor %}
+
+        </tbody>
+        </table>
+
+    </div>
+  </div>
+  <!-- /.box -->
+      </section>
+      <!-- /.col md-->
+
+
+        </section>
+        <!-- /.Left col -->
+
+        <!---------------------------------------------------------------------------------------------------------->
+
+        <!-- right col -->
+        <section class="col-lg-5 no-padding">
+
+		  <!-- @Scans Ativos -->
+		  <section class="col-md-12 no-padding-left">
+		  	<div class="box box-default">
+		  		<div class="box-header with-border">
+		  			<h3 class="box-title">Radar</h3>
+		  		</div>
+
+				<!-- /.box-header -->
+				<div class="box-body">
+					<iframe
+					id="radar-iframe"
+					style="width: 100%;" height="320" frameborder="0" scrolling="no"  marginheight="0" marginwidth="0"
+						src="/radar/radar">
+					</iframe>
+				</div>
+			</div>
+			<!-- /.box -->
+          </section>
+          <!-- /.col md-->
+
+          <!-- @Últimos Scans -->
+          <section class="col-md-12 no-padding-left">
+			<div class="box box-default">
+				<div class="box-header with-border">
+					<h3 class="box-title">Últimos Scans</h3>
+					<small class="pull-right"><a href="/scans/list">Ver todos &nbsp; <i style="line-height:19px; display:block; float:left;" class="pull-right fa fa-caret-right"></i></a></small>
+				</div>
+				<!-- /.box-header -->
+				<div class="box-body">
+					<table class="table table-condensed table-bordered" style="text-align:center;">
+						<thead>
+						  <tr>
+							<th style="text-align:center;" class="col-sm-1">ID</th>
+							<th style="text-align:center;" class="col-sm-5">Ocorrências</th>
+							<th style="text-align:center;">Status</th>
+							<th style="text-align:center;">Realizado em</th>
+						  </tr>
+						</thead>
+						<tbody class="table-limited">
+
+
+						{% for scan in last_scans %}
+              <tr class='dblclickable-row' data-href='/scans/details/{{scan.id|safe}}' style="cursor:pointer;">
+                <td>{{scan.id|safe|truncatechars:64}}</td>
+                <td class="scan-progress" style="vertical-align: middle;">
+					<a href="/scans/details/{{scan.id|safe}}">
+                  <div class="progress" style="margin-bottom: 0;">
+                    {% if scan.status == "finished" %}
+                    {% with total=scan.summary|keyvalue:'total' %}
+                    <div class="progress-bar progress-bar progress-bar-critical progress-bar-striped" role="progressbar" data-width="{{ scan.summary|keyvalue:'critical' | perc:total }}">
+                      {{scan.summary|keyvalue:"critical"}}
+                    </div>
+                    <div class="progress-bar progress-bar progress-bar-high progress-bar-striped" role="progressbar" data-width="{{ scan.summary|keyvalue:'high' | perc:total }}">
+                      {{scan.summary|keyvalue:"high"}}
+                    </div>
+                    <div class="progress-bar progress-bar progress-bar-medium progress-bar-striped" role="progressbar" data-width="{{ scan.summary|keyvalue:'medium' | perc:total  }}">
+                      {{scan.summary|keyvalue:"medium"}}
+                    </div>
+                    <div class="progress-bar progress-bar progress-bar-low progress-bar-striped" role="progressbar" data-width="{{ scan.summary|keyvalue:'low' | perc:total }}">
+                      {{scan.summary|keyvalue:"low"}}
+                    </div>
+                    <div class="progress-bar progress-bar progress-bar-info progress-bar-striped" role="progressbar" data-width="{{ scan.summary|keyvalue:'info' | perc:total }}">
+                      {{scan.summary|keyvalue:"info"}}
+                    </div>
+                    {% endwith %}
+                    {% else %}
+                    <div class="progress-bar progress-bar active" role="progressbar" style="text-align-center;">
+                      -
+                    </div>
+                    {% endif %}
+
+                  </div>
+                  </a>
+                </td>
+                <td class="text-center">
+                  {% if scan.status == "finished" %}
+                  <span class="label label-success">Finalizado</span>
+                  {% elif scan.status == "started" %}
+                  <span class="label label-warning">Executando</span>
+                  {% elif scan.status == "error" %}
+                  <span class="label label-danger">Falha</span>
+		  {% elif scan.status == "stopped" %}
+                  <span class="label label-danger">Parado</span>
+                  {% elif scan.status == "stopping" %}
+                  <span class="label label-danger">Parando</span>
+                  {% else %}
+                  <span class="label label-primary">Na Fila</span>
+                  {% endif %}
+                </td>
+                <td>{{scan.started_at|date:"d-m-Y H:i:s"}}</td>
+              </tr>
+              {% endfor %}
+
+
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<!-- /.box -->
+          </section>
+          <!-- /.col md-->
+
+
+
+
+         			<!-- @Ranking CVE -->
+          <section class="col-md-7 no-padding-left">
+			<div class="box box-default">
+				<div class="box-header with-border">
+					<h3 class="box-title">Ranking CVE</h3>
+					<small class="pull-right"><a href='/findings/list'>Ver todas &nbsp; <i style="line-height:19px; display:block; float:left;" class="pull-right fa fa-caret-right"></i></a></small>
+				</div>
+				<!-- /.box-header -->
+				<div class="box-body">
+					<table class="table table-bordered table-condensed" style="text-align:center;">
+						<thead>
+						  <tr>
+							<th style="text-align:center;">CVE</th>
+							<th style="text-align:center;">Ocorrências</th>
+						  </tr>
+						</thead>
+						<tbody class="table-limited5">
+
+                           {% for cve in cxe_stats.top_cve %}
+                           <tr>
+								<td><a target="_blank" href="https://vulners.com/cve/{{cve.0}}">{{cve.0}}</a></td>
+								<td><a href="/findings/list?_reference={{cve.0}}&_reference_cond=CVE"><span class="badge bg-yellow">{{cve.1}} ocorrências</span></a></td>
+							</tr>
+			               {% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<!-- /.box -->
+          </section>
+          <!-- /.col md-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <!-- @CVSS Score / Ocorrências -->
+		  <section class="col-md-5 no-padding-left">
+		  	<div class="box box-default">
+		  		<div class="box-header with-border">
+		  			<h3 class="box-title">CVSS/Ocorrências</h3>
+		  		</div>
+				<!-- /.box-header -->
+				<div class="box-body">
+					<table class="table table-bordered table-condensed">
+						<tr>
+							<td style="text-align:right;">#CVSS = 10</td>
+							<th>{{cvss_scores.eq10}}</th>
+						</tr>
+						<tr>
+							<td style="text-align:right;">9.0 &lt;= #CVSS <i class="fa fa-chevron-left"></i> 10</td>
+							<th>{{cvss_scores.gte9}}</th>
+						</tr>
+						<tr>
+							<td style="text-align:right;">7.0 <i class="fa fa-chevron-left"></i>= #CVSS <i class="fa fa-chevron-left"></i> 9.0</td>
+							<th>{{cvss_scores.gte7}}</th>
+						</tr>
+						<tr>
+							<td style="text-align:right;">5.0 <i class="fa fa-chevron-left"></i>= #CVSS <i class="fa fa-chevron-left"></i> 7.0 </td>
+							<th>{{cvss_scores.5to7}}</th>
+						</tr>
+						<tr>
+							<td style="text-align:right;">#CVSS <i class="fa fa-chevron-left"></i> 5.0</td>
+							<th>{{cvss_scores.lte5}}</th>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<!-- /.box -->
+          </section>
+          <!-- /.col md-->
+
+
+
+
+
+
+
+        </section>
+        <!-- right col -->
+
+      </div>
+      <!-- /.row (main row) -->
+
+    </section>
+    <!-- /.content -->
+
+<script>
+  //Polar Chart - Dashboard
+	new Chart(document.getElementById("polarChart"),{
+		"type":"polarArea",
+		"data":{
+			"labels":["Crítica","Alta","Média","Baixa"],
+			"datasets":[{
+				"label":"My First Dataset",
+				"data":[{{global_stats.findings.critical}},{{global_stats.findings.high}},{{global_stats.findings.medium}},{{global_stats.findings.low}}],
+				"backgroundColor":[
+					"#890000",
+					"#D13523",
+					"#F69F00",
+					"#FDFD00"
+					],
+				"borderColor" : "#333"
+			}],
+		},
+		options: {
+				legend: {
+					position: 'right',
+					labels: {
+						boxWidth:25,
+						"fontColor": "white"
+					}
+				},
+				scale: {
+					gridLines: {
+						display:true,
+						color: "#C8CACB"
+					},
+					borderDash: "#000"
+
+				}
+			},
+		gridLines: {
+			display: false
+		}
+
+	});
+</script>
+
+
+{% endblock %}

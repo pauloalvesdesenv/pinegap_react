@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  .material-switch > input[type="checkbox"] {
+      display: none;
+  }
+
+  .material-switch > label {
+      cursor: pointer;
+      height: 0px;
+      position: relative;
+      width: 40px;
+  }
+
+  .material-switch > label::before {
+      background: #ef8224;
+      box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+      content: '';
+      height: 16px;
+      margin-top: -8px;
+      position:absolute;
+      opacity: 0.3;
+      transition: all 0.4s ease-in-out;
+      width: 40px;
+  }
+  .material-switch > label::after {
+      background: rgb(255, 255, 255);
+      border-radius: 16px;
+      box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+      content: '';
+      height: 24px;
+      left: -4px;
+      margin-top: -8px;
+      position: absolute;
+      top: -4px;
+      transition: all 0.3s ease-in-out;
+      width: 24px;
+  }
+  .material-switch > input[type="checkbox"]:checked + label::before {
+      background: inherit;
+      opacity: 0.5;
+  }
+  .material-switch > input[type="checkbox"]:checked + label::after {
+      background: inherit;
+      left: 20px;
+  }
+
+  #modal-options .row { padding:20px; }
+  #modal-options .row .padding-5 { padding:5px; }
+  #modal-options .row input[type="text"] { width:150px; }
+  #modal-options .row input[type="checkbox"] { float: right;}
+
+
+</style>
+
+<div class="container-fluid" style="padding:0;">
+
+<section class="content-header">
+      <h1>
+        Sensores
+        <small> Edição de Política</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboad</a></li>
+        <li class="active">Edição de Política</li>
+      </ol>
+    </section>
+
+    <div id="menu_tabs" class="container-fluid" style="padding:15px 15px;">
+
+		<div class="nav-tabs-custom">
+
+		<ul class="nav nav-tabs">
+              <li class="dropdown">
+				<a class="dropdown-toggle" data-toggle="dropdown" href="/engines/list">
+					<i class="fas fa-satellite-dish"></i>&nbsp; Sensores de Scan <span class="caret"></span>
+				</a>
+				<ul class="dropdown-menu">
+					<li role="presentation"><a role="menuitem" href="/engines/list"><i class="fa fa-list"></i> Listar Sensores</a></li>
+					<li role="presentation"><a role="menuitem" href="/engines/add"><i class="fa fa-plus"></i>&nbsp; Criar Novo Sensor</a></li>
+					<li role="presentation" class="divider"></li>
+					<li role="presentation"><a role="menuitem" href="/engines/types/list"><i class="fa fa-list"></i> Tipos de Sensores</a></li>
+					<li role="presentation"><a role="menuitem" href="/engines/types/add"><i class="fa fa-plus"></i>&nbsp; Criar Novo Tipo</a></li>
+		        </ul>
+			  </li>
+              <li class="dropdown">
+				  <a class="dropdown-toggle" data-toggle="dropdown" href="/engines/policies/list">
+					<i class="fa fa-th-list"></i>&nbsp; Políticas de Scanner <span class="caret"></span>
+				  </a>
+				  <ul class="dropdown-menu">
+					<li role="presentation"><a role="menuitem" href="/engines/policies/list"><i class="fa fa-list"></i> Listar Políticas</a></li>
+					<li role="presentation"><a role="menuitem" href="/engines/policies/add"><i class="fa fa-plus"></i>&nbsp; Criar Políticas</a></li>
+					<li role="presentation" class="divider"></li>
+					<li role="presentation"><a role="menuitem" href="/engines/policies/import"><i class="fa fa-upload"></i> Importar Políticas</a></li>
+					<li role="presentation"><a role="menuitem" href="/engines/api/v1/policies/export?all=true"><i class="fa fa-download"></i> Exportar Políticas</a></li>
+                  </ul>
+			  </li>
+			  <li class="active">
+				<a href="#"><i class="fas fa-edit"></i>&nbsp; Edição de Política</a>
+			  </li>
+            </ul>
+
+  <form action="/engines/policies/edit/{{ policy_id }}" method="post" class="form-horizontal" style="margin:0;" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% for field in form %}
+          {% if field.errors %}
+              <div class="form-group has-error">
+                  <label class="col-sm-2 control-label" for="id_{{ field.name }}">{{ field.label }}</label>
+                  <div class="col-sm-4">
+                      {{ field }}
+                      <span class="help-block">
+                          {% for error in  field.errors %}{{ error }}{% endfor %}
+                      </span>
+                  </div>
+              </div>
+          {% elif not field.is_hidden %}
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_{{ field.name }}">{{ field.label }}</label>
+                  <div class="col-sm-4">
+                  {% if field.name == 'options' %}
+                      {% if user.is_superuser %}
+                          {{ field }}
+                          {% if field.help_text %}
+                              <p class="help-block"><small>{{ field.help_text }}</small></p>
+                          {% endif %}
+                      {% else %}
+                      <!--<a href="#" id="btn_options" class="btn btn-warning" style="color:#fff !important;">Opções</a>-->
+                      <div style="display:block;">
+                        {{ field }}
+                        {% if field.help_text %}
+                            <p class="help-block"><small>{{ field.help_text }}</small></p>
+                        {% endif %}
+                      </div>
+                      {% endif %}
+                  {% else %}
+                      {{ field }}
+                      {% if field.help_text %}
+                          <p class="help-block"><small>{{ field.help_text }}</small></p>
+                      {% endif %}
+                  {% endif %}
+                  </div>
+              </div>
+          {% endif %}
+      {% endfor %}
+      <div class="form-group submit-div">
+        <div class="col-sm-2">
+        </div>
+        <div class="col-sm-4">
+          <button type="submit" class="btn btn-warning col-sm-12">Atualizar Pol&iacute;tica</button>
+        </div>
+      </div>
+  </form>
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+</div>
+</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="modal-options" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <!--<h5 class="modal-title" id="exampleModalLabel">Opções</h5>-->
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <!--<button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>-->
+        <button type="button" class="btn btn-primary save-options">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+  $(function() {
+      $('#btn_options').on('click', function(){
+          var json_opt = JSON.parse($('#id_options').val());
+          var html_row = $('#modal-options .row');
+          $('#modal-options .row').html('');
+
+          for(opt in json_opt) {
+
+              var checked = '';
+              var form_element = '';
+              var form_element_child = '';
+
+              if(typeof json_opt[opt] === 'boolean'){
+                  if(json_opt[opt]==true) {
+                      checked = 'checked';
+                  }
+                  form_element = '<div class="col-md-4 padding-5" style="padding-left:60px !important;"><div class="material-switch"><input '+checked+' type="checkbox" name="'+opt+'" value="'+json_opt[opt]+'" id="switchOption'+opt+'" /><label for="switchOption'+opt+'" class="label-warning" style="background:#ef8224;"></label></div></div>';
+
+              } else if(Array.isArray(json_opt[opt])) {
+                    var i=0;
+                    for(index in json_opt[opt]) {
+                        form_element_child += '<div class="col-md-8 padding-5"></div><div class="col-md-4 padding-5"><input type="text" name="'+opt+'" value="'+json_opt[opt][index]+'" class="form-control form-control-sm " parent="'+opt+'" style="background:#353C42 !important; border:0 !important;" /></div>';
+                        i++;
+                    }
+              } else {
+                  form_element = '<div class="col-md-4 padding-5"><input type="text" name="'+opt+'" value="'+json_opt[opt]+'" class="form-control form-control-sm" style="background:#353C42 !important; border:0 !important;" /></div>';
+              }
+              $(html_row).append('<div class="col-md-8 padding-5">'+opt+'</div>'+form_element+form_element_child);
+          }
+          $('#modal-options').modal('show');
+      });
+
+      $('.save-options').click(function(){
+          var html_inputs = $('#modal-options input');
+          var array_options = {};
+          var child_options = {};
+
+          for(let i=0; i < html_inputs.length; i++) {
+
+              var name = $(html_inputs[i]).attr('name');
+              var type = $(html_inputs[i]).attr('type');
+              var parent = $(html_inputs[i]).attr('parent');
+
+              if(type == 'checkbox') {
+                  if ($(html_inputs[i]).is(':checked')) {
+                      var value = true;
+                  } else {
+                      var value = false;
+                  }
+                  array_options[name] = value;
+
+              } else {
+                  var value = $(html_inputs[i]).val();
+                  if(parent) {
+                      if(array_options[name]) {
+                        array_options[name].push(value);
+                      } else {
+                        array_options[name] = [];
+                        array_options[name].push(value);
+                      }
+                  } else {
+                      array_options[name] = value;
+                  }
+              }
+          }
+          var updated = JSON.stringify(array_options, null, 2);
+          $('#id_options').val(updated);
+          $('#modal-options').modal('hide');
+      });
+  });
+
+
+</script>
+
+
+{% endblock %}

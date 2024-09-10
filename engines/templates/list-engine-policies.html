@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% block content %}
+
+<div class="container-fluid" style="padding:0;">
+<section class="content-header">
+      <h1>
+      Sensores
+      <small> Políticas de Scanner</small>
+      </h1>
+      <ol class="breadcrumb">
+      <li><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboad</a></li>
+      <li class="active">Políticas de Scanner</li>
+      </ol>
+    </section>   
+    <div id="menu_tabs" class="container-fluid" style="padding:15px 15px;">	
+	<div class="nav-tabs-custom">
+	<ul class="nav nav-tabs">
+        <li class="dropdown">
+	<a class="dropdown-toggle" data-toggle="dropdown" href="/engines/list">
+	<i class="fas fa-satellite-dish"></i>&nbsp; Sensores de Scan <span class="caret"></span>
+		</a>
+		<ul class="dropdown-menu">
+		<li role="presentation"><a role="menuitem" href="/engines/list"><i class="fa fa-list"></i> Listar Sensores</a></li>
+		{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+		<li role="presentation"><a role="menuitem" href="/engines/add"><i class="fa fa-plus"></i>&nbsp; Criar Novo Sensor</a></li>
+		{% endif %}
+		<li role="presentation" class="divider"></li>
+		<li role="presentation"><a role="menuitem" href="/engines/types/list"><i class="fa fa-list"></i> Tipos de Sensores</a></li>
+		{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+		<li role="presentation"><a role="menuitem" href="/engines/types/add"><i class="fa fa-plus"></i>&nbsp; Criar Novo Tipo</a></li>
+		{% endif %}
+		</ul>
+		</li>
+                <li class="active dropdown">
+		<a class="dropdown-toggle" data-toggle="dropdown" href="/engines/policies/list">
+		<i class="fa fa-th-list"></i>&nbsp; Políticas de Scanner <span class="caret"></span>
+		</a>
+		<ul class="dropdown-menu">
+		<li role="presentation"><a role="menuitem" href="/engines/policies/list"><i class="fa fa-list"></i> Listar Políticas</a></li>
+		{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+		<li role="presentation"><a role="menuitem" href="/engines/policies/add"><i class="fa fa-plus"></i>&nbsp; Criar Políticas</a></li>
+		{% endif %}
+		<li role="presentation" class="divider"></li>
+		{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+		<li role="presentation"><a role="menuitem" href="/engines/policies/import"><i class="fa fa-upload"></i> Importar Políticas</a></li>
+		<li role="presentation"><a role="menuitem" href="/engines/policies/export?all=true"><i class="fa fa-download"></i> Exportar Políticas</a></li>
+                {% endif %}
+		 </ul>
+		</li>
+		{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+		<li class="pull-right"><a href="#" class="btn-export-selected"><i class="fas fa-download"></i> &nbsp; Exportar Selecionados</a></li>
+             	{% endif %}
+		 </ul>
+<div class="tab-content">	
+  <table class="table table-bordered"
+      data-toggle="table"
+      data-sort-name="value"
+      data-sort-order="desc">
+    <thead>
+      <tr>
+        <th data-field="cb" style="width:10px;"><input type="checkbox" onClick="toggle(this)" /></th>
+        <th data-field="engine_name">Nome do Sensor</th>
+        <th data-field="name">Nome (Arquivo de pol&iacute;tica incluso)</th>
+        <th data-field="updated_at">Atualizado</th>
+        
+        <th style="width:60px;">Info</th>
+	{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <th style="width:60px;">Duplicar</th>
+        <th style="width:60px;">Editar</th>
+        <th style="width:60px;">Exportar</th>
+        <th style="width:60px;">Excluir</th>
+	{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+    {% for policy in policies %}
+    <tr>
+      <td><input type="checkbox" class="radio" name="policy" value="{{ policy.id }}"/></td>
+      <td>{{ policy.engine }}</td>
+      <td>{{ policy.name }}
+      {% if policy.file.name %}<span class="glyphicon glyphicon-file"></span>
+      {% endif %}
+      </td>
+      <td>{{ policy.updated_at|date:"d/m/Y\-H:i:s"  }}</td>
+	<td>
+	<a href="#" style="margin-left:15px;" class="btn-engine-info" data-toggle="modal" data-target="#modalInfo{{ policy.id }}"><i class="fas fa-info"></i></a>
+	<div id="modalInfo{{ policy.id }}" class="modal fade" role="dialog">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header bg-primary">
+                <button type="button" class="close" style="color:white" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">{{ policy.name }}</h4>
+              </div>
+              <div class="modal-body">
+                <p>{{ policy.description }}</p>
+                <p>Sensor: {{ policy.engine }}</p>
+                <p>Op&ccedil;&otilde;es: {{ policy.options }}</p>
+                <p>Escopos: {{ policy.scopes.all|join:", " }}</p>
+                <p>Status: {{ policy.status }}</p>
+                <p>Definir como Padr&atilde;o?: {{ policy.default }}</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        </td>
+	{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <td>
+	<a href="#" style="margin-left:15px;" class="btn-duplicate-policy" policy-id="{{ policy.id }}"><i class="fas fa-clone"></i></a>
+        </td>
+	{% endif %}
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <td>
+	<a href="/engines/policies/edit/{{ policy.id }}" style="margin-left:15px;""><i class="fas fa-edit"></i></a>
+        </td>
+	{% endif %}
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <td>
+	<a href="{% url 'export_policy_api' policy.id %}" style="margin-left:15px;"><i class="fas fa-download"></i></a>
+        </td>
+	{% endif %}
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <td>
+	<a href="#" style="margin-left:15px;" data-toggle="modal" data-target="#modal-delete-policy" policy-id="{{ policy.id }}" policy-name="{{ policy.name }}"><i class="fas fa-trash"></i></a>
+        </td>
+	{% endif %}      
+    </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+
+<br/>
+<br/>
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+</div>
+</div>
+</div>
+<!-- Delete Policy modal -->
+<div class="modal fade" id="modal-delete-policy" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Excluir Pol&iacute;tica</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="delete-policy">
+          <!-- Content -->
+        </div>
+        Confirma Exclus&atilde;o?
+        <button type="button" class="btn btn-xs btn-warning btn-delete-policy" data-dismiss="modal" autofocus>Sim</button>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">N&atilde;o</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+  function toggle(source) {
+    checkboxes = document.getElementsByName('policy');
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+      checkboxes[i].checked = source.checked;
+    }
+  }
+
+  // jQuery ready
+  $(function() {
+
+    // Export selected policies
+    $("a.btn-export-selected").on('click', function(eventObject) {
+      policies_to_export = [];
+      $("input[name='policy']").each(function(cbx){
+        if (this.checked) {
+          policies_to_export.push(this.value)
+        }
+      });
+
+      if (policies_to_export.length != 0){
+        export_url="{% url 'export_policies_api' %}"
+        var request = $.ajax({
+          url: export_url,
+          method: "POST",
+          headers: {"X-CSRFToken": "{{ csrf_token }}"},
+          data: JSON.stringify(policies_to_export),
+          contentType: "application/json"
+        });
+        request.done(function(response){
+          var blob=new Blob([JSON.stringify(response)], {type: "application/json"});
+          var link=document.createElement('a');
+          link.href=window.URL.createObjectURL(blob);
+          link.download="selected_policies.json";
+          link.click();
+        });
+      }
+    }); // End - Export selected policies
+
+    // Delete engine policy modal
+    $("#modal-delete-policy").on('show.bs.modal', function (e) {
+      policy_id = e.relatedTarget.getAttribute('policy-id');
+      policy_name = e.relatedTarget.getAttribute('policy-name');
+      $("div#delete-policy").attr('policy-id', policy_id);
+      $("div#delete-policy").html("Policy: <b>"+policy_name+"</b><br/><br/>");
+    });
+    $("button.btn-delete-policy").on('click', function (e) {
+      policy_id = $("div#delete-policy").attr('policy-id');
+      delete_policy_url = "{% url 'delete_policy_api' 0 %}".replace('0', policy_id);
+      var request = $.ajax({
+        url: delete_policy_url,
+        method: "DELETE",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        success: function(){
+          location.reload();
+        }
+      });
+    }); // End - Delete engine policy modal
+
+    // Duplicate engine policy
+    $("a.btn-duplicate-policy").on('click', function (e) {
+      policy_id = e.currentTarget.getAttribute('policy-id');
+      duplicate_policy_url = "{% url 'duplicate_policy_api' 0 %}".replace('0', policy_id);
+      var request = $.ajax({
+        url: duplicate_policy_url,
+        method: "PUT",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        success: function(){
+          location.reload();
+        }
+      });
+    }); // End - Duplicate engine policy
+
+  });
+</script>
+{% endblock %}

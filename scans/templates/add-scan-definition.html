@@ -1,0 +1,737 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+.no_padding {
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+.tooltip-inner {
+    max-width: 600px;
+    padding: 10px;
+    text-align: left;
+}
+
+#scrollable-dropdown-menu .tt-dropdown-menu {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.twitter-typeahead, .tt-hint, .tt-input, .tt-menu { width: 100%; }
+
+.tt-query {
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+
+.tt-hint {
+    color: #999;
+}
+
+.tt-menu {
+    /* width: 422px; */
+    margin-top: 12px;
+    padding: 8px 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    box-shadow: 0 5px 10px rgba(0,0,0,.2);
+}
+
+.tt-suggestion {
+    padding: 3px 20px;
+    /* font-size: 18px; */
+    line-height: 24px;
+}
+
+.tt-suggestion.tt-is-under-cursor {
+    color: #fff;
+    background-color: #0097cf;
+
+}
+
+.tt-suggestion p {
+    margin: 0;
+}
+
+label.radio {
+  margin-left: 20px;
+}
+</style>
+
+
+
+<div class="container-fluid" style="padding:0;">
+
+
+<section class="content-header">
+      <h1>
+        Scanners
+        <small> Criar Novo Scan</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboad</a></li>
+        <li class="active">Criar Novo Scan</li>
+      </ol>
+    </section>
+
+
+      <div id="menu_tabs" class="container-fluid" style="padding:15px 15px;">
+
+
+			<div class="nav-tabs-custom">
+
+			<ul class="nav nav-tabs">
+			 <li class="active">
+				<a href="/scans/defs/add">
+					<i class="fa fa-plus"></i>&nbsp; Criar Novo Scan
+				</a>
+			  </li>
+              <li>
+				<a href="/scans/list">
+					<i class="fa fas fa-bullseye"></i>&nbsp; Scans Realizados
+				</a>
+			  </li>
+			  <li>
+				<a href="/scans/defs/list">
+					<i class="fa fa-list"></i>&nbsp; Scans Parametrizados
+				</a>
+			  </li>
+            </ul>
+
+
+  <form action="{% url 'add_scan_def_view' %}" method="post" class="form-horizontal form-scan" style="margin:0;">
+    {% csrf_token %}
+    <!-- Title -->
+    <div class="form-group">
+      <label class="col-sm-2 control-label" for="id_title">Nome</label>
+      <div class="col-sm-5">
+        <input id="id_title" name="title" type="text" placeholder="Entre com um nome para o scan..." required class="form-control"/>
+      </div>
+    </div>
+
+
+    <!-- Description -->
+    <div class="form-group">
+      <label class="col-sm-2 control-label" for="id_description">Descrição</label>
+      <div class="col-sm-5">
+        <textarea cols="40" id="id_description" name="description" rows="5"  placeholder="Entre com uma descrição..." required class="form-control"/></textarea>
+      </div>
+    </div>
+
+    <!-- Scan Type -->
+    <div class="form-group">
+      <label class="col-sm-2 control-label" for="id_scan_type">Tipo de Scan</label>
+      <div class="col-sm-4">
+        <div class="col-sm-6 no_padding">
+          <div class="btn-group btn-group-sm btn-scantype" data-toggle="buttons">
+            <label class="btn btn-success active" id="lbl_scan_type_ondemand">
+              <input type="radio" name="scan_type" value="single" id="id_scan_type_ondemand" autocomplete="off" checked="checked"> Sob-demanda
+            </label>
+            <label class="btn btn-primary" id="lbl_scan_type_periodic">
+              <input type="radio" name="scan_type" value="periodic" id="id_scan_type_periodic" autocomplete="off"> Peri&oacute;dico
+            </label>
+
+          </div>
+        </div>
+        <!-- Periodicity options -->
+        <div class="col-sm-3 no_padding">
+          <input class="form-control form-control-sm" type="text" placeholder="a cada" id="id_scan_periodic_freq" name="every" required class="form-control"  disabled>
+        </div>
+        <div class="col-sm-3 no_padding">
+          <select class="form-control form-control-sm" id="id_scan_periodic_period" name="period" disabled>
+            <option value="days">Dias</option>
+            <option value="hours">Horas</option>
+            <option value="minutes">Minutos</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scan starting -->
+    <div class="form-group">
+      <label class="col-sm-2 control-label" for="id_enabled">Iniciar Scan</label>
+      <div class="col-sm-4">
+        <div class="col-sm-7 no_padding">
+          <div class="btn-group btn-group-sm btn-scanrun" data-toggle="buttons">
+
+            <label class="btn btn-success active" id="lbl_start_now">
+              <input type="radio" name="start_scan" id="id_start_now" autocomplete="off" checked="checked" value="now">Agora
+            </label>
+            <label class="btn btn-primary" id="lbl_start_later">
+              <input type="radio" name="start_scan" id="id_start_later" autocomplete="off" value="later">Depois
+            </label>
+             <!--label class="btn btn-primary" id="lbl_start_scheduled">
+              <input type="radio" name="start_scan" id="id_start_scheduled" autocomplete="off" value="scheduled">Agendar
+            </label>-->
+          </div>
+        </div>
+        <!--div class="col-sm-5 controls input-append date no_padding" id="id_scheduled_at_div" >
+          <input id="id_scheduled_at" name="scheduled_at" type="text" class="form-control form-control-sm" placeholder="Selecione"  disabled>
+        </div>-->
+      </div>
+    </div>
+
+    <!-- Asset selection -->
+    <div class="form-group">
+      <label class="col-sm-2 control-label"  for="id_assets_list">Pesquisar Ativos</label>
+      <div class="col-sm-5 has-feedback">
+        <div id="scrollable-dropdown-menu">
+          <input class="typeahead form-control" type="text" placeholder="Procurar ativos">
+          <i class="form-control-feedback glyphicon glyphicon-search"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selected assets and asset groups -->
+    <div class="form-group">
+      <label class="col-sm-2 control-label"  required for="id_assets_list">Ativo(s) Alvo(s)</label>
+      <div class="col-sm-5">
+        <div class="custom-control  custom-checkbox cbx_assets">
+          <!-- list of selected assets -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter scan policies by engine name -->
+    <div class="form-group" id="engine-buttons">
+      <label class="col-sm-2 control-label" for="id_engine_name">Filtrar por Sensor</label>
+      <div class="col-sm-10">
+        <div class="btn-group btn-group-sm" role="group" data-toggle="buttons">
+          <label class="btn btn-primary" engineId="0">
+            <input type="radio" autocomplete="off">Todos
+          </label>
+          {% for engine in scan_engines %}
+            <label class="btn btn-primary" engineId="{{ engine.id }}" data-engineid="{{ engine.id }}">
+              <input type="radio" autocomplete="off">
+              {{ engine.name }}
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter scan policies by scan category -->
+    <div class="form-group" id="category-buttons">
+      <label class="col-sm-2 control-label" for="id_scan_category">Filtrar por Categoria</label>
+      <div class="col-sm-10">
+        <div class="btn-group btn-group-sm" role="group" data-toggle="buttons">
+          <label class="btn btn-primary" categoryId="0">
+            <input type="radio" autocomplete="off">Todas
+          </label>
+          {% for category in scan_cats %}
+          <label class="btn btn-primary" categoryId="{{ category.id }}" data-categoryid="{{ category.id }}">
+            <input type="radio" autocomplete="off">{{ category.name }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Scan policy selection -->
+    <div class="form-group hidden" id="policies-div">
+      <label class="col-sm-2 control-label" for="id_engine_policy">Selecionar Pol&iacute;tica</label>
+      <div class="col-sm-10 custom-control custom-radio">
+        {% for policy in scan_policies %}
+        <label class="radio" label-id="{{ policy.id }}">
+          <input type="radio" class="custom-control-input" name="engine_policy" id="id_engine_policy_{{ policy.id }}" value="{{ policy.id }}" engine-name="{{ policy.engine.name }}" policy-name="{{ policy.name }} - {{ policy.engine }}" required/>{{ policy.name }} - {{ policy.engine }}
+          <i data-toggle="tooltip" data-html="true" data-placement="right" data-original-title="<b>Descrição</b>: {{ policy.description }}" class="fa fa-question-circle"></i>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Engine instance selection -->
+    <!-- Displayed when a policy is selected-->
+    <div class="form-group hidden" id="engine-div">
+      <label class="col-sm-2 control-label" for="id_engine_id">Selecionar Sensor</label>
+      <div class="col-sm-4">
+        <select id="id_engine" name="engine_id" class="form-control" required>
+          <!-- autofilled by jQuery -->
+        </select>
+      </div>
+    </div>
+    <div class="form-group hidden submit-div">
+      <div class="col-sm-2">
+      </div>
+      <div class="col-sm-4">
+        <button type="submit" class="btn btn-warning col-sm-12">Criar novo Scan</button>
+      </div>
+    </div>
+  </form>
+ </div>
+</div>
+</div>
+
+
+<!-- Select asset modal -->
+<div class="modal fade" id="modal-select-asset" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel"></h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="delete-scan-def">
+          <!-- Content -->
+        </div>
+        Selecione um ou mais Ativos antes de prosseguir
+        <button type="button" class="btn btn-sm btn-warning pull-right" data-dismiss="modal">Ok</button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal_verify_minutes" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" style="text-align:center;">
+        <p>A periodicidade do <b>Scan</b> não pode ser menor que 30 minutos.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal_policy_allowed_types" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 style="float:left;" class="modal-title">Existem tipos de ativos não compatíveis com a política selecionada</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h4 style="margin-bottom:20px;">Política Selecionada</h4>
+            <p><b>Nome:</b> <span class="modal-policy-name"></span></p>
+            <p><b>Tipos de ativos permitidos:</b> <span class="modal-policy-types"></span></p>
+          </div>
+          <div class="col-md-6">
+            <h4 style="margin-bottom:20px;">Ativos não compatíveis</h4>
+            <div class="modal-assets-list">
+
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+    <script type="text/javascript">
+    $('#id_scan_periodic_period').on('click', function(){
+		var id_scan_periodic_freq = $('#id_scan_periodic_freq').val();
+		if(id_scan_periodic_freq < 30 && $(this).val() == 'minutes') {
+			$('#modal_verify_minutes').modal('show');
+			$('#id_scan_periodic_freq').val('');
+		}
+	});
+	$('#id_scan_periodic_freq').on('change', function(){
+		var id_scan_periodic_period = $('#id_scan_periodic_period').val();
+		if(id_scan_periodic_period=='minutes' && $(this).val() < 30) {
+			$('#modal_verify_minutes').modal('show');
+			$(this).val('');
+		}
+	});
+    </script>
+
+
+
+  <script src="/static/js/bootstrap.min.js"></script>
+
+<script>
+
+  _selected_assets = [];
+  _id_asset = 1;
+  $(function() {
+
+	// assets averiguation
+	$('.form-scan').submit(function(){
+		var assets_ckd = $('.cbx_assets input:checked').length;
+		if(assets_ckd == 0) {
+			$('#modal-select-asset').modal('show');
+			return false;
+		}
+	});
+
+    // toggle scan type radio buttons styles
+    $('div.btn-scantype').click(function (e) {
+      if (e.target.id != $('div.btn-scantype label.active').attr('id')){
+        $('div.btn-scantype label:not(.active) input').attr("checked", "checked");
+        $('div.btn-scantype label.active input').removeAttr("checked", "checked");
+
+        $('div.btn-scantype label.active').removeClass("btn-success");
+        $('div.btn-scantype label.active').addClass("btn-primary");
+        $('div.btn-scantype label:not(.active)').removeClass("btn-primary");
+        $('div.btn-scantype label:not(.active)').addClass("btn-success");
+
+        if (e.target.id == "lbl_scan_type_periodic"){
+          $('#id_scan_periodic_freq').removeAttr("disabled");
+          $('#id_scan_periodic_period').removeAttr("disabled");
+        } else {
+          $('#id_scan_periodic_freq').attr("disabled","disabled");
+          $('#id_scan_periodic_period').attr("disabled","disabled");
+        }
+      }
+    });
+
+    // toggle scan start radio buttons styles
+    $('div.btn-scanrun').click(function (e) {
+      if (e.target.id != $('div.btn-scanrun label.active').attr('id')){
+        $('div.btn-scanrun label input').removeAttr("checked", "checked");
+        $(e.target).find('input').attr("checked", "checked");
+
+        $('div.btn-scanrun label').removeClass("btn-success");
+        $('div.btn-scanrun label').addClass("btn-primary");
+        $(e.target).removeClass("btn-primary");
+        $(e.target).addClass("btn-success");
+
+        if (e.target.id == "lbl_start_scheduled"){
+          $('#id_scheduled_at').removeAttr("disabled");
+         } else {
+          $('#id_scheduled_at').attr("disabled", "disabled");
+        }
+        $('div.btn-scanrun label input').removeAttr("disabled")
+      }
+    });
+
+jQuery(function($){
+        $.datepicker.regional['pt-BR'] = {
+                closeText: 'Fechar',
+                prevText: '&#x3c;Anterior',
+                nextText: 'Pr&oacute;ximo&#x3e;',
+                currentText: 'Hoje',
+                monthNames: ['Janeiro','Fevereiro','Mar&ccedil;o','Abril','Maio','Junho',
+                'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+                monthNamesShort: ['Jan','Fev','Mar','Abr','Mai','Jun',
+                'Jul','Ago','Set','Out','Nov','Dez'],
+                dayNames: ['Domingo','Segunda-feira','Ter&ccedil;a-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sabado'],
+                dayNamesShort: ['Dom','Seg','Ter','Qua','Qui','Sex','Sab'],
+                dayNamesMin: ['Dom','Seg','Ter','Qua','Qui','Sex','Sab'],
+                weekHeader: 'Sm',
+                dateFormat: 'dd/mm/yy',
+                firstDay: 0,
+                isRTL: false,
+                showMonthAfterYear: false,
+                yearSuffix: ''};
+        $.datepicker.setDefaults($.datepicker.regional['pt-BR']);
+});
+
+    // datepicker for scheduled scans
+    $("#id_scheduled_at").datetimepicker({
+      locale: 'pt-BR',
+      minuteStep: 5,
+      autoclose: true,
+      format: 'yyyy-mm-dd hh:ii:ss',
+      clearBtn: true,
+      //pickerPosition: 'bottom-right',
+      showMeridian: false,
+      todayHighlight: true
+    });
+
+
+
+    localStorage.clear();
+    var assets = new Bloodhound({
+      // datumTokenizer: Bloodhound.tokenizers.obj.whitespace,
+      datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+      queryTokenizer: Bloodhound.tokenizers.whitespace,
+      prefetch: "{% url 'list_assets_api' %}",
+      ttl:0,
+      remote: {
+        url: "{% url 'list_assets_api' %}?q=%QUERY",
+        wildcard: '%QUERY'
+      }
+    });
+
+    $('#scrollable-dropdown-menu .typeahead').typeahead({
+      hint: true,
+      highlight: true,
+      minLength: 2
+    }, {
+      name: 'assets',
+      display: 'value',
+      //limit: 5,
+      source: assets.ttAdapter(),
+      templates: {
+        empty: function(data) {
+          return '<div class="noitems"> No items found</div>';
+        },
+        suggestion: function(data) {
+          if (data.format == "asset"){
+            return '<div>' + data.value + ' - '+ data.name + '</div>';
+          } else {
+            return '<div> [Group] ' + data.value + ' - '+ data.name + '</div>';
+          }
+        }
+      }
+    }).bind("typeahead:selected", function(e, datum, name) {
+      // append the asset to the list
+      if (_selected_assets.indexOf(datum["value"]) == -1){
+        if (datum["format"] == "asset") {
+
+          //get asset type
+          $.get('/assets/api/v1/by-id/'+datum['id'], function(data) {/*+datum['id']*/
+              populateAssetHtml(e, datum, name, data);
+          });
+          //populateAssetHtml
+          function populateAssetHtml(e, datanum, name, data) {
+              _selected_assets.push(datum["value"]);
+              _id_asset += 1;
+              $('div.cbx_assets').append("<label for='id_assets_list_"+_id_asset+"' class='custom-control-label'>\
+                <input id='id_assets_list_"+_id_asset+"' class='custom-control-input' name='assets_list' type='checkbox' data-type='"+data['type']+"' data-title='"+data['name']+" - "+e.target.value+"' value='"+datum["id"]+"' checked/> "+data['name']+" - "+e.target.value+" ("+data['type']+")</label><br/>");
+          }
+
+          /*_selected_assets.push(datum["value"]);
+          _id_asset += 1;
+          $('div.cbx_assets').append("<label for='id_assets_list_"+_id_asset+"' class='custom-control-label'>\
+            <input id='id_assets_list_"+_id_asset+"' class='custom-control-input' name='assets_list' type='checkbox' value='"+datum["id"]+"' checked/> "+e.target.value+"</label><br/>");
+          */
+        } else {
+          //get assetgroup types
+          $.get('/assets/api/v1/groups/report/json/'+datum['id'], function(data) {/*+datum['id']*/
+              var asset_types = [];
+              for(var i=0; i<data.length; i++) {
+                  if(asset_types[data[i].asset.type]) {
+                    asset_types[data[i].asset.type] += 1;
+                  } else {
+                    asset_types[data[i].asset.type] = 1;
+                  }
+              }
+              var types = Object.keys(asset_types).join(', ');
+              populateAssetGroupHtml(e, datum, name, data, types);
+          });
+          function populateAssetGroupHtml(e, datum, name, data, types) {
+              _selected_assets.push(datum["value"]);
+              _id_asset += 1;
+              $('div.cbx_assets').append("<label for='id_assetgroups_list_"+_id_asset+"' class='custom-control-label'>\
+                <input id='id_assetgroups_list_"+_id_asset+"' data-title='Grupo - "+e.target.value+"' data-type='"+types+"' class='custom-control-input' name='assetgroups_list' type='checkbox' value='"+datum["id"]+"' checked/> Grupo - "+e.target.value+" ("+types+")</label><br/>");
+          }
+          /*_selected_assets.push(datum["value"]);
+          _id_asset += 1;
+          $('div.cbx_assets').append("<label for='id_assetgroups_list_"+_id_asset+"' class='custom-control-label'>\
+            <input id='id_assetgroups_list_"+_id_asset+"' class='custom-control-input' name='assetgroups_list' type='checkbox' value='"+datum["id"]+"' checked/> "+e.target.value+" (group)</label><br/>");
+          */
+        }
+      }
+    });
+
+    function policiesTypes() {
+
+        $.get('/engines/api/v1/types', function(data){
+
+            var types = [];
+            var types_clean = [];
+            for(x=0; x < data.length; x++) {
+                types[data[x].name] = data[x].allowed_asset_types.match(/'(.*?)'/g);
+                types_clean[data[x].name] = [];
+                for(y=0; y < types[data[x].name].length; y++) {
+                  types_clean[data[x].name][y] = types[data[x].name][y].replace(/["']/g, "");
+                }
+
+            }
+            console.log(types_clean);
+
+            var inputs = $('#policies-div input');
+            for(i=0; i < inputs.length; i++) {
+                var engine_name = $(inputs[i]).attr('engine-name');
+                //type_names[] = types_clean[engine_name].join(',');
+                $(inputs[i]).attr('allowed-types', types_clean[engine_name].join(','));
+                var description = $(inputs[i]).parent().find('i').attr('data-original-title');
+                var complete_text = '<b>Tipos de ativos permitidos</b>: '+types_clean[engine_name].join(', ')+'<br />'+description;
+
+                $(inputs[i]).parent().find('i').attr('data-original-title', complete_text);
+
+
+                //$(inputs[i]).parent().append('<i data-toggle="tooltip" data-placement="top" data-original-title="Tipos de ativos permitidos: '+types_clean[engine_name].join(', ')+'" class="fa fa-question-circle"></i>');
+
+                //alert(engine);
+            }
+        });
+
+
+
+        //alert(inputs.length);
+    }
+    policiesTypes();
+
+    //Validate Asset Types vs Policy
+    $('.form-scan').submit(function(){
+
+      var selected_policy_alowed_types = $('#policies-div input:checked').attr('allowed-types');
+      var split_policy_types = selected_policy_alowed_types.split(',');
+
+      var alowed_types = [];
+      for(i=0; i < split_policy_types.length; i++){
+          alowed_types[i] = split_policy_types[i];
+      }
+      //console.log(alowed_types);
+      var selected_assets_types = $('.cbx_assets input:checked');
+      var validation_errors = [];
+
+      for(x=0; x < selected_assets_types.length; x++){
+          var asset_types = $(selected_assets_types[x]).attr('data-type').split(',');
+          var asset_title = $(selected_assets_types[x]).attr('data-title');
+          for(y=0; y< asset_types.length; y++){
+              if(!alowed_types.includes(asset_types[y])) {
+                validation_errors[x] = {
+                  asset_name: asset_title,
+                  asset_types: asset_types.join(', ')
+                }
+              }
+          }
+      }
+
+      if(validation_errors.length) {
+
+        var policy_name = $('#policies-div input:checked').attr('policy-name');
+        var policy_types = $('#policies-div input:checked').attr('allowed-types');
+
+        var asset_html = '';
+        for(a=0; a < validation_errors.length; a++){
+          asset_html += '<div style="padding-left:10px; border-left: solid 5px #EF8224; margin-bottom:20px;"><p><b>Nome:</b> '+validation_errors[a].asset_name+'</span></p>\
+          <p><b>Tipo(s):</b> '+validation_errors[a].asset_types+'</p></div>';
+        }
+        $('.modal-assets-list').html(asset_html);
+
+        $('#modal_policy_allowed_types .modal-policy-name').html(policy_name);
+        $('#modal_policy_allowed_types .modal-policy-types').html(policy_types);
+
+        $('#modal_policy_allowed_types').modal('show');
+        return false;
+      }
+      //console.log(validation_errors);
+    });
+
+    // Filter scan policy by engines & categories
+    var policies_list = {{ scan_policies_json | safe }};
+    var hidden_policies_by_cat = [];
+    var hidden_policies_by_engine = [];
+    $('#category-buttons').bind('change', function(e){
+
+      $('#policies-div input:checked').attr('checked', false);
+
+      $('#policies-div').removeClass('hidden');
+      $("html, body").animate({ scrollTop: $(document).height() }, "slow");
+      $('#engine-buttons > div > div > label').removeClass('active');
+      $('#engine-buttons > div > div > label[engineid=0]').addClass('active');
+
+      active_cat = parseInt($(e.target).attr('categoryId'));
+      hidden_policies_by_cat = [];
+
+	  //alert($(e).data('engineid'));
+
+      if (active_cat != 0) {
+        var i, j;
+
+        // loop on all policies
+        for (i = 0; i < policies_list.length; ++i){
+          scopes = policies_list[i]["scopes"];
+          if (scopes.indexOf(active_cat) == -1) {
+            if (hidden_policies_by_cat.indexOf(policies_list[i]["id"]) === -1){
+              hidden_policies_by_cat.push(policies_list[i]["id"]);
+            }
+          };
+        }
+      }
+
+      //list policies with categoryId in scopes
+      labels = $("#policies-div").find('div > label');
+      for (i = 0; i < labels.length; ++i){
+        if (hidden_policies_by_cat.indexOf(parseInt($(labels[i]).attr('label-id'))) > -1){
+          $(labels[i]).addClass('hidden');
+        } else {
+          $(labels[i]).removeClass('hidden');
+        }
+      }
+
+    }); //End of $('#category-buttons').bind('change')
+
+    $('#engine-buttons').bind('change', function(e){
+
+      $('#policies-div input:checked').attr('checked', false);
+
+      $('#policies-div').removeClass('hidden');
+      $("html, body").animate({ scrollTop: $(document).height() }, "slow");
+      $('#category-buttons > div > div > label').removeClass('active');
+      $('#category-buttons > div > div > label[categoryid=0]').addClass('active');
+
+      active_engine = parseInt($(e.target).attr('engineId'));
+      hidden_policies_by_engine = [];
+
+      //alert($(e.target).attr('engineId'));
+
+      if (active_engine != 0) {
+        var i, j;
+
+        // loop on all policies
+        for (i = 0; i < policies_list.length; ++i){
+          if( policies_list[i]['engine'] != active_engine){
+            hidden_policies_by_engine.push(policies_list[i]['id'])
+          }
+        }
+      }
+
+      //list policies with matching categoryId
+      labels = $("#policies-div").find('div > label');
+      for (i = 0; i < labels.length; ++i){
+        if (hidden_policies_by_engine.indexOf(parseInt($(labels[i]).attr('label-id'))) > -1){
+          $(labels[i]).addClass('hidden');
+        } else {
+          $(labels[i]).removeClass('hidden');
+        }
+      }
+    }); //End of $('#engine-buttons').bind('change')
+
+    // unhide the engine select until a scan policy is selected
+    $("#policies-div").change(function(e){
+      $('#engine-div').removeClass('hidden');
+      $('div.submit-div').removeClass('hidden');
+      $("html, body").animate({ scrollTop: $(document).height() }, "slow");
+    });
+
+    // List appropriate engine instances depending on scan policy
+    engine_list = {{scan_engines_json|safe}}
+    $("[name='engine_policy']").change(function(e){
+      engine_name = e.currentTarget.getAttribute('engine-name');
+      $('select#id_engine').empty();
+      $('select#id_engine').append("<option value='-1'> Rand&ocirc;mico (Padr&atilde;o)</option>");
+      for (i = 0; i< engine_list.length; i++){
+        if(engine_list[i]["engine__name"] == engine_name){
+          $('select#id_engine').append($('<option>', {
+              value: engine_list[i]['id'],
+              text: engine_list[i]['name']
+            })
+          );
+        }
+      }
+    });
+
+  }); //End of jQuery ready
+
+</script>
+
+{% endblock %}

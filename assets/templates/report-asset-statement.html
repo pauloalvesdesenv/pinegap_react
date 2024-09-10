@@ -1,0 +1,501 @@
+{% load staticfiles %}
+{% load pinegap_tags %}
+{% load i18n %}
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'staticv2/reports/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'staticv2/reports/css/reports.css' %}">
+    <title>{{site_name}} | Relatório Mensal de Ativos</title>
+  </head>
+  <style>
+    .table-assets td { padding:7px !important; }
+    .table-assets h5 { float:right; }
+    .table-assets span { border-radius:3px; color:#fff; padding:1px 5px 2px 5px; display:inline-block; }
+    .table-assets span.ip { background:#8593A0; }
+    .table-assets span.url { background:#436582; }
+    .table-assets span.domain { background:#1A3954; }
+    .primary-loader { position:absolute; right:50%; top:50%; width:70px; margin:0 auto; }
+    .a4-month { font-style: normal; }
+    .a4-year { font-style: normal; }
+  </style>
+  <body>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <button onclick="javascript:pdfGen()" class="btn btn-primary ">Salvar PDF</button>
+      <a class="back" href="javascript:history.back()"><i class="fas fa-arrow-left"></i> Voltar</a>
+    </div>
+
+    <img class="primary-loader" src="{% static 'staticv2/reports/img/primary-loader.gif' %}" />
+
+    <!-- Loading modal -->
+    <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modal" aria-hidden="true">
+      <div class="modal-dialog" id="modal" role="document">
+        <div class="modal-content">
+          <div class="modal-header"></div>
+          <div class="modal-body">
+            <h5 class="modal-title">Estamos gerando o seu PDF</h5>
+            <img src="{% static 'staticv2/reports/img/loader.gif' %}" />
+          </div>
+          <div class="modal-footer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Blob buffer -->
+    <div class="pdf" filename='Relatorio-Billing-Gerado-em-{% now "d" %}-{% now "F" %}-{% now "Y" %}-{% now "H:i" %}.pdf' quality="2">
+      <!--empty-->
+    </div>
+
+    <div class="document">
+
+        <!-- a4 model -->
+        <div class="a4-model">
+
+          <div class="a4">
+            <div class="container-fluid">
+              <!-- row -->
+              <div class="row header">
+                  <div class="col-5">
+                    <img class="logo" src="/media/{{report_logo}}" />
+                  </div>
+                  <div class="col-7">
+                    <h1>Ativos / Relatório de <i class="a4-month"></i> de <i class="a4-year"></i></h1>
+                    <small class="date">{% now "d" %} de {% now "F" %} de {% now "Y" %} às {% now "H:i" %}</small>
+                  </div>
+              </div>
+
+              <!-- row -->
+              <div class="row">
+                  <div class="col-12 a4-loop-content" mm="230"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- a4-loop -->
+        <div class="a4-loop">
+          <!--loop areas-->
+          <div class="a4-loop-model" loop-item="areas" mm="20">
+            <div class="row"><h2>##title##</h2></div>
+          </div>
+
+          <!--loop list-->
+          <div class="a4-loop-model" loop-item="list" mm="10">
+            <table>
+              <tr>
+                <td>##id##</td>
+                <td>##name##</td>
+                <td>##created_at##</td>
+              </tr>
+            </table>
+          </div>
+
+          <!--loop list-table-->
+          <div class="a4-loop-model" loop-item="list-table" mm="10">
+              <table class="table-assets table-striped finding-table table" style="width:670px; margin:30px 90px 0 0 !important;">
+                <tbody>
+                    <tr>
+                      <td style="width:30px;"><b>ID</b></td>
+                      <td><b>Endereço do Ativo</b></td>
+                      <td style="width:120px;"><b class="created_at">Data de Criação</b></td>
+                    </tr>
+                </tbody>
+              </table>
+          </div>
+
+          <!--loop list-total-->
+          <div class="a4-loop-model" loop-item="list-total" mm="15">
+            <table>
+              <tr style="background:transparent;">
+                <td class="list-total" colspan="4">
+                  <h5 style="padding-top:20px;"><!--empty--></h5>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+        </div>
+
+        <!-- a4-prepend-->
+		<div class="a4-prepend">
+			<!-- a4 a4-1 -->
+			<div class="a4">
+			  <div class="container-fluid">
+
+				<!-- row -->
+				<div class="row header">
+					<div class="col-5">
+					  <img class="logo" src="/media/{{report_logo}}" />
+					</div>
+					<div class="col-7">
+					  <h1>Ativos / Relatório de <i class="a4-month"></i> de <i class="a4-year"></i></h1>
+					  <small class="date">{% now "d" %} de {% now "F" %} de {% now "Y" %} as {% now "H:i" %}</small>
+					</div>
+				</div>
+
+
+
+				<br class="space-5" />
+
+				<!-- row -->
+				  <div class="row">
+					<div class="col-12">
+					  <h2>Resumo do Mês</h2>
+					  <span style="border-bottom:solid 1px #ccc; padding:2px 0px; font-size:18px; position:absolute; right:0; top:25px;" class="instance"></span>
+					</div>
+				  </div>
+
+				  <!-- row -->
+				<div class="row">
+					 <table class="table-assets table-striped table" style="width:670px; margin:30px 90px 0 15px !important;">
+						 <tr>
+							 <td>Total de Ativos no Mês</td>
+							 <td class="recipient-total-1"></td>
+						 </tr>
+						 <tr>
+							 <td>Ativos Adicionados no Mês</td>
+							 <td class="recipient-total-2"></td>
+						 </tr>
+						 <tr>
+							 <td>Ativos Removidos no Mês</td>
+							 <td class="recipient-total-3"></td>
+						 </tr>
+					 </table>
+				  </div>
+
+				  <br class="space-5" />
+				  <br class="space-5" />
+
+
+				<div class="a4-loop-content" mm="150"></div>
+
+
+			  </div>
+			</div>
+			<br />
+		</div>
+
+        <!-- a4-append -->
+        <div class="a4-append">
+
+          <!-- a4 -->
+          <div class="a4">
+            <div class="container-fluid">
+
+              <!-- row -->
+              <div class="row header">
+                <div class="col-5">
+                  <img class="logo" src="/media/{{report_logo}}" />
+                </div>
+                <div class="col-7">
+                  <h1>Ativos / Relatório de <i class="a4-month"></i> de <i class="a4-year"></i></h1>
+
+                  <small class="date">{% now "d" %} de {% now "F" %} de {% now "Y" %} às {% now "H:i" %}</small>
+                </div>
+              </div>
+
+
+
+              <!-- row -->
+              <div class="row">
+                <div class="col-12">
+                  <h2>Glossário</h2>
+                </div>
+              </div>
+
+
+              <br class="space-5" />
+
+              <!-- row-->
+              <div class="row">
+                <div class="col-12">
+                  <table class="table table-borderless table-sm glossary">
+                    <tr>
+                      <td style="width:120px;"><b>Ativo</b></td>
+                      <td><p>Qualquer coisa que tenha IP e tenha valor para a empresa, como por exemplo meios de armazenamento, transmissão e processamento da informação, os equipamentos necessários a isso, os sistemas utilizados para tal, os locais onde se encontram esses meios.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Endereço</b></td>
+                      <td><p>Endereço do ativo cadastrado no sistema, como IP, domínio, etc.</p></td>
+                    </tr>
+                  </table>
+              </div>
+            </div>
+          </div>
+          <div style="padding-left:8px;" class="page-number">2</div>
+          </div>
+          <br />
+        </div>
+
+    </div>
+
+    <!-- Jquery Fist -->
+    <script src="{% static 'staticv2/reports/js/jquery-3.4.1.min.js' %}"></script>
+
+    <script>
+
+    //_jsondata array
+    var _jsondata = [];
+
+    //_dataset array
+    var _dataset = [];
+
+    //areas
+    _dataset['areas']=[];
+    //area total
+    _dataset['areas'][1] = {
+        title: 'Total de Ativos no Mês',
+        total: 'Total de Ativos no Mês:'
+    };
+    //area created
+    _dataset['areas'][2] = {
+        title: 'Ativos Adicionados no Mês',
+        total: 'Total de Ativos Adicionados:'
+    };
+    //area deleted
+    _dataset['areas'][3] = {
+        title: 'Ativos Removidos no Mês',
+        total: 'Total de Ativos Removidos:'
+    };
+
+    //define list arrays
+    _dataset['list']=[];
+    _dataset['list'][1]=[];//active assets
+    _dataset['list'][2]=[];//created in month
+    _dataset['list'][3]=[];//deleted in month
+
+
+/*
+    //get /reportings/api/v1/assets-history
+    $.get('/reportings/api/v1/assets-history', function(data) {
+        _jsondata['created'] = data;
+    });
+    //get /reportings/api/v1/assets-deleted
+    $.get('/reportings/api/v1/assets-deleted', function(data) {
+        _jsondata['deleted'] = data;
+    });
+    //get /reportings/api/v1/assets-using
+    $.get('/reportings/api/v1/assets-using', function(data) {
+        _jsondata['using'] = data;
+    });
+
+*/
+
+    $.ajax({
+        url: '/reportings/api/v1/assets-history',
+        async: false
+    }).done(function (data) {
+        _jsondata['created'] = data;
+    });
+
+    $.ajax({
+        url: '/reportings/api/v1/assets-deleted',
+        async: false
+    }).done(function (data) {
+        _jsondata['deleted'] = data;
+    });
+
+    $.ajax({
+        url: '/reportings/api/v1/assets-using',
+        async: false
+    }).done(function (data) {
+        _jsondata['using'] = data;
+    });
+
+    var getParams = function (url) {
+      	var params = {};
+      	var parser = document.createElement('a');
+      	parser.href = url;
+      	var query = parser.search.substring(1);
+      	var vars = query.split('&');
+      	for (var i = 0; i < vars.length; i++) {
+      		  var pair = vars[i].split('=');
+      		    params[pair[0]] = decodeURIComponent(pair[1]);
+      	}
+      	return params;
+    };
+
+    // Get parameters from the current URL
+    var url_params = getParams(window.location.href);
+    var date = url_params.date.split('/');
+
+    //get selected date
+    var selected_month = date[0];
+    var selected_year = date[1];
+
+
+    function dateFormat(date) {
+
+        date = new Date(date);
+        var year = date.getFullYear();
+        var month =   ('0' + (date.getMonth() + 1)).slice(-2);
+        var day = ('0'+date.getDate()).slice(-2);
+        var hour = ('0'+date.getHours()).slice(-2);
+        var minute = ('0'+date.getMinutes()).slice(-2);
+
+        return day+'/'+month+'/'+year+' '+hour+':'+minute;
+    }
+
+
+    //active
+    for (let i=0, d=1; i < _jsondata['using'].length; i++) {
+        if(_jsondata['using'][i].format=='asset') {
+            _dataset['list'][1][d] = {
+                parent_id: 1,
+                parent_dataset: 'areas',
+                id: _jsondata['using'][i].id,
+                name: _jsondata['using'][i].value,
+                created_at: dateFormat(_jsondata['using'][i].created_at),
+            }
+            d++;
+        }
+    }
+
+    //created in month
+    for (let i=0, d=1; i < _jsondata['created'].length; i++) {
+
+        //get date, message and split it
+        var date = new Date(_jsondata['created'][i].created_at);
+        var message = _jsondata['created'][i].message.split(':');
+        var name = message[1];
+        var temp = message[0].split(')');
+        temp = temp[0].split('=');
+        var id = temp[1];
+
+        //if created month and year == selected
+        if(date.getFullYear() == selected_year && (date.getMonth()+1) == selected_month) {
+            _dataset['list'][2][d] = {
+                parent_id: 2,
+                parent_dataset: 'areas',
+                id: id,
+                name: name,
+                created_at: dateFormat(_jsondata['created'][i].created_at),
+            }
+            d++;
+        }
+    }
+
+    //deleted in month and add in total
+    for (let i=0, d=1; i < _jsondata['deleted'].length; i++) {
+
+        //get date, message and split it
+        var date = new Date(_jsondata['deleted'][i].created_at);
+        var message = _jsondata['deleted'][i].message.split("'");
+        var name = message[1];
+        var temp = message[2].split(')');
+        temp = temp[0].split('=');
+        var id = temp[1];
+
+        var deleteted_item_created_at = '';
+
+        //if deleted month and year == selected
+        if(date.getFullYear() == selected_year && (date.getMonth()+1) == selected_month) {
+
+            //get deleted item created_at
+            for (let x=0; x < _jsondata['created'].length; x++) {
+                var message2 = _jsondata['created'][x].message.split(":");
+                var name2 = message2[1];
+                var temp2 = message2[0].split(')');
+                temp2 = temp2[0].split('=');
+                var id2 = temp2[1];
+
+                if(id2==id){
+                  deleteted_item_created_at = dateFormat(_jsondata['created'][x].created_at);
+                  break;
+                }
+            }
+
+            //add deleted to active assets
+            _dataset['list'][1][_dataset['list'][1].length] = {
+                parent_id: 1,
+                parent_dataset: 'areas',
+                id: id,
+                name: name,
+                created_at: deleteted_item_created_at,
+            }
+
+            //add deleted
+            _dataset['list'][3][d] = {
+                parent_id: 3,
+                parent_dataset: 'areas',
+                id: id,
+                name: name,
+                created_at: dateFormat(_jsondata['deleted'][i].created_at),
+            }
+            d++
+        }
+    }
+
+    $(document).ready(function() {
+
+      //add different title
+      var created_at = $('.created_at:eq(3)');
+      $(created_at).html('Data da Remoção');
+
+      //months
+      var months = {
+          '01': 'Janeiro',
+          '02': 'Fevereiro',
+          '03': 'Março',
+          '04': 'Abril',
+          '05': 'Maio',
+          '06': 'Junho',
+          '07': 'Julho',
+          '08': 'Agosto',
+          '09': 'Setembro',
+          '10': 'Outubro',
+          '11': 'Novembro',
+          '12': 'Dezembro'
+      };
+      $('.a4-month').html(months[selected_month]);
+      $('.a4-year').html(selected_year);
+
+      $('.pdf').attr('filename', 'Relatorio-Ativos-Billing-'+months[selected_month]+'-'+selected_year+'.pdf');
+      console.log('Relatorio-Ativos-Billing-'+months[selected_month]+'-'+selected_year+'.pdf');
+    });
+
+
+    var instance = window.location.host.split('.')[1] ? window.location.host.split('.')[0] : false;
+    $('.instance').html(window.location.host);
+
+    </script>
+
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="{% static 'staticv2/reports/js/popper.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/jspdf.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/html2canvas.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/Chart.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/fontawesome.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/chartjs.showAllTooltips.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/replaceArray.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/pdfGen.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/dataProc.js' %}"></script>
+
+
+	<script>
+
+		//resumo
+		var total_using   = ($('.total-1').html()) ? $('.total-1').html() : 0;
+		var total_created = ($('.total-2').html()) ? $('.total-2').html() : 0;
+		var total_deleted = ($('.total-3').html()) ? $('.total-3').html() : 0;
+
+		$('.recipient-total-1').html(total_using);
+		$('.recipient-total-2').html(total_created);
+		$('.recipient-total-3').html(total_deleted);
+
+		$('.pdf').attr('filename', '');
+
+	</script>
+
+  </body>
+</html>

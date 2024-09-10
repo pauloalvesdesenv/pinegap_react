@@ -1,0 +1,578 @@
+{% load staticfiles %}
+{% load pinegap_tags %}
+{% load i18n %}
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'staticv2/reports/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'staticv2/reports/css/reports.css' %}">
+    <title>{{site_name}} | Dashboard - Relatório Executivo</title>
+  </head>
+  <body>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <button onclick="javascript:pdfGen()" class="btn btn-primary ">Salvar PDF</button>
+      <a class="back" href="javascript:history.back()"><i class="fas fa-arrow-left"></i> Voltar</a>
+    </div>
+
+    <!-- Loading modal -->
+    <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modal" aria-hidden="true">
+      <div class="modal-dialog" id="modal" role="document">
+        <div class="modal-content">
+          <div class="modal-header"></div>
+          <div class="modal-body">
+            <h5 class="modal-title">Estamos gerando o seu PDF</h5>
+            <img src="{% static 'staticv2/reports/img/loader.gif' %}" />
+          </div>
+          <div class="modal-footer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Blob buffer -->
+    <div class="pdf" filename="Relatorio-Dashboard-Executivo.pdf" quality="2">
+      <!--empty-->
+    </div>
+
+    <!-- a4 a4-1 -->
+    <div class="a4 a4-1">
+      <div class="container-fluid">
+        <!-- row -->
+        <div class="row header">
+            <div class="col-5">
+              <img class="logo" src="/media/{{report_logo}}" />
+            </div>
+            <div class="col-7">
+              <h1>Dashboard / Relatório Executivo</h1>
+              <small class="date">{% now "d" %} de {% now "F" %} de {% now "Y" %} às {% now "H:i" %}</small>
+            </div>
+        </div>
+        <!-- row -->
+        <div class="row">
+            <h2>Ativos</h2>
+        </div>
+        <!-- row -->
+        <div class="row">
+          <div class="col-4 padding-right">
+            <h3>Ranking de Ativos</h3>
+            <table class="table table-borderless table-sm">
+              <thead>
+                <tr>
+                  <th>Nota</th>
+                  <th>Nome</th>
+                  <th>Score</th>
+                </tr>
+              </thead>
+              <tbody class="table-limited">
+                {% for asset in top_critical_assets %}
+                <tr>
+                  <td style="padding-left:5px !important;"><span class="round round-{{asset.risk_level|keyvalue:'grade'}}">{{asset.risk_level|keyvalue:"grade"}}</span></td>
+                  <td>{{asset.name|truncatechars:25}}</td>
+                  <td>{{asset|risk_score}} <i class="icon-arrow-up"></i></td>
+                </tr>
+                {% endfor %}
+              <tbody>
+            </table>
+          </div>
+          <div class="col-4">
+            <h3>Ranking Grupos de Ativos</h3>
+            <table class="table table-borderless table-sm">
+              <thead>
+                <tr>
+                  <th>Nota</th>
+                  <th>Nome</th>
+                  <th>Score</th>
+                </tr>
+              </thead>
+              <tbody class="table-limited">
+                {% for assetgroup in top_critical_assetgroups %}
+                <tr>
+                  <td style="padding-left:5px !important;"><span class="round round-{{assetgroup.risk_level|keyvalue:'grade'}}">{{assetgroup.risk_level|keyvalue:"grade"}}</span></td>
+                  <td>{{assetgroup.name}}</td>
+                  <td>{{assetgroup|risk_score}} <i class="icon-arrow-up"></i></td>
+                </tr>
+                {% endfor %}
+              <tbody>
+            </table>
+          </div>
+          <div class="col-4 padding-left">
+            <div class="circle circle-major">
+              <span class="number"><b>{{global_stats.assets.total}}</b></span>
+              <p>Total de Ativos</p>
+              <!--<div class="circle circle-minor">
+                <span><b>07</b></span>
+                <p>Grupos</p>
+              </div>-->
+            </div>
+          </div>
+        </div>
+        <br class="space-5" />
+        <div class="row">
+          <div class="col-12">
+            <h3>Matriz de Risco Qualitativo</h3>
+            <br class="space-10" />
+            <table class="table table-sm table-borderless matriz">
+								<tbody>
+								<tr>
+								  <th></th>
+								  <th style="text-align: right; padding-right:15px !important;">Impacto Negócio</th>
+								  <th style="text-align: center; font-weight: normal;">Baixo</th>
+								  <th style="text-align: center; font-weight: normal;">Médio</th>
+								  <th style="text-align: center; font-weight: normal;">Alto</th>
+								</tr>
+								<tr>
+									<th>Risco Negócio </i></th>
+									<th style="text-align: right; padding-right:15px !important;">Probabilidade </th>
+									<td><i class="icon-arrow-down"></i></td>
+									<td><i class="icon-arrow-down"></i></td>
+									<td><i class="icon-arrow-down"></i></td>
+                </tr>
+
+                {% for grades in asset_grades_map %}
+                {% for grade, value in grades.items %}
+                <tr>
+                   <td class="new-grade bg-grade-{% cycle '--low' 'A-low' 'B-medium' 'C-high' 'D-high' 'E-high' 'F-high' %}"  >{% cycle 'Imponderável' 'Trivial' 'Aceitável' 'Moderado' 'Substancial' 'Intolerável' 'Extremo' %}
+                   <td style="font-weight: normal; text-align: right;">{% cycle 'Imponderável' 'Improvável' 'Rara' 'Pouco Provável' 'Possível' 'Provável' 'Quase Certa' %} </td>
+                   <td class="new-grade bg-grade-{{grade}}-low">{{ grades|keyvalue:grade|keyvalue:"low" }}</td>
+                   <td class="new-grade bg-grade-{{grade}}-medium">{{ grades|keyvalue:grade|keyvalue:"medium" }}</td>
+                   <td class="new-grade bg-grade-{{grade}}-high">{{ grades|keyvalue:grade|keyvalue:"high" }}</td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+							  </tbody>
+						</table>
+            <span class="box">
+              O <b>Risco Negócio</b> da <b>Matriz Qualitativa</b> indica o quanto as áreas de negócio da empresa precisam se preocupar com a segurança do ativo. É indicado fortemente que não haja nenhum ativo com risco negócio maior que Moderado.
+            </span>
+          </div>
+        </div>
+        <!-- row -->
+        <div class="row">
+            <h2>Scanners</h2>
+        </div>
+        <!-- row -->
+        <div class="row">
+          <div class="col-8 padding-right">
+            <table class="table table-sm table-borderless scans" style="text-align:center;">
+						<thead>
+						  <tr>
+							<th style="text-align:center;">ID</th>
+							<th style="text-align:center; width:190px;">Ocorrências</th>
+							<th style="text-align:center;">Status</th>
+							<th style="text-align:center;">Realizado em</th>
+						  </tr>
+						</thead>
+						<tbody class="table-limited">
+              {% for scan in last_scans %}
+              <tr>
+                <td>{{scan.id}}</td>
+                <td class="scan-progress">
+                  <div class="progress" style="margin-bottom: 0;">
+                    {% if scan.status == "finished" %}
+                    {% with total=scan.summary|keyvalue:'total' %}
+                    <div class="progress-bar progress-bar progress-bar-critical progress-bar-striped" role="progressbar" data-width="{{ scan.summary|keyvalue:'critical' | perc:total | floatformat:'0' }}" style="width:{{ scan.summary|keyvalue:'critical' | perc:total | floatformat:'0' }}%;">
+                      {{scan.summary|keyvalue:"critical"}}
+                    </div>
+                    <div class="progress-bar progress-bar progress-bar-high progress-bar-striped" role="progressbar" data-width="{{ scan.summary|keyvalue:'high' | perc:total }}" style="width:{{ scan.summary|keyvalue:'high' | perc:total | floatformat:'0' }}%;">
+                      {{scan.summary|keyvalue:"high"}}
+                    </div>
+                    <div class="progress-bar progress-bar progress-bar-medium progress-bar-striped" role="progressbar" data-width="{{ scan.summary|keyvalue:'medium' | perc:total  }}" style="width:{{ scan.summary|keyvalue:'medium' | perc:total | floatformat:'0' }}%;">
+                      {{scan.summary|keyvalue:"medium"}}
+                    </div>
+                    <div class="progress-bar progress-bar progress-bar-low progress-bar-striped" role="progressbar" data-width="{{ scan.summary|keyvalue:'low' | perc:total }}" style="width:{{ scan.summary|keyvalue:'low' | perc:total | floatformat:'0' }}%;">
+                      {{scan.summary|keyvalue:"low"}}
+                    </div>
+                    <div class="progress-bar progress-bar progress-bar-info progress-bar-striped" role="progressbar" data-width="{{ scan.summary|keyvalue:'info' | perc:total }}" style="width:{{ scan.summary|keyvalue:'info' | perc:total | floatformat:'0' }}%;">
+                      {{scan.summary|keyvalue:"info"}}
+                    </div>
+                    {% endwith %}
+                    {% else %}
+                    <div class="progress-bar progress-bar active" role="progressbar" style="text-align-center;">
+                      -
+                    </div>
+                    {% endif %}
+                  </div>
+                  </a>
+                </td>
+                <td class="text-center">
+                  {% if scan.status == "finished" %}
+                  <span class="label label-{{ scan.status }}">Finalizado</span>
+                  {% elif scan.status == "started" %}
+                  <span class="label label-{{ scan.status }}">Executando</span>
+                  {% elif scan.status == "error" %}
+                  <span class="label label-{{ scan.status }}">Falha</span>
+		              {% elif scan.status == "stopped" %}
+                  <span class="label label-{{ scan.status }}">Parado</span>
+                  {% elif scan.status == "stopping" %}
+                  <span class="label label-{{ scan.status }}">Parando</span>
+                  {% else %}
+                  <span class="label label-{{ scan.status }}">Na Fila</span>
+                  {% endif %}
+                </td>
+                <td>{{scan.started_at|date:"d-m-Y H:i:s"}}</td>
+              </tr>
+              {% endfor %}
+
+						</tbody>
+					</table>
+          </div>
+          <div class="col-4 padding-left">
+            <div class="circle circle-major">
+              <span class="number"><b>{{global_stats.scans.performed}}</b></span>
+              <p>Scans Realizados</p>
+              <div class="circle circle-minor">
+                <span><b>{{global_stats.scans.active_periodic}}</b></span>
+                <p>Recorrentes</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- row -->
+        <div class="row">
+          <div class="col-12">
+            <!--<canvas class="my-4" id="myChart" width="900" height="380"></canvas>-->
+          </div>
+        </div>
+      </div>
+      <div style="padding-left:8px;" class="page-number">1</div>
+    </div>
+    <br />
+
+    <!-- a4 a4-2 -->
+    <div class="a4 a4-2">
+      <div class="container-fluid">
+        <!-- row -->
+        <div class="row header">
+          <div class="col-5">
+            <img class="logo" src="/media/{{report_logo}}" />
+          </div>
+          <div class="col-7">
+            <h1>Dashboard / Relatório Executivo</h1>
+            <small class="date">{% now "d" %} de {% now "F" %} de {% now "Y" %} às {% now "H:i" %}</small>
+          </div>
+        </div>
+        <!-- row -->
+        <div class="row">
+            <h2>Ocorrências</h2>
+        </div>
+        <!-- row -->
+        <div class="row findings">
+          <div class="col-8 padding-right">
+            <h3>Ranking de Ocorrências</h3>
+            <br class="space-5" />
+            <table class="table table-borderless table-sm">
+              <thead>
+                <tr>
+                  <th style="width:100px !important; text-align:center;">Severidade</th>
+                  <th style="width:500px !important;">Descrição</th>
+                  <th>Ativo</th>
+                </tr>
+              </thead>
+
+              <tbody class="table-limited7">
+
+                {% for finding in top_critical_findings %}
+                <tr>
+                    {% if finding.severity == 'critical' %}
+                    <td style="text-align:center;"><span class="label label-critical">Crítica</span></td>
+                    {% elif finding.severity == 'high' %}
+                    <td style="text-align:center;"><span class="label label-high">Alta</span></td>
+                    {% elif finding.severity == 'medium' or finding.severity == 'moderate' %}
+                    <td style="text-align:center;"><span class="label label-medium">Média</span></td>
+                    {% elif finding.severity == 'low' %}
+                    <td style="text-align:center;"><span class="label label-low">Baixa</span></td>
+                    {% else %}
+                    <td style="text-align:center;"><span class="label label-info">Desconhecida</span></td>
+                    {% endif %}
+                    <td>{{finding.title|truncatechars:40}}</td>
+                    <td>{{finding.asset_name|truncatechars:30}}</td>
+                </tr>
+                {% endfor %}
+
+              </tbody>
+            </table>
+          </div>
+          <div class="col-4 padding-left">
+            <div class="circle circle-major">
+              <span class="number"><b>{{global_stats.findings.total}}</b></span>
+              <p>Ocorrências Únicas</p>
+              <div class="circle circle-minor">
+                <span><b>{{global_stats.findings.new}}</b></span>
+                <p>Novas</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <br class="space-5" />
+        <!-- row -->
+        <div class="row">
+          <div class="col-7">
+            <h3>Ocorrências por Severidade</h3>
+            <div class="row" style="padding-top:20px; padding-left:20px; position:relative;">
+              <ul class="findinngs-legend">
+                <li><span style="background:#FFFF00;"></span>Baixa</li>
+                <li><span style="background:#FFA500;"></span>Média</li>
+                <li><span style="background:#D33724;"></span>Alta</li>
+                <li><span style="background:#8B0000;"></span>Crítica</li>
+              </ul>
+              <canvas id="findingsChart" width="40" height="35"></canvas>
+            </div>
+          </div>
+          <div class="col-5 padding-left" style="padding-left:30px !important;">
+            <h3>Ranking CVE</h3>
+
+              <table class="table table-borderless table-sm cve">
+              <thead>
+                <tr>
+                  <th>CVE</th>
+                  <th style="width:80px;">Ocorrências</th>
+                </tr>
+              </thead>
+              <tbody class="table-limited7">
+                {% for cve in cxe_stats.top_cve %}
+                <tr>
+                   <td>{{cve.0}}</td>
+                   <td>{{cve.1}} ocorrências</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+
+            <br class="space-10" />
+
+            <h3>CVSS/Ocorrências</h3>
+              <table class="table table-borderless table-sm cvss" style="width:180px;">
+              <tbody>
+                <tr>
+    							<td style="text-align:right;">#CVSS = 10</td>
+    							<th style="width:20px">{{cvss_scores.eq10}}</th>
+    						</tr>
+    						<tr>
+    							<td style="text-align:right;">9.0 &lt;= #CVSS <i class="fa fa-chevron-left"></i> 10</td>
+    							<th>{{cvss_scores.gte9}}</th>
+    						</tr>
+    						<tr>
+    							<td style="text-align:right;">7.0 <i class="fa fa-chevron-left"></i>= #CVSS <i class="fa fa-chevron-left"></i> 9.0</td>
+    							<th>{{cvss_scores.gte7}}</th>
+    						</tr>
+    						<tr>
+    							<td style="text-align:right;">5.0 <i class="fa fa-chevron-left"></i>= #CVSS <i class="fa fa-chevron-left"></i> 7.0 </td>
+    							<th>{{cvss_scores.5to7}}</th>
+    						</tr>
+    						<tr>
+    							<td style="text-align:right;">#CVSS <i class="fa fa-chevron-left"></i> 5.0</td>
+    							<th>{{cvss_scores.lte5}}</th>
+    						</tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div style="padding-left:8px;" class="page-number">2</div>
+    </div>
+    <br />
+
+    <!-- a4 a4-3 -->
+    <div class="a4 a4-3">
+      <div class="container-fluid">
+        <!-- row -->
+        <div class="row header">
+          <div class="col-5">
+            <img class="logo" src="/media/{{report_logo}}" />
+          </div>
+          <div class="col-7">
+            <h1>Dashboard / Relatório Executivo</h1>
+            <small class="date">{% now "d" %} de {% now "F" %} de {% now "Y" %} às {% now "H:i" %}</small>
+          </div>
+        </div>
+        <!-- row -->
+        <div class="row">
+            <div class="col-6">
+              <h2>Sensores</h2>
+              <div class="circle circle-major" style="margin-top:90px;">
+                <span class="number"><b>{{global_stats.engines.total}}</b></span>
+                <p>Total de Sensores</p>
+                <div class="circle circle-minor">
+                  <span><b>{{global_stats.engines.active}}</b></span>
+                  <p>Ativos</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <h2>Automação</h2>
+              <div class="circle circle-major" style="margin-top:90px;">
+                <span class="number"><b>{{global_stats.rules.total}}</b></span>
+                <p>Regras Criadas</p>
+                <div class="circle circle-minor">
+                  <span><b>{{global_stats.rules.active}}</b></span>
+                  <p>Ativas</p>
+                </div>
+              </div>
+            </div>
+        </div>
+        <!-- row -->
+        <div class="row">
+          <div class="col-12">
+            <h2>Glossário</h2>
+          </div>
+        </div>
+        <br class="space-5" />
+        <!-- row-->
+        <div class="row">
+          <div class="col-12">
+            <table class="table table-borderless table-sm glossary">
+              <tr>
+                <td style="width:120px;"><b>Ativo</b></td>
+                <td><p>Qualquer coisa que tenha IP e tenha valor para a empresa, como por exemplo meios de armazenamento, transmissão e processamento da informação, os equipamentos necessários a isso, os sistemas utilizados para tal, os locais onde se encontram esses meios.</p></td>
+              </tr>
+              <tr>
+                <td><b>Ocorrência</b></td>
+                <td><p>Evento detectado e registrado em um ativo.</p></td>
+              </tr>
+              <tr>
+                <td><b>Sensor</b></td>
+                <td><p>Mecanismo técnico que funciona como um motor para fazer Scans.</p></td>
+              </tr>
+              <tr>
+                <td><b>Scan</b></td>
+                <td><p>Mecanismo técnico que faz o tipo de varredura em determinado ambiente que possui ativos e que é responsável por trazer as ocorrências e vincular aos ativos corretos.</p></td>
+              </tr>
+              <tr>
+                <td><b>Severidade</b></td>
+                <td><p>Classificação qualitativa de gravidade de uma ocorrência de segurança encontrada no ativo.</p></td>
+              </tr>
+              <tr>
+                <td><b>Nota de Segurança</b></td>
+                <td><p>Nota de segurança dada a um ativo. Esta nota pode ir de A até F, onde A é a melhor nota (mais seguro) e F é a pior nota (menos seguro). Esta nota é dada automaticamente pelo sistema baseado na quantidade de ocorrências e severidade das mesmas.</p></td>
+              </tr>
+              <tr>
+                <td><b>Nota</b></td>
+                <td><p>É o mesmo que Nota de Segurança.</p></td>
+              </tr>
+              <tr>
+                <td><b>Valor</b></td>
+                <td><p>Endereço do ativo cadastrado no sistema, como IP, domínio, etc.</p></td>
+              </tr>
+              <tr>
+                <td><b>Endereço</b></td>
+                <td><p>Endereço é o mesmo que valor.</p></td>
+              </tr>
+              <tr>
+                <td><b>Valor em Risco</b></td>
+                <td><p>Valor monetário que potencialmente será impactado no caso de um incidente de segurança no ativo. A denominação do Valor em Risco é dada de forma livre.</p></td>
+              </tr>
+              <tr>
+                <td style="width:120px;"><b>Impacto Negócio</b></td>
+                <td><p>Classificação de importância para o negócio que um ativo possui.</p></td>
+              </tr>
+              <tr>
+                <td><b>Probabilidade</b></td>
+                <td><p>É baseada na Nota de Segurança e tem como objetivo evidenciar as chances que determinado ativo tem de sofrer um incidente de segurança. A probabilidade começa com Imponderável e pode chegar até Quase Certa.</p></td>
+              </tr>
+              <tr>
+                <td><b>Risco Negócio</b></td>
+                <td><p>Resultado da matriz que correlaciona Impacto Negócio e Probabilidade, classificando o Risco do Negócio de Imponderável até Extremo.</p></td>
+              </tr>
+              <tr>
+                <td><b>DPO</b></td>
+                <td><p>O DPO (Data Protection Officer), é a pessoa responsável por garantir que a organização processe os dados pessoais da equipe, clientes, fornecedores ou quaisquer outros indivíduos (também chamados de titulares de dados), além de atuar como canal de comunicação entre o controlador, os titulares dos dados e a Autoridade Nacional de Proteção de Dados (ANPD), em conformidade com as regras de proteção de dados aplicáveis. Na Lei Geral de Proteção de Dados brasileira (LGPD), o nome do "DPO" é "Encarregado".</p></td>
+              </tr>
+              <tr>
+                <td><b>CVE</b></td>
+                <td><p>Common Vulnerabilities and Exposures, é uma iniciativa colaborativa de diversas organizações de tecnologia e segurança que criam listas de nomes padronizados para vulnerabilidades e outras exposições de segurança. O objetivo da CVE é padronizar as vulnerabilidades e riscos conhecidos, facilitando a procura, o acesso e o compartilhamento de dados entre diversos indivíduos e empresas.</p></td>
+              </tr>
+              <tr>
+                <td><b>CPE</b></td>
+                <td><p>O CPE (Common Platform Enumeration) é um método padronizado de descrição e identificação de classes de aplicativos, sistemas operacionais e dispositivos de hardware presentes nos ativos de computação de uma empresa. </p></td>
+              </tr>
+              <tr>
+                <td><b>CVSS</b></td>
+                <td><p>Common Vulnerability Scoring System, é um padrão utilizado para qualificar e avaliar vulnerabilidades presentes nos sistemas. Usando esse modelo de numeração, fica mais fácil avaliar quais prioridades devem ser remediadas de maneira mais simples. Essa pontuação indica a gravidade do risco apontado, podendo variar entre baixa, média e alta. Baseado em uma série de critérios, o método aponta uma numeração de 0 a 10, em que, naturalmente, quanto maior a nota, maior o risco.</p></td>
+              </tr>
+            </table>
+        </div>
+      </div>
+    </div>
+    <div style="padding-left:8px;" class="page-number">3</div>
+    </div>
+    <br />
+
+
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="{% static 'staticv2/reports/js/jquery-3.4.1.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/popper.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/jspdf.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/html2canvas.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/Chart.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/fontawesome.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/chartjs.showAllTooltips.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/replaceArray.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/pdfGen.js' %}"></script>
+
+    <script>
+  /* Polar Chart */
+  new Chart(document.getElementById("findingsChart"),{
+		"type":"polarArea",
+		"data":{
+			"labels":["Crítica","Alta","Média","Baixa"],
+			"datasets":[{
+        "data":[{{global_stats.findings.critical}},{{global_stats.findings.high}},{{global_stats.findings.medium}},{{global_stats.findings.low}}],
+				"backgroundColor":[
+					"#890000",
+					"#D13523",
+					"#F69F00",
+					"#FDFD00"
+					],
+
+			}],
+		},
+		options: {
+        tooltips: {
+          yAlign: 'bottom',
+          titleAlign: 'right',
+          bodyAlign: 'left',
+          footerAlign: 'right',
+          //position: "custom",
+          //rtl: true
+        },
+        //showAllTooltips
+        showAllTooltips: true,
+				legend: {
+          //fullWidth: false,
+          display:true,
+					position: 'center',
+					labels: {
+						boxWidth:20,
+						fontColor: "#122F49",
+            fontSize: "10"
+					}
+				},
+				scale: {
+          display: true,
+					gridLines: {
+						display:true,
+						color: "#eee"
+					},
+					borderDash: "#000"
+
+				}
+			},
+		gridLines: {
+			display: false
+		}
+
+	});
+
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% block content %}
+
+<div class="container-fluid" style="padding:0;">
+
+<section class="content-header">
+      <h1>
+      Sensores
+      <small> Sensores de Scan</small>
+      </h1>
+      <ol class="breadcrumb">
+      <li><a href="#"><i class="fas fa-tachometer-alt"></i> &nbsp;Dashboad</a></li>
+      <li class="active">Sensores de Scan</li>
+      </ol>
+      </section>
+      <div id="menu_tabs" class="container-fluid" style="padding:15px 15px;">	
+      <div class="nav-tabs-custom">	
+      <ul class="nav nav-tabs">
+      	<li class="active dropdown">
+		<a class="dropdown-toggle" data-toggle="dropdown" href="/engines/list">
+		<i class="fas fa-satellite-dish"></i>&nbsp; Sensores de Scan <span class="caret"></span>
+		</a>
+		<ul class="dropdown-menu">
+			<li role="presentation"><a role="menuitem" href="/engines/list"><i class="fa fa-list"></i> Listar Sensores</a></li>
+   			{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+			<li role="presentation"><a role="menuitem" href="/engines/add"><i class="fa fa-plus"></i> Criar Novo Sensor</a></li>
+			{% endif %}
+			<li role="presentation" class="divider"></li>
+			<li role="presentation"><a role="menuitem" href="/engines/types/list"><i class="fa fa-list"></i> Tipos de Sensores</a></li>
+                        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+			<li role="presentation"><a role="menuitem" href="/engines/types/add"><i class="fa fa-plus"></i>&nbsp; Criar Novo Tipo</a></li>
+			{% endif %}
+		        </ul>
+			</li>
+                <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="/engines/policies/list">
+			<i class="fa fa-th-list"></i>&nbsp; Políticas de Scanner <span class="caret"></span>
+                        </a>
+	        <ul class="dropdown-menu">
+			<li role="presentation"><a role="menuitem" href="/engines/policies/list"><i class="fa fa-list"></i> Listar Políticas</a></li>
+                        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+			<li role="presentation"><a role="menuitem" href="/engines/policies/add"><i class="fa fa-plus"></i>&nbsp; Criar Políticas</a></li>
+			{% endif %}
+			<li role="presentation" class="divider"></li>
+			{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+			<li role="presentation"><a role="menuitem" href="/engines/policies/import"><i class="fa fa-upload"></i> Importar Políticas</a></li>
+			<li role="presentation"><a role="menuitem" href="/engines/policies/export?all=true"><i class="fa fa-download"></i> Exportar Políticas</a></li>
+			{% endif %}
+                  </ul>
+			  </li>
+              <li class="pull-right"><a href="#" class="btn-refresh-all-engines"><i class="fa fa-refresh"></i>&nbsp; Atualizar Status</a></li>
+			{% if autorefresh_status %}
+			<li class="pull-right"><a href="#" class="btn-autorefresh-all-engines"><i class="fa fa-refresh"></i>&nbsp; Dasabilitar Auto-refresh</a></li>
+			{% else %}
+			<li class="pull-right"><a href="#" class="btn-autorefresh-all-engines"><i class="fa fa-refresh"></i>&nbsp; Habilitar Auto-refresh</a></li>
+			{% endif %}
+            </ul>
+	
+<div class="tab-content">	
+	
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Tipo</th>
+        <th>Nome</th>
+        <th>Status Funcional</th>
+        <th>Estado Operacional</th>
+        <th>API URL</th>
+        <th>Atualizado</th>
+	{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <th style="width:60px;">Desabilitar</th>
+        <th style="width:60px;">Editar</th>
+	{% endif %}
+        <th style="width:60px;">Info</th>
+        <th style="width:60px;">Atualizar</th>
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <th style="width:60px;">Excluir</th>
+	{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+    {% for engine in engines %}
+    <tr>
+      <td>{{ engine.engine }}</td>
+      <td>{{ engine.name }}</td>
+      {% if engine.enabled %}
+      <td><span class="label label-success">Habilitado</span></td>
+      {% else %}
+      <td><span class="label label-danger">Desabilitado</span></td>
+      {% endif %}
+      {% if engine.status == 'READY' %}
+      <td><span class="glyphicon glyphicon-ok" style="color:green"></span> Pronto</td>
+      {% else %}
+      <td><span class="glyphicon glyphicon-remove" style="color:red"></span> Falha</td>
+      {% endif %}
+      <td>{{ engine.api_url }}</td>
+      <td>{{ engine.updated_at|date:"d/m/Y\-H:i:s" }}</td>
+      {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+      <td>
+     	{% if engine.enabled %}
+	<button type="button" class="btn btn-warning dropdown-toggle btn-xs btn-change-status" aria-haspopup="true" aria-expanded="false" engine-id="{{ engine.id }}">Desabilitar</button>
+	{% else %}
+	<button type="button" class="btn btn-success dropdown-toggle btn-xs btn-change-status" aria-haspopup="true" aria-expanded="false" engine-id="{{ engine.id }}">Habilitar</button>
+	{% endif %}
+        </td>
+	{% endif %}
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+	<td>
+	<a href="/engines/edit/{{ engine.id }}" style="margin-left:15px;"><i class="fas fa-edit"></i></a>
+        </td>
+	{% endif %}
+        <td>
+	<a href="#" style="margin-left:15px;" data-toggle="modal" data-target="#modal-info-engine" engine-id="{{ engine.id }}"><i class="fas fa-info"></i></a>
+        </td>
+        <td>
+	<a href="#" style="margin-left:15px;" class="btn-refresh-sensor-status" aria-haspopup="true" aria-expanded="false" engine-id="{{ engine.id }}"><i class="fas fa-refresh"></i></a>
+        </td>
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <td>
+	<a href="#" style="margin-left:15px;" data-toggle="modal" data-target="#modal-delete-engine" engine-id="{{ engine.id }}" engine-name="{{ engine.name }}@{{ engine.api_url}}"><i class="fas fa-trash"></i></a>
+        </td>
+	{% endif %}			
+	 <!-- 
+        <button type="button" class="btn btn-default btn-xs" aria-haspopup="true" aria-expanded="false" onclick="location.href='/engines/edit/{{ engine.id }}'">
+          <span class="glyphicon glyphicon-edit"></span></button>
+        <button type="button" class="btn btn-default btn-xs btn-engine-info" data-toggle="modal" data-target="#modal-info-engine" engine-id="{{ engine.id }}">
+          <span class="glyphicon glyphicon-info-sign"></span></button>
+        <button type="button" class="btn btn-default btn-xs btn-refresh-sensor-status" aria-haspopup="true" aria-expanded="false" engine-id="{{ engine.id }}">
+          <span class="glyphicon glyphicon-repeat"></span></button>
+        <button type="button" class="btn btn-danger btn-xs" data-toggle="modal" data-target="#modal-delete-engine"
+           engine-id="{{ engine.id }}" engine-name="{{ engine.name }}@{{ engine.api_url}}">
+          <span class="glyphicon glyphicon-remove"></button>
+        {% if engine.enabled %}
+        <button type="button" class="btn btn-warning dropdown-toggle btn-xs btn-change-status" aria-haspopup="true" aria-expanded="false" engine-id="{{ engine.id }}">
+          Desabilitar</button>
+        {% else %}
+        <button type="button" class="btn btn-success dropdown-toggle btn-xs btn-change-status" aria-haspopup="true" aria-expanded="false" engine-id="{{ engine.id }}">
+          Habilitar</button>
+        {% endif %}
+      </td>
+      -->
+    </tr>
+  {% endfor %}
+  </tbody>
+  </table>
+
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+</div>
+</div>
+</div>
+
+<!-- Delete Engine modal -->
+<div class="modal fade" id="modal-delete-engine" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Excluir Sensor</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="delete-engine">
+          <!-- Content -->
+        </div>
+        Confirma Exclus&atilde;o?
+        <button type="button" class="btn btn-xs btn-warning btn-delete-engine" data-dismiss="modal" autofocus>Sim</button>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">N&atilde;o</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Info Engine modal -->
+<div class="modal fade" id="modal-info-engine" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Propriedades dos Sensores</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="info-engine">
+          <!-- Content -->
+        </div>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">Cancelar</a></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  // jQuery ready
+  $(function() {
+
+    // Info engine modal
+    $("#modal-info-engine").on('show.bs.modal', function (e) {
+      engine_id = e.relatedTarget.getAttribute('engine-id');
+      xhr = $.ajax({
+        url: "{% url 'info_engine_api' 0 %}".replace("0", engine_id),
+        method: "GET",
+        dataType: 'json',
+        beforeSend: function(){
+          $("div#info-engine").html("Loading...");
+        },
+        success: function(data, textStatus, jqXHR){
+          info_data = "Sensor: <b>"+data["engine"]["name"]+"</b><br/>";
+          info_data+= "API URL: <b>"+data["engine"]["api_url"]+"</b><br/>";
+          info_data+= "Scans Realizados: <b>"+data["nb_scans"]+"</b><br/>";
+
+          if(data["engine_infos"]["status"] == "ERROR") {
+            info_data+= "Status: <b>ERROR</b><br/>";
+          } else {
+            info_data+= "Status: <b>"+data["engine_infos"]["engine_config"]["status"]+"</b><br/>";
+            info_data+= "Vers&atilde;o: <b>"+data["engine_infos"]["engine_config"]["version"]+"</b><br/>";
+            info_data+= "Descri&ccedil;&atilde;o: <b>"+data["engine_infos"]["engine_config"]["description"]+"</b><br/>";
+          }
+
+          current_scans=data["current_scans"];
+          if (current_scans == null || Object.keys(current_scans).length === 0) {
+            info_data+= "Scans Atuais: <b>Nenhum scan Rodando</b><br/>";
+          } else {
+            info_data+= "Scans Atuais: <br/>";
+            for (var scan in current_scans){
+              if (current_scans.hasOwnProperty(scan)) {
+                scan_id = Object.keys(current_scans[scan])[0];
+                info_data+= " * id="+scan_id+", started_at: "+new Date(current_scans[scan][scan_id]["started_at"])+", status: "+current_scans[scan][scan_id]["status"]+" <br/>";
+              }
+            }
+          }
+
+          $("div#info-engine").html(info_data+"<br/><br/>");
+        }
+      });
+    });
+
+    // Delete engine modal
+    $("#modal-delete-engine").on('show.bs.modal', function (e) {
+      engine_id = e.relatedTarget.getAttribute('engine-id');
+      engine_name = e.relatedTarget.getAttribute('engine-name');
+      $("div#delete-engine").attr('engine-id', engine_id);
+      $("div#delete-engine").html("Sensor: <b>"+engine_name+"</b><br/><br/>");
+    });
+    $("button.btn-delete-engine").on('click', function (e) {
+      engine_id = $("div#delete-engine").attr('engine-id');
+      delete_engine_url = "{% url 'delete_engine_api' 0 %}".replace("0", engine_id);
+      xhr = $.ajax({
+        url: delete_engine_url,
+        method: "DELETE",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        success: function(){
+          location.reload();
+        }
+      });
+    });
+
+    // Change engine status (enable-disable)
+    $("button.btn-change-status").on('click', function(eventObject) {
+      engine_id = eventObject.target.getAttribute('engine-id');
+      engine_url = "{% url 'toggle_engine_status_api' 0 %}".replace("0", engine_id);
+      xhr = $.ajax({
+        url: engine_url,
+        method: "PATCH",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        success: function(){
+          location.reload();
+          if (data.status == "success") {
+            console.log( "Status successfully updated!" );
+            $("div.notifications").html('<div class="alert alert-dismissible alert-success fade in"><button type="button" class="close" data-dismiss="alert">&times;</button>Scan successfully enqueued</div>');
+            $("div.notifications>div").delay(3000).fadeOut(
+              function () {
+                  $("div.notifications>div").remove();
+              }
+            );
+          }
+        }
+      });
+    });
+
+    // Refresh an engine status
+    $("button.btn-refresh-sensor-status").on('click', function(eventObject) {
+      engine_id = eventObject.currentTarget.getAttribute('engine-id');
+      engine_url = "{% url 'get_engine_status_api' 0 %}".replace("0", engine_id);
+      var xhr = $.get(engine_url, function(data) {
+        location.reload();
+        if (data.status == "success") {
+          $("div.notifications").html('<div class="alert alert-dismissible alert-success fade in"><button type="button" class="close" data-dismiss="alert">&times;</button>Scan successfully enqueued</div>');
+          $("div.notifications>div").delay(3000).fadeOut(
+            function () {
+                $("div.notifications>div").remove();
+            }
+          );
+        }
+      });
+    });
+
+    // Refresh all engine status
+    $("a.btn-refresh-all-engines").on('click', function() {
+      engine_url = "{% url 'refresh_engines_status_api' %}";
+      var xhr = $.get(engine_url, function(data) {
+        if (xhr.status == 200) {
+          $("div.notifications").html('<div class="alert alert-dismissible alert-success fade in"><button type="button" class="close" data-dismiss="alert">&times;</button>Action enqueued</div>');
+          $("div.notifications>div").delay(3000).fadeOut(
+            function () {
+              $("div.notifications>div").remove();
+            }
+          );
+        }
+        location.reload();
+      })
+    });
+
+    // Auto-Refresh all engine status
+    $("a.btn-autorefresh-all-engines").on('click', function() {
+      autorefresh_url = "{% url 'toggle_autorefresh_engine_status_api' %}";
+      var xhr = $.get(autorefresh_url, function(data) {
+        if (xhr.status == 200) {
+          if (data.autorefresh_task_status == true){
+            $("a.btn-autorefresh-all-engines").html("* Disable Auto-refresh scan engine status");
+          } else {
+            $("a.btn-autorefresh-all-engines").html("* Enable Auto-refresh scan engine status");
+          }
+        }
+        //location.reload();
+      });
+    });
+
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% load i18n %}
+{% load l10n %}
+{% block content %}
+<style>
+.glyphicon-refresh-animate {
+    -animation: spin .7s infinite linear;
+    -webkit-animation: spin2 .7s infinite linear;
+}
+
+@-webkit-keyframes spin2 {
+    from { -webkit-transform: rotate(0deg);}
+    to { -webkit-transform: rotate(360deg);}
+}
+
+@keyframes spin {
+    from { transform: scale(1) rotate(0deg);}
+    to { transform: scale(1) rotate(360deg);}
+}
+
+</style>
+
+<div class="container-fluid" style="padding:0;">
+
+<section class="content-header">
+      <h1>
+      Scanners
+      <small> Scans Parametrizados</small>
+      </h1>
+      <ol class="breadcrumb">
+      <li><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboad</a></li>
+      <li class="active">Scans Parametrizados</li>
+      </ol>
+    </section>	   
+      <div id="menu_tabs" class="container-fluid" style="padding:15px 15px;">
+	<div class="nav-tabs-custom">
+           <ul class="nav nav-tabs">
+	  {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+	     <li>
+	  	<a href="/scans/defs/add">
+	 	<i class="fa fa-plus"></i>&nbsp; Criar Novo Scan </a>
+	      </li>
+	      {% endif %}
+              <li>
+         	<a href="/scans/list">
+		<i class="fa fas fa-bullseye"></i>&nbsp; Scans Realizados</a>
+	      </li>
+	      <li class="active">
+	      <a href="/scans/defs/list">
+	      <i class="fa fa-list"></i>&nbsp; Scans Parametrizados	
+		</a>
+	       </li>
+            </ul>
+<div class="">
+<div class="tab-content">
+	
+  <table class="table table-bordered" data-toggle="table" data-sort-name="value" data-sort-order="desc">
+    <thead>
+      <tr>
+        <th>Scan / ID</th>
+        <th>Scans Realizados</th>
+        <th>Tipo do Scan</th>
+        <th>Sensor</th>
+        <th>Status</th>
+        <th>Atualizado</th>
+   	{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <th style="width:60px;">Editar</th>
+        <th style="width:60px;">Habilitar</th>
+	<th style="width:60px;">Excluir</th>
+        {% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for scan_def in scan_defs %}
+      <tr>
+        <td><a href="/scans/defs/details/{{ scan_def.id|safe }}" class="text-primary">{{ scan_def.title }} / {{ scan_def.id|safe }}</a></td>
+        <td>{{ scan_def.scan_count }}</td>
+        {% if scan_def.scan_type == "scheduled" %}
+        <td><span class="label label-warning">Agendado</span></td>
+        {% elif scan_def.scan_type == "single" %}
+        <td><span class="label label-info">Pontual / Manual</span></td>
+        {% elif scan_def.scan_type == "periodic" %}
+        <td><span class="label label-success">Recorrente / Automático</span></td>
+        {% endif %}
+        <td>{{ scan_def.engine_type_name }}</td>
+        {% if scan_def.scan_type == "periodic" %}
+        {% if scan_def.enabled %}
+        <td><span class="label label-success">Habilitado</span></td>
+        {% else %}
+        <td><span class="label label-danger">Desabilitado</span></td>
+        {% endif %}
+        {% else %}       
+        <td><span class="label label-default">Pronto</span></td>
+        {% endif %}
+        <td>{{ scan_def.updated_at|date:"d/m/Y\-H:i:s" }}</td>
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+          <td>
+	   <a href="/scans/defs/edit/{{ scan_def.id|safe }}" style="margin-left:15px;"><i scan-id="{{ scan.id|safe }}" class="fas fa-edit"></i></a>
+             </td>
+               <td>
+	    {% if scan_def.scan_type == "periodic" %}
+            {% if scan_def.enabled %}
+            <button type="button" class="btn btn-warning btn-xs btn-change-status" aria-haspopup="true" aria-expanded="false" scan-id="{{ scan_def.id|safe }}">
+              Desabilitar</button>
+            {% else %}
+            <button type="button" class="btn btn-success btn-xs btn-change-status" aria-haspopup="true" aria-expanded="false" scan-id="{{ scan_def.id|safe }}">
+              Habilitar</button>
+            {% endif %}
+            {% else %}
+            <button type="button" class="btn btn-warning btn-xs btn-run-now" scan-id="{{ scan_def.id|safe }}" scan-title="{{ scan_def.title }}" data-toggle="modal" data-target="#modal-run-scan">
+              Executar </button>
+          {% endif %} 		  
+           </td>
+	 {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+           <td>
+           <a href="#" data-toggle="modal" data-target="#modal-delete-scan-def" scan-id="{{ scan_def.id|safe }}" scan-title="{{ scan_def.title }}" style="margin-left:15px;"><i class="fa fa-trash"></i></a>
+          </td>       
+    	    {% endif %}
+	   {% endif %}
+       </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <br/>
+
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Delete scan definition modal -->
+<div class="modal fade" id="modal-delete-scan-def" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Excluir Defini&ccedil;&atilde;o do Scan</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="delete-scan-def">
+          <!-- Content -->
+        </div>
+        Voc&ecirc; Confirma a Exclus&atilde;o?
+        <button type="button" class="btn btn-xs btn-warning btn-delete-scan-def" data-dismiss="modal">Sim</button>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">N&atilde;o</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Run single scan modal -->
+<div class="modal fade" id="modal-run-scan" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Varredura Direta</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="run-scan">
+          <!-- Content -->
+        </div>
+        <a href="/scans/list">Visualizar &uacute;timo scan realizado</a><br/><br/>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggle(source) {
+    checkboxes = document.getElementsByName('scan');
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+      checkboxes[i].checked = source.checked;
+    }
+  }
+
+  $(function() {
+
+    // Run direct scan now Event
+    $("#modal-run-scan").on('show.bs.modal', function (e) {
+      scan_title = e.relatedTarget.getAttribute('scan-title');
+      $("div#run-scan").html("Scan started: <b>"+scan_title+"</b><br/><br/>");
+
+      //Hide the modal 3 seconds later
+      var myModal = $(this);
+      clearTimeout(myModal.data('hideInterval'));
+      myModal.data('hideInterval', setTimeout(function(){
+          myModal.modal('hide');
+      }, 3000));
+    });
+    $("button.btn-run-now").on('click', function(eventObject) {
+      scan_id = eventObject.target.getAttribute('scan-id');
+      scan_url = "{% url 'run_scan_def_api' 0 %}".replace("0", scan_id);
+      var xhr = $.get(scan_url, function(data) {
+        location.reload();
+      })
+    });
+
+    // Change periodic scan status Event
+    $("button.btn-change-status").on('click', function(eventObject) {
+      scan_id = eventObject.target.getAttribute('scan-id');
+      scan_url = "{% url 'toggle_scan_def_status_api' 0 %}".replace("0", scan_id);
+      var xhr = $.get( scan_url, function(data) {
+        location.reload();
+        if (xhr.status == 200) {
+          $("div.notifications").html('<div class="alert alert-dismissible alert-success fade in"><button type="button" class="close" data-dismiss="alert">&times;</button>Scan successfully enqueued</div>');
+          $("div.notifications>div").delay(3000).fadeOut(
+            function () {
+                $("div.notifications>div").remove();
+            }
+        );
+        }
+      })
+    });
+
+    // Delete scan definition modal
+    $("#modal-delete-scan-def").on('show.bs.modal', function (e) {
+      scan_id = e.relatedTarget.getAttribute('scan-id');
+      scan_title = e.relatedTarget.getAttribute('scan-title');
+      $("div#delete-scan-def").attr('scan-id', scan_id);
+      $("div#delete-scan-def").html("Title: <b>"+scan_title+"</b><br/><br/>");
+    });
+    $("button.btn-delete-scan-def").on('click', function (e) {
+      scan_id = $("div#delete-scan-def").attr('scan-id');
+      delete_scan_def_url = "/scans/defs/delete/"+scan_id;
+      var request = $.ajax({
+        url: delete_scan_def_url,
+        method: "POST",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        success: function(){
+          location.reload();
+        }
+      });
+    });
+
+  });
+</script>
+
+{% endblock %}

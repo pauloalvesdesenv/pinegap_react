@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% block content %}
+
+<div class="container-fluid" style="padding:0;">
+	
+	<section class="content-header">
+      <h1>
+        Ocorrências
+        <small> Comparação de Ocorrências</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboad</a></li>
+        <li><a href="/findings/list"><i class="fas fa-search-location"></i> Ocorr&ecirc;ncias</a></li>
+        <li class="active">Comparação de Ocorrências</li>
+      </ol>
+    </section>
+    
+     <div id="menu_tabs" class="container-fluid" style="padding:15px 15px;">
+
+<div class="nav-tabs-custom">
+	
+	<ul class="nav nav-tabs">
+              <li>
+				<a href="/findings/list">
+					<i class="fas fa-search-location"></i>&nbsp; Todas as Ocorrências (240)	
+				</a>
+			  </li>
+              <li class="new-findings">
+				  <a href="/findings/list?_status=new">
+					<i class="fa fa-bullseye"></i>&nbsp; Novas Ocorrências (10)
+				  </a>
+			  </li>
+              <li class="ack-findings">
+				  <a href="/findings/list?_status=ack">
+					<i class="fa fa-eye"></i>&nbsp; Ocorrências Ignoradas (230)
+				  </a>
+			  </li>
+			  <li class="active ack-findings">
+				  <a href="">
+					 Comparação de Ocorrências
+				  </a>
+			  </li>
+			</ul>
+			
+			<div class="tab-content">
+	
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th></th>
+        <th><a href="/findings/details/{{finding_a.id}}">Ocorr&ecirc;ncia A (ID: {{finding_a.id}})</a></th>
+        <th><a href="/findings/details/{{finding_a.id}}">Ocorr&ecirc;ncia B (ID: {{finding_b.id}})</a></th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Title -->
+      {% if finding_a.title != finding_b.title %}
+      <tr class="text-danger bg-red" style="border: 1px solid #FF0000 !important;">
+      {% else %}
+      <tr>
+      {% endif %}
+        <td><b>T&iacute;tulo</b></td>
+        <td>{{ finding_a.title }}</td>
+        <td>{{ finding_b.title }}</td>
+      </tr>
+
+      <!-- Severity -->
+      {% if finding_a.severity != finding_b.severity %}
+      <tr class="text-danger bg-red" style="border: 1px solid #FF0000 !important;">
+      {% else %}
+      <tr>
+      {% endif %}
+        <td><b>Severidade</b></td>
+        <td>{{ finding_a.severity }}</td>
+        <td>{{ finding_b.severity }}</td>
+      </tr>
+
+      <!-- Asset -->
+      {% if finding_a.asset.value != finding_b.asset.value %}
+      <tr class="text-danger bg-red" style="border: 1px solid #FF0000 !important;">
+      {% else %}
+      <tr>
+      {% endif %}
+        <td><b>Ativo</b></td>
+        <td>{{ finding_a.asset.value }}</td>
+        <td>{{ finding_b.asset.value }}</td>
+      </tr>
+
+      <!-- Description -->
+      {% if finding_a.description != finding_b.description %}
+      <tr class="text-danger bg-red" style="border: 1px solid #FF0000 !important; ">
+      {% else %}
+      <tr>
+      {% endif %}
+        <td><b>Descri&ccedil;&atilde;o</b></td>
+        <td>{{ finding_a.description|linebreaks }}</td>
+        <td>{{ finding_b.description|linebreaks }}</td>
+      </tr>
+
+      <!-- Solution -->
+      {% if finding_a.solution != finding_b.solution %}
+      <tr class="text-danger bg-red" style="border: 1px solid #FF0000 !important;">
+      {% else %}
+      <tr>
+      {% endif %}
+        <td><b>Parecer Técnico</b></td>
+        <td>{{ finding_a.solution|linebreaks }}</td>
+        <td>{{ finding_b.solution|linebreaks }}</td>
+      </tr>
+      <tr>
+        <td><b>Informa&ccedil;&atilde;o sobre Risco(s)</b></td>
+        <td>
+          {% if not finding_a.risk_info %}
+            Nenhuma informa&ccedil;&atilde;o adicional sobre potenciais riscos foi adicionada.
+          {% else %}
+            {% for key, value in finding_a.risk_info.items %}
+              {{ key }}: {{ value }}<br/>
+            {% endfor %}
+          {% endif %}
+        </td>
+        <td>
+          {% if not finding_b.risk_info %}
+            Nenhuma informa&ccedil;&atilde;o adicional sobre potenciais riscos foi adicionada.
+          {% else %}
+            {% for key, value in finding_b.risk_info.items %}
+              {{ key }}: {{ value }}<br/>
+            {% endfor %}
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td><b>Informa&ccedil;&atilde;o sobre Vulnerabilidade(s)</b></td>
+        <td>
+          {% if not finding_a.vuln_refs %}
+            Nenhuma informa&ccedil;&atilde;o adicional sobre esta vulnerabilidades foi adicionada.
+          {% else %}
+            {% for key, value in finding_a.vuln_refs.items %}
+              {{ key }}: {{ value }}<br/>
+            {% endfor %}
+          {% endif %}
+        </td>
+        <td>
+          {% if not finding_b.vuln_refs %}
+            Nenhuma informa&ccedil;&atilde;o adicional sobre esta vulnerabilidades foi adicionada.
+          {% else %}
+            {% for key, value in finding_b.vuln_refs.items %}
+              {{ key }}: {{ value }}<br/>
+            {% endfor %}
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td><b>Links</b></td>
+        <td>
+          {% if not finding_a.links %}
+            Nenhum link relacionado.
+          {% else %}
+            {% for link in finding_a.links %}
+              <a href="{{link}}"> {{link}}</a><br/>
+            {% endfor %}
+          {% endif %}
+        </td>
+        <td>
+          {% if not finding_a.links %}
+            Nenhum link relacionado.
+          {% else %}
+            {% for link in finding_a.links %}
+              <a href="{{link}}"> {{link}}</a><br/>
+            {% endfor %}
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td><b>Tags</b></td>
+        <td>
+          {% if not finding_a.tags %}
+            Nenhuma Tag relacionada.
+          {% else %}
+            {% for tag in finding_a.tags %}
+              <span class="label label-success">{{ tag|lower }}</span>
+            {% endfor %}
+          {% endif %}
+        </td>
+        <td>
+          {% if not finding_b.tags %}
+            Nenhuma Tag relacionada.
+          {% else %}
+            {% for tag in finding_b.tags %}
+              <span class="label label-success">{{ tag|lower }}</span>
+            {% endfor %}
+          {% endif %}
+        </td>
+      </tr>
+
+      <!-- Creation date -->
+      {% if finding_a.created_at != finding_b.created_at %}
+      <tr class="text-danger bg-red" style="border: 1px solid #FF0000">
+      {% else %}
+      <tr>
+      {% endif %}
+        <td><b>Criado</b></td>
+        <td>{{ finding_a.created_at|date:"d/m/Y\-H:i:s"  }}</td>
+        <td>{{ finding_b.created_at|date:"d/m/Y\-H:i:s"  }}</td>
+      </tr>
+
+      <!-- Scan title -->
+      {% if finding_a.scan.title != finding_b.scan.title %}
+      <tr class="text-danger bg-red" style="border: 1px solid #FF0000">
+      {% else %}
+      <tr>
+      {% endif %}
+        <td><b>ID do Scan</b></td>
+        <td>{{finding_a.scan.scan_definition.id}} <a href="/scans/defs/details/{{finding_a.scan.scan_definition.id}}"><span class='glyphicon glyphicon-share-alt'></span></a></td>
+        <td>{{finding_a.scan.scan_definition.id}} <a href="/scans/defs/details/{{finding_b.scan.scan_definition.id}}"><span class='glyphicon glyphicon-share-alt'></span></a></td>
+      </tr>
+
+      <!-- Scan policy -->
+      {% if finding_a.scan.engine_policy != finding_b.scan.engine_policy %}
+      <tr class="text-danger bg-red" style="border: 1px solid #FF0000">
+      {% else %}
+      <tr>
+      {% endif %}
+        <td><b>Pol&iacute;tica do Scan</b></td>
+        <td>{{ finding_a.scan.engine_policy.name }} <a href="/engines/policies/edit/{{finding_a.scan.engine_policy.id}}"><span class='glyphicon glyphicon-share-alt'></span></a></td>
+        <td>{{ finding_b.scan.engine_policy.name }} <a href="/engines/policies/edit/{{finding_b.scan.engine_policy.id}}"><span class='glyphicon glyphicon-share-alt'></span></a></td>
+      </tr>
+
+      <!-- Scan engine type -->
+      {% if finding_a.scan.engine_type != finding_b.scan.engine_type %}
+      <tr class="text-danger bg-red" style="border: 1px solid #FF0000">
+      {% else %}
+      <tr>
+      {% endif %}
+        <td><b>Sensor de Scan</b></td>
+        <td>{{ finding_a.scan.engine_type }} - {{ finding_a.scan.engine.name }}</td>
+        <td>{{ finding_b.scan.engine_type }} - {{ finding_b.scan.engine.name }}</td>
+      </tr>
+
+      <!-- Hash -->
+      <!-- {% if finding_a.hash != finding_b.hash %}
+      <tr  class="text-danger" style="border: 1px solid #FF0000">
+      {% else %}
+      <tr>
+      {% endif %}
+        <td><b>Hash</b></td>
+        <td>{{ finding_a.hash }}</td>
+        <td>{{ finding_b.hash }}</td>
+      </tr> -->
+    </tbody>
+  </table>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+  // Todo
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block content %}
+
+
+
+<div class="container-fluid" style="padding:0;">
+
+	<section class="content-header">
+      <h1>
+        Ativos
+        <small>Criar Grupo de Ativos</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="/"><i class="fas fa-tachometer-alt"></i> Dashboad</a></li>
+        <li><a href="/assets/list"><i class="fas fa-crosshairs"></i> Ativos</a></li>
+        <li class="active"> Criar Grupo de Ativos</li>
+      </ol>
+    </section>
+        <div class="container-fluid" style="padding:15px 15px;">
+
+			<div class="nav-tabs-custom">
+
+
+			<ul class="nav nav-tabs">
+              <li class="dropdown">
+				<a class="dropdown-toggle" data-toggle="dropdown" href="/assets/list">
+					<i class="fas fa-crosshairs"></i></i>&nbsp; Ativos <span class="caret"></span>
+				</a>
+				<ul class="dropdown-menu">
+					<li role="presentation"><a role="menuitem" href="/assets/list"><i class="fa fa-list"></i> Todos os Ativos</a></li>
+					<li role="presentation"><a role="menuitem" href="/assets/add"><i class="fa fa-plus"></i>&nbsp; Criar Ativo</a></li>
+					<li role="presentation"><a role="menuitem" href="/assets/bulkadd"><i class="fa fa-cloud-upload"></i> Importar Ativos</a></li>
+					<li role="presentation"><a role="menuitem" href="/assets/api/v1/export"><i class="fa fa-cloud-download"></i> Exportar Ativos</a></li>
+                </ul>
+			  </li>
+              <li class="active dropdown">
+				  <a class="dropdown-toggle" data-toggle="dropdown" href="/assets/list?target=asset_group">
+					<i class="fa fa-th-list"></i>&nbsp; Grupos de Ativos <span class="caret"></span>
+				  </a>
+				  <ul class="dropdown-menu">
+					<li role="presentation"><a role="menuitem" href="/assets/list?target=asset_group"><i class="fa fa-list"></i> Todos os Grupos de Ativos</a></li>
+					<li role="presentation"><a role="menuitem" href="/assets/addgroup"><i class="fa fa-plus"></i> &nbsp; Criar Grupo de Ativos</a></li>
+                  </ul>
+			  </li>
+              <li class="dropdown">
+				  <a class="dropdown-toggle" data-toggle="dropdown" href="/assets/owners/list">
+					<i class="fa fa-user-secret"></i>&nbsp; Proprietários <span class="caret"></span>
+				  </a>
+				  <ul class="dropdown-menu">
+					<li role="presentation"><a role="menuitem" href="/assets/owners/list"><i class="fa fa-list"></i> Todos os Proprietários</a></li>
+					<li role="presentation"><a role="menuitem" href="/assets/owners/add"><i class="fa fa-plus"></i>&nbsp; Criar Proprietário</a></li>
+                  </ul>
+			  </li>
+            </ul>
+
+
+  <form action="{% url 'add_asset_group_view' %}" style="margin:0;" method="post" class="form-horizontal">
+    {% csrf_token %}
+<!--<form action="/assets/addgroup" style="margin:0;" method="post" class="form-horizontal">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">  -->
+          <div class="form-group">
+                <label class="col-sm-2 control-label" for="id_name">Nome</label>
+                <div class="col-sm-4">
+                    <input type="text" name="name" required="" id="id_name" maxlength="256" class="form-control form-control-sm" placeholder="Nome do grupo de ativo">
+                </div>
+            </div>
+<div class="form-group">
+      <label class="col-sm-2 control-label" for="id_description">Descrição</label>
+            <div class="col-sm-4">
+                <textarea name="description" maxlength="256" id="id_description" rows="4" class="form-control form-control-sm" cols="40" placeholder="Descrição do grupo de ativo"></textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="id_criticity">Criticidade</label>
+                <div class="col-sm-4">
+                    <select name="criticity" class="form-control form-control-sm" id="id_criticity">
+  <option value="low">Baixa</option>
+  <option value="medium">Média</option>
+  <option value="high">Alta</option>
+</select>
+     </div>
+        </div>
+          {% for field in form %}
+          {% if  field.name == 'assets' %}
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="id_assets">Ativos</label>
+                <div class="col-sm-4">
+		              {{ field }}
+                {% if field.help_text %}
+               <p class="help-block"><small>{{ field.help_text }}</small></p>
+              {% endif %}
+            </div>
+           </div>
+          {% endif %}
+          {% endfor %}
+       {% for field in form %}
+          {% if field.name == 'categories' %}
+             <div class="form-group">
+              <label class="col-sm-2 control-label" for="id_categories">Tags</label>
+               <div class="col-sm-4">
+              {{ field }}
+              {% if field.help_text %}
+              <p class="help-block"><small>{{ field.help_text }}</small></p>
+              {% endif %}
+           </div>
+     </div>
+{% endif %}
+{% endfor %}
+    <div class="form-group submit-div">
+      <div class="col-sm-2">
+      </div>
+      <div class="col-sm-4">
+        <button type="submit" class="btn btn-warning col-sm-12">Criar grupo</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="notifications">
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+</div>
+
+</div>
+</div>
+{% endblock %}

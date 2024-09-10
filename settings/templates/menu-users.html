@@ -1,0 +1,142 @@
+{% block content %}
+{% load pinegap_tags %}
+
+<div class="container-fluid">
+  <table class="table table-bordered">
+    <thead>
+       <tr>
+        <th data-field="name">Usu&aacute;rio</th>
+        <th data-field="name">Grupo</th>
+        <!-- <th data-field="profile">Profil {{ user.id }}</th> -->
+        <th data-field="apitoken">API-Token</th>
+        <th data-field="status">Status</th>
+        <!--<th data-field="is_authenticated">Autenticado ?</th>-->
+        <th data-field="updated_at">Atualizado</th>
+
+        <th style="width:60px;">Info</th>
+        <th style="width:100px;">Editar Grupo</th>
+	<th style="width:60px;">Ativar/Desativar</th>
+    </thead>
+     <tbody>
+     {% for user in users %}
+      <tr class='dblclickable-row' data-href='#'>
+      <td>{{ user.username }}</td>
+      <td>{{ user.groups.all.0.name }}</td>
+      <!--td{{ user.profile }}</td-->
+      <td>
+          {% if user.apitoken %}
+          <span style="font-family: monospace;">{{ user.apitoken }}</span>
+          <label class="label label-warning label-api" action="renew" user-id="{{ user.id }}">renovar</label>
+          <label class="label label-danger label-api" action="delete" user-id="{{ user.id }}">excluir</label>
+          {% else %}
+          <label class="label label-primary label-api" action="get" user-id="{{ user.id }}">criar</label>
+          {% endif %}
+        </td>
+      <td>
+	{% if user.profile.status == 'ACTIVE'  %}
+        Ativo <span class="glyphicon glyphicon-ok text-success"></span>
+        {% else %}
+        Inativo <span class="glyphicon glyphicon-remove text-danger"></span>
+        {% endif %}
+      </td>
+      <!--<td>
+        {% if user.is_authenticated %}
+        Sim <span class="glyphicon glyphicon-ok text-success"></span>
+        {% else %}
+        N&atilde;o <span class="glyphicon glyphicon-remove text-warning"></span>
+        {% endif %}
+      </td>-->
+      <td>{{ user.profile.updated_at|date:"d/m/Y\-H:i:s" }}</td>
+
+      <td>
+         <a href="#" class="btn-user-info" data-toggle="modal" data-target="#modal_info_{{user.id}}" style="margin-left:15px;"><i class="fas fa-info"></i></a>
+         <div id="modal_info_{{user.id}}" class="modal fade" role="dialog">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header bg-primary">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">{{ user.username }}</h4>
+              </div>
+              <div class="modal-body">
+                <dl class="dl-horizontal">
+                  <dt>Usu&aacute;rio</dt><dd>{{user.username}}</dd>
+                  <dt>Nome</dt><dd>{{user.first_name}}</dd>
+                  <dt>Sobrenome</dt><dd>{{user.last_name}}</dd>
+                  <dt>Email</dt><dd>{{user.email}}</dd>
+                  <dt>&Uacute;ltimo login</dt><dd>{{user.last_login}}</dd>
+                  <dt>Criado</dt><dd>{{user.date_joined}}</dd>
+              </div>
+              <div class="modal-footer">
+              {% if user.profile.status == 'ACTIVE' %}
+              <button type="button" class="btn btn-default btn-xs" data-dismiss="modal">Fechar</button>
+              {% endif %}
+              </div>
+              </div>
+              </div>
+              </div>
+              </td>
+
+              <td style="padding-left:27px;">
+                {% if user.groups.all.0.name != 'root' %}
+                <a href="#" class="btn-user-info" data-toggle="modal" data-target="#modal_user_group_change_{{user.id}}" style="margin-left:15px;"><i class="fas fa-edit"></i></a>
+                {% include 'modal/change_user_group.html' %}
+                {% else %}
+                <i class="fas fa-edit" style="color: #353C42 !important; margin-left:15px;"></i>
+                {% endif %}
+              </td>
+              <td style="text-align:center;">
+                {% if user.profile.status == "ACTIVE" %}
+                  <a href="/users/unactive_user/{{user.id}}" title="Desativar">
+                    <span class="glyphicon glyphicon-remove text-danger"></span>
+                  </a>
+                {% endif %}
+                {% if user.profile.status == "DISABLED" %}
+                  <a href="/users/active_user/{{user.id}}" title="Ativar">
+                    <span class="glyphicon glyphicon-ok text-success"></span>
+                  </a>
+                {% endif %}
+             </td>
+ 	 </tr>
+        {% endfor %}
+	 </tbody>
+ 	 </table>
+         <a href="/users/add" class="label label-success" >Adicionar novo usu&aacute;rio</a>
+         <a href="/users/change-password" class="label label-danger" >Alterar minha senha</a>
+        {% if user.is_superuser %}
+        <a onclick="location.href='/admin/auth/user/{{ user.id }}/change/'" class="label label-warning label-api" >Administrar Usu&aacute;rios</a>
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+     {% endif %}
+   {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+      </ul>
+     {% endif %}
+      </div>
+
+<script>
+  $(function() {
+    // Token API management
+    $("label.label-api").on('click', function (e) {
+      user_id = e.target.getAttribute('user-id');
+      action = e.target.getAttribute('action');
+      token_api_url = "/users/api/v1/authtoken/"+action+"/"+user_id;
+      var request = $.ajax({
+        url: token_api_url,
+        method: "GET",
+        success: function(){
+          url = new URL(window.location.href);
+          window.location = url.search+"#users";
+          location.reload();
+        }
+      });
+    });
+   }); // End of jQuery-ready
+
+
+</script>
+{% endblock %}

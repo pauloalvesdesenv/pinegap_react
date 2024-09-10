@@ -1,0 +1,11 @@
+[
+ {
+    "model": "users.join",
+    "pk": 1,
+    "fields": {
+      "user_id": "1",
+      "group_id": "1"
+   }
+ }
+]
+

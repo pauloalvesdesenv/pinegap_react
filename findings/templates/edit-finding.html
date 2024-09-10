@@ -1,0 +1,435 @@
+{% extends 'base.html' %}
+{% block content %}
+
+
+<script type="text/javascript">
+  $(document).ready(function() {
+    tagsinput_input = $('div.bootstrap-tagsinput')
+    tagsinput_input.tagsinput('removeAll');
+    if ("{{ finding.tags }}" != "None") {
+      tags = "{{ finding.tags }}".replace(/u&#39;/g, "").replace(/&#39;/g, "").replace('[', '').replace(']', '').split(',');
+      for (var i = 0; i < tags.length; i++) {
+        tagsinput_input.tagsinput('add', tags[i]);
+      }
+    }
+  })
+</script>
+
+<div class="container-fluid" style="padding:0;">
+
+
+<section class="content-header">
+      <h1>
+        Ocorrências
+        <small> Tratamento de Ocorrência</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboad</a></li>
+        <li><a href="/findings/list"><i class="fas fa-search-location"></i> Ocorr&ecirc;ncias</a></li>
+        <li class="active">Tratamento de Ocorrência</li>
+      </ol>
+    </section>
+
+     <div id="menu_tabs" class="container-fluid" style="padding:16px 0;">
+
+	<div class="col-md-12">
+
+				<div class="nav-tabs-custom">
+
+
+	<ul class="nav nav-tabs">
+              <li>
+				<a href="/findings/list">
+					<i class="fas fa-search-location"></i>&nbsp; Todas as Ocorrências
+				</a>
+			  </li>
+              <li class="new-findings">
+				  <a href="/findings/list?_status=new">
+					<i class="fa fa-bullseye"></i>&nbsp; Novas Ocorrências
+				  </a>
+			  </li>
+              <li class="ack-findings">
+				  <a href="/findings/list?_status=ack">
+					<i class="fa fa-eye"></i>&nbsp; Ocorrências Ignoradas
+				  </a>
+			  </li>
+			  <li class="active ack-findings">
+				  <a href="#">
+					 <i class="fa fa-hand-pointer-o"></i>&nbsp; Tratamento de Ocorrência
+				  </a>
+			  </li>
+			</ul>
+
+
+  {% if raw == True %}
+  <form action="/findings/edit/{{ finding.id|safe }}?raw=true" method="post" class="form-horizontal" style="margin:0;">
+  {% else %}
+  <form action="/findings/edit/{{ finding.id|safe }}" method="post" class="form-horizontal" style="margin:0;">
+  {% endif %}
+
+
+
+
+    <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+              <li class="active"><a href="#tab_title" data-toggle="tab">Geral</a></li>
+              <li><a href="#tab_solution" data-toggle="tab">Parecer Técnico</a></li>
+              <li><a href="#tab_risk_info" data-toggle="tab">Informação de Risco</a></li>
+              <li><a href="#tab_vuln_refs" data-toggle="tab">Artefatos</a></li>
+              <li><a href="#tab_comments" data-toggle="tab">Parecer DPO</a></li>
+              <li class="pull-right"><input type="submit" class="btn btn-primary" value="Atualizar Ocorrência" style="color:#fff !important;"></li>
+
+            </ul>
+            <div class="tab-content" style="margin-top:50px;">
+
+
+
+      {% csrf_token %}
+      {% for field in form %}
+          {% if field.errors %}
+              <div class="form-group has-error">
+                  <label class="col-sm-2 control-label" for="id_{{ field.name }}">{{ field.label }}</label>
+                  <div class="col-sm-8">
+                      {{ field }}
+                      <span class="help-block">
+                          {% for error in  field.errors %}{{ error }}{% endfor %}
+                      </span>
+                  </div>
+              </div>
+          {% elif not field.is_hidden %}
+
+
+
+				  {% if field.name == "title" %}
+				  <div class="tab-pane active" id="tab_{{ field.name }}">
+				    <div class="form-group">
+					  <label class="col-sm-2 control-label" for="id_{{ field.name }}">Título:</label>
+					  <div class="col-sm-8">
+						  {{ field }}
+						  {% if field.help_text %}
+							  <p class="help-block"><small>{{ field.help_text }}</small></p>
+						  {% endif %}
+					  </div>
+					</div>
+                  {% endif %}
+
+                  {% if field.name == "type" %}
+                  <div class="form-group">
+					  <label class="col-sm-2 control-label" for="id_{{ field.name }}">Tipo:</label>
+					  <div class="col-sm-8">
+						  {{ field }}
+						  {% if field.help_text %}
+							  <p class="help-block"><small>{{ field.help_text }}</small></p>
+						  {% endif %}
+					  </div>
+				  </div>
+                  {% endif %}
+
+                  {% if field.name == "severity" %}
+                  <div class="form-group">
+					  <label class="col-sm-2 control-label" for="id_{{ field.name }}">Severidade:</label>
+					  <div class="col-sm-8">
+						  {{ field }}
+						  {% if field.help_text %}
+							  <p class="help-block"><small>{{ field.help_text }}</small></p>
+						  {% endif %}
+					  </div>
+				  </div>
+                  {% endif %}
+
+
+                  {% if field.name == "status" %}
+                  <div class="form-group">
+					  <label class="col-sm-2 control-label" for="id_{{ field.name }}">Status:</label>
+					  <div class="col-sm-8">
+						  {{ field }}
+						  {% if field.help_text %}
+							  <p class="help-block"><small>{{ field.help_text }}</small></p>
+						  {% endif %}
+					  </div>
+				   </div>
+                  {% endif %}
+
+
+                  {% if field.name == "description" %}
+                  <div class="form-group">
+					  <label class="col-sm-2 control-label" for="id_{{ field.name }}">Descrição:</label>
+					  <div class="col-sm-8">
+						  {{ field }}
+						  {% if field.help_text %}
+							  <p class="help-block"><small>{{ field.help_text }}</small></p>
+						  {% endif %}
+					  </div>
+					</div>
+                  {% endif %}
+
+                  {% if field.name == "tags" %}
+                  <div class="form-group">
+					  <label class="col-sm-2 control-label" for="id_{{ field.name }}">{{ field.label }}</label>
+					  <div class="col-sm-8">
+						  {{ field }}
+						  {% if field.help_text %}
+							  <p class="help-block"><small>{{ field.help_text }}</small></p>
+						  {% endif %}
+					  </div>
+					</div>
+				</div>
+                  {% endif %}
+
+
+                   {% if field.name == "solution" %}
+				  <div class="tab-pane" id="tab_{{ field.name }}">
+					  <div class="form-group">
+						  <label class="col-sm-2 control-label" for="id_{{ field.name }}">Parecer:</label>
+						  <div class="col-sm-8">
+							  {{ field }}
+							  {% if field.help_text %}
+								  <p class="help-block"><small>{{ field.help_text }}</small></p>
+							  {% endif %}
+						  </div>
+					  </div>
+				  </div>
+                  {% endif %}
+
+                  {% if field.name == "risk_info" %}
+				  <div class="tab-pane" id="tab_{{ field.name }}">
+					  <div class="form-group">
+					  <label class="col-sm-2 control-label" for="id_{{ field.name }}">Indicador de Risco:</label>
+					  <div class="col-sm-8">
+						  {{ field }}
+						  {% if field.help_text %}
+							  <p class="help-block"><small>{{ field.help_text }}</small></p>
+						  {% endif %}
+					  </div>
+				  </div>
+				 </div>
+                  {% endif %}
+
+                  {% if field.name == "vuln_refs" %}
+				  <div class="tab-pane" id="tab_{{ field.name }}">
+
+				  <div class="form-group">
+					  <label class="col-sm-2 control-label" for="id_{{ field.name }}">Vulnerabilidades Encontradas:</label>
+					  <div class="col-sm-8">
+						  {{ field }}
+						  {% if field.help_text %}
+							  <p class="help-block"><small>{{ field.help_text }}</small></p>
+						  {% endif %}
+					  </div>
+				  </div>
+				  {% endif %}
+
+                  {% if field.name == "links" %}
+				  <div class="form-group">
+					  <label class="col-sm-2 control-label" for="id_{{ field.name }}">Fonte de Classificação:</label>
+					  <div class="col-sm-8">
+						  {{ field }}
+						  {% if field.help_text %}
+							  <p class="help-block"><small>{{ field.help_text }}</small></p>
+						  {% endif %}
+					  </div>
+				  </div>
+				</div>
+                  {% endif %}
+
+                  {% if field.name == "comments" %}
+				  <div class="tab-pane" id="tab_{{ field.name }}">
+					<div class="form-group">
+					  <label class="col-sm-2 control-label" for="id_{{ field.name }}">Parecer:</label>
+					  <div class="col-sm-8">
+						  {{ field }}
+						  {% if field.help_text %}
+							  <p class="help-block"><small>{{ field.help_text }}</small></p>
+						  {% endif %}
+					  </div>
+				    </div>
+				  </div>
+                  {% endif %}
+
+          {% endif %}
+      {% endfor %}
+      </div>
+      <!-- /.tab-content -->
+      </div>
+      <!--
+      <div class="form-group submit-div">
+        <div class="col-sm-4">
+          <button class="btn btn-primary"><a href="/findings/list">Cancelar</a></button>
+        </div>
+        <div class="col-sm-4">
+        </div>
+      </div>
+      -->
+
+  </form>
+
+  </div>
+  </div>
+
+
+
+		<!--section class="col-lg-3" style="padding-left:0;"-->
+
+			  <!--div class="nav-tabs-custom"-->
+				<!--ul class="nav nav-tabs pull-right ui-sortable-handle"-->
+				  <!--<li><a href="#tab-findings2" data-toggle="tab" aria-expanded="true">Ranking CVE</a></li-->
+				  <!--li class="active" class=""><a href="#tab-findings1" data-toggle="tab" aria-expanded="false">Geral</a></li-->
+
+				  <!--li class="pull-left header" style="font-size:18px;"> Ocorrências por Severidade</li-->
+				<!--/ul-->
+
+				<!--div class="tab-content no-padding"-->
+					<!--div class="box tab-pane active" id="tab-findings1"-->
+						<!--div class="box-body" style="border:0 !important;"-->
+							<!--div class="row" style="padding-right:20px;"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div-->
+
+								<!--canvas id="polarChart" width="343" height="209" style="display: block; height: 234px; width: 384px;" class="chartjs-render-monitor"></canvas-->
+
+							<!--/div-->
+							  <!-- /.row -->
+						<!--/div-->
+					<!--/div-->
+					<!-- /.box -->
+				<!--/div-->
+
+			  <!--/div-->
+			  <!-- /.nav-tabs-custom -->
+			<!--/section-->
+
+</div>
+</div>
+
+
+<div class="modal" id="modal_id_solution" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" style="text-align:center;">
+        <p>O campo <b>Parecer Técnico</b> deve conter no máximo <b>40</b> linhas.</p>
+        <p>Número atual de linhas: <b class="lines"></b></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal_id_comments" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" style="text-align:center;">
+        <p>O campo <b>Parecer DPO</b> deve conter no máximo <b>20</b> linhas.</p>
+        <p>Número atual de linhas: <b class="lines"></b></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+$(function() {
+
+    var solution = $('#id_solution');
+    var comments = $('#id_comments');
+
+    var txtareaWidth = 720;
+    var txtareaLineHeight = '20px';
+
+    solution.css('width',txtareaWidth);
+    comments.css('width',txtareaWidth);
+    solution.css('line-height', txtareaLineHeight);
+    comments.css('line-height', txtareaLineHeight);
+
+    var calculateContentHeight = function( ta, scanAmount ) {
+
+        var origHeight = ta.style.height,
+            height = ta.offsetHeight,
+            scrollHeight = ta.scrollHeight,
+            overflow = ta.style.overflow;
+        /// only bother if the ta is bigger than content
+        if ( height >= scrollHeight ) {
+            /// check that our browser supports changing dimension
+            /// calculations mid-way through a function call...
+            ta.style.height = (height + scanAmount) + 'px';
+            /// because the scrollbar can cause calculation problems
+            ta.style.overflow = 'hidden';
+            /// by checking that scrollHeight has updated
+            if ( scrollHeight < ta.scrollHeight ) {
+                /// now try and scan the ta's height downwards
+                /// until scrollHeight becomes larger than height
+                while (ta.offsetHeight >= ta.scrollHeight) {
+                    ta.style.height = (height -= scanAmount)+'px';
+                }
+                /// be more specific to get the exact height
+                while (ta.offsetHeight < ta.scrollHeight) {
+                    ta.style.height = (height++)+'px';
+                }
+                /// reset the ta back to it's original height
+                ta.style.height = origHeight;
+                /// put the overflow back
+                ta.style.overflow = overflow;
+                return height;
+            }
+        } else {
+            return scrollHeight;
+        }
+    }
+
+    var calculateHeight = function(id) {
+            var ta = document.getElementById(id),
+
+            style = (window.getComputedStyle) ?
+                window.getComputedStyle(ta) : ta.currentStyle,
+
+            // This will get the line-height only if it is set in the css,
+            // otherwise it's "normal"
+            taLineHeight = parseInt(style.lineHeight, 10),
+            // Get the scroll height of the textarea
+            taHeight = calculateContentHeight(ta, taLineHeight),
+            // calculate the number of lines
+            numberOfLines = Math.ceil(taHeight / taLineHeight);
+
+            return numberOfLines;
+    };
+
+
+    $('#id_solution').on('keyup',function(){
+          var lines = calculateHeight('id_solution');
+          if(lines>40) {
+              $('#modal_id_solution .lines').html(lines);
+              $('#modal_id_solution').modal('show');
+              $(":submit").prop('disabled', true);
+          } else {
+              $(":submit").prop('disabled', false);
+          }
+
+    });
+    $('#id_comments').on('keyup',function(){
+          var lines = calculateHeight('id_comments');
+          if(lines>20) {
+              $('#modal_id_comments .lines').html(lines);
+              $('#modal_id_comments').modal('show');
+              $(":submit").prop('disabled', true);
+          } else {
+              $(":submit").prop('disabled', false);
+          }
+    });
+});
+
+</script>
+
+
+{% endblock %}

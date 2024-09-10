@@ -1,0 +1,443 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% load i18n %}
+{% load l10n %}
+{% block content %}
+
+<style>
+.dl-horizontal dd {
+  margin-left: 100px;
+  /* font-size: small; */
+}
+.dl-horizontal dt {
+  text-align: left;
+  /* font-weight: 100; */
+  font-weight: 600;
+  /* font-size: small; */
+}
+hr {
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+</style>
+
+
+
+<div class="container-fluid" style="padding:0;">
+
+
+<section class="content-header">
+      <h1>
+      Ocorrências
+      <small> Detalhes da Ocorrência</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboad</a></li>
+        <li><a href="/findings/list"><i class="fas fa-search-location"></i> Ocorr&ecirc;ncias</a></li>
+        <li class="active">Detalhes da Ocorrência</li>
+      </ol>
+    </section>
+     <div id="menu_tabs" class="container-fluid" style="padding:15px 15px;">
+
+
+
+
+  <div class="row">
+    <div class="col-sm-8"> <!-- left column -->
+	<div class="nav-tabs-custom">
+	<ul class="nav nav-tabs">
+              <li>
+		<a href="/findings/list">
+ 		<i class="fas fa-search-location"></i>&nbsp; Todas as Ocorrências
+		</a>
+		</li>
+               <li class="new-findings">
+		<a href="/findings/list?_status=new">
+		<i class="fa fa-bullseye"></i>&nbsp; Novas Ocorrências
+		</a>
+		</li>
+              <li class="ack-findings">
+		<a href="/findings/list?_status=ack">
+		<i class="fa fa-eye"></i>&nbsp; Ocorrências Ignoradas
+		 </a>
+		 </li>
+		 <li class="active ack-findings">
+		  <a href="#">
+		 <i class="fa fa-hand-pointer-o"></i>&nbsp; Detalhe da Ocorrência
+		 </a>
+		 </li>
+		</ul>
+
+
+      <div id="menu_tabs" class="nav-tabs-custom" style="padding-top:30px; padding-left:30px;">
+        <ul class="nav nav-tabs" id="menu_tabs_ul">
+          <li class="active menu_summary"><a data-toggle="tab"  href="#summary_div">Resumo</a></li>
+	  {% if user.groups.all.0.name == 'root' or user.groups.all.0.name == 'gestor' or user.groups.all.0.name == 'analista' or user.groups.all.0.name == 'dpo' %}
+          <li class="menu_comments"><a data-toggle="tab" href="#comments_div">Parecer DPO</a></li>
+	  {% endif %}
+          <li class="menu_tracking"><a data-toggle="tab" href="#tracking_div">Rastreamento</a></li>
+        </ul>
+        <div class="tab-content">
+
+          <!-- Summary tab -->
+          <div id="summary_div" class="tab-pane fade in active">
+            <br/>
+            <div class="row">
+              <b>
+                {% if finding.severity == 'critical' %}
+                <span class="label label-critical">Crítica</span>
+                {% elif finding.severity == 'high' %}
+                <span class="label label-high">Alta</span>
+                {% elif finding.severity == 'medium' or finding.severity == 'moderate' %}
+                <span class="label label-medium">Média</span>
+                {% elif finding.severity == 'low' %}
+                <span class="label label-low">Baixa</span>
+                {% else %}
+                <span class="label label-info">Desconhecida</span>
+                {% endif %}
+                {% trans finding.title %}
+              </b>
+            </div>
+            <div class="row">
+              <p>
+                <br/><b>Descri&ccedil;&atilde;o</b><br/>
+                {% if finding.scan.engine_type.name == "CORTEX" %}
+                <pre>{{ finding.description|linebreaksbr }}</pre>
+                {% else %}
+                {% trans finding.description|linebreaks %}
+                {% endif %}
+              </p>
+            </div>
+            <div class="row">
+              <b>Parecer Técnico</b><br/>
+              {{ finding.solution|linebreaks }}
+            </div>
+            <div class="row">
+              <p>
+                <b>Detalhamento da(s) Vulnerabilidade(s)</b><br/>
+                {% if not finding.links %}
+                 An&aacute;lise: Esta Ocorr&ecirc;ncia ap&oacute;s analisada n&atilde;o p&ocirc;de ser "confirmada" como uma vulnerabilidade,<br/>
+				 no entanto foi "classificada" como um vetor. (O que sugere a aplica&ccedil;&atilde;o de um teste de penetra&ccedil;&atilde;o de amplo espectro para certifica&ccedil;&atilde;o).
+				  {% else %}
+                  {% for link in finding.links %}
+                   <!--<a target="_blank"
+                    class="external-link link-detail"
+                    data-toggle="modal"
+                    data-target=".external-modal"
+                    data-name="{{link}}"
+                    href="{{link}}"> {{link}}</a><br/>
+                    -->
+                    <a target="_blank" href="{{link}}"> {{link}}</a><br/>
+                  {% endfor %}
+                {% endif %}
+
+                <script>
+                  $('.link-detail').each(function(){
+                    var str = $(this).text();
+                    var n = str.search("nist");
+                    if(n!=(-1)) {
+                      $(this).removeClass('external-link');
+                      $(this).removeAttr('data-toogle');
+                      $(this).removeAttr('data-target');
+                      $(this).removeAttr('data-name');
+                    }
+                  });
+                </script>
+              <p>
+            </div>
+            <div class="row">
+              <p>
+                <b>Hash</b><br/>
+                {{ finding.hash }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Comments tab -->
+          <div id="comments_div" class="tab-pane fade">
+            <br/>
+            <textarea id="comments_text" rows="8" class="form-control form-control-sm">{{ finding.comments }}</textarea>
+            <br/>
+            <button class="btn btn-warning btn-xs btn-update-comments" style="width: 100%;">Atualizar Coment&aacute;rios</button>
+          </div>
+
+          <!-- Tracking tab -->
+          <div id="tracking_div" class="tab-pane fade">
+            <br/>
+            {% if tracking_timeline|length == 0 %}Nenhum dado de informa&ccedil;&atilde;o de tracking dispon&iacute;vel (raw finding).{% else %}
+              {% for event_date, event_message in tracking_timeline.items %}
+              {{event_date|date:"d/m/Y\-H:i:s"}}: {{event_message.message|safe}}<br/>
+              {% endfor %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+</div>
+    </div>
+    <div class="col-sm-4" style="padding-left:0;">
+	{% if user.groups.all.0.name == 'root' or user.groups.all.0.name == 'gestor' or user.groups.all.0.name == 'analista' %}
+	<div class="container-fluid box">
+	<div class="box-header with-border">
+	<h3 class="box-title">Ações</h3>
+	</div>
+	<div class="box-body">
+      <div class="generate-alerts">
+        <button class="btn btn-danger btn-xs btn-generate-alerts" style="width: 100%;">Gerar Alertas - SOC</button>
+        <i class="alerts_summary"></i>
+      </div>
+      <div class="change-finding-status">
+         {% if raw == True %}
+        <a href="/findings/edit/{{ finding.id|safe }}?raw=true"><button class="btn btn-default btn-xs btn-change-finding-infos" style="width: 100%;">Tratar Ocorrência</button></a>
+	 {% else %}
+        <a href="/findings/edit/{{ finding.id|safe }}"><button class="btn btn-default btn-xs btn-change-finding-infos" style="width: 100%;">Tratar Ocorrência</button></a>
+	 {% endif %}
+     </div>
+      <div class="export-finding btn-group" style="width: 100%;">
+        <a target="_blank" href="/findings/api/v1/export/{{ finding.id|safe }}?" style="color:#fff !important; width: 100%;" class="btn btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">Exportar Ocorr&ecirc;ncia<span class="caret pull"></span></a>
+        <ul class="dropdown-menu">
+          <li><a href="#" export-format="html">HTML</a></li>
+          <!--li><a href="#" export-format="pdf">PDF (Todo)</a></li-->
+          <li><a href="#" export-format="json">JSON</a></li>
+          <li><a href="#" export-format="stix">STIX 2</a></li>
+          <li><a href="#" export-format="csv">CSV</a></li>
+        </ul>
+      </div>
+      </div>
+   {% endif %}
+
+     <div class="container-fluid box">
+	<div class="box-header with-border">
+	<h3 class="box-title">Detalhes do Contexto</h3>
+        </div>
+	<div class="box-body">
+
+      <hr class="my-1">
+      <dl class="dl-horizontal">
+        <dt>ID:</dt><dd>{{ finding.id|safe }}</dd>
+        <dt>Severidade:</dt><dd>
+          {% if finding.severity == 'critical' %}
+          <td><span class="label label-critical">Crítica</span></td>
+          {% elif finding.severity == 'high' %}
+          <td><span class="label label-high">Alta</span></td>
+          {% elif finding.severity == 'medium' or finding.severity == 'moderate' %}
+          <td><span class="label label-medium">Média</span></td>
+          {% elif finding.severity == 'low' %}
+          <td><span class="label label-low">Baixa</span></td>
+          {% else %}
+          <td><span class="label label-info">Desconhecida</span></td>
+          {% endif %}
+        </dd>
+        <dt>Status:</dt><dd>
+          {% if finding.status == 'new' %}
+          <span class="text-danger">Nova</span>
+          {% elif finding.status == 'ack' %}
+          <td class="text-danger">Ignorada</td>
+          {% elif finding.status == 'mitigated' %}
+          <td class="text-danger">Mitigada</td>
+          {% elif finding.status == 'confirmed' %}
+          <td class="text-danger">Confirmada</td>
+          {% elif finding.status == 'closed' %}
+          <td class="text-danger">Encerraada</td>
+          {% elif finding.status == 'false-positive' %}
+          <td class="text-danger">Falso-Positivo</td>
+          {% elif finding.status == 'patched' %}
+          <td class="text-danger">Corrigida</td>
+          {% endif %}
+        </dd>
+        <dt>Ativo:</dt><dd>
+          <a href="/assets/details/{{finding.asset.id|safe}}">
+          {% if finding.asset|length > 64 %}
+            {{ finding.asset|truncatechars:64 }}
+          {% else %}
+            {{ finding.asset }}
+          {% endif %}
+        </a>
+        </dd>
+        <dt>Sensor utilizado:</dt><dd>{{ finding.scan.engine.name }} ({{ finding.engine_type }})</dd>
+        <dt>Nome do scan:</dt><dd><a href="/scans/details/{{finding.scan.id|safe}}">{{ finding.scan.title }}</a></dd>
+        <dt>Nome da pol&iacute;tica:</dt><dd><a href="/engines/policies/edit/{{finding.scan.engine_policy.id}}">{{ finding.scan.engine_policy.name }}</a></dd>
+        <dt>Tipo da Ocorr&ecirc;ncia:</dt><dd>{{ finding.type }}</dd>
+        <dt>Tags:</dt>
+        <dd>
+          {% if not finding.tags %}
+            Nenhuma Tag Encontrada.
+          {% else %}
+            {% for tag in finding.tags %}
+              <span class="label label-primary">{{ tag|lower }}</span>
+            {% endfor %}
+          {% endif %}
+        </dd>
+        <dt>Data do evento:</dt><dd>{{ finding.created_at|date:"d/m/Y\-H:i:s" }}</dd>
+      </dl>
+
+      {% if finding.risk_info %}
+      <b>Contexto de Risco e Vetores de Vulnerabilidades</b>
+      <hr class="my-1">
+      <dl class="dl-horizontal">
+        {% if "cvss3_base_score" in finding.risk_info.keys %}
+        <dt>Base Score CVSSv3:</dt><dd>{{ finding.risk_info.cvss3_base_score }}</dd>
+        {% endif %}
+        {% if "cvss3_vector" in finding.risk_info.keys %}
+        <dt>Vetores CVSSv3:</dt><dd>{{ finding.risk_info.cvss3_vector }}</dd>
+        {% endif %}
+        {% if "cvss_base_score" in finding.risk_info.keys %}
+        <dt>Base Score CVSSv2:</dt><dd>{{ finding.risk_info.cvss_base_score }}</dd>
+        {% endif %}
+        {% if "cvss_vector" in finding.risk_info.keys %}
+        <dt>Vetores CVSSv2:</dt><dd>{{ finding.risk_info.cvss_vector }}</dd>
+        {% endif %}
+        {% if "vuln_publication_date" in finding.risk_info.keys %}
+        <dt>Data da Publica&ccedil;&atilde;o:</dt><dd>{{ finding.risk_info.vuln_publication_date|date:"d/m/Y\-H:i:s" }}</dd>
+        {% endif %}
+
+        {% with "cvss3_base_score cvss3_vector cvss_base_score cvss_vector vuln_publication_date" as list %}
+        {% for key, value in finding.risk_info.items %}
+        {% if key not in list.split %}
+        <dt>{{ key }}</dt><dd>{{ value }}</dd>
+        {% endif %}
+        {% endfor %}
+        {% endwith %}
+      </dl>
+      {% endif %}
+
+      {% if finding.vuln_refs %}
+      <b>Detalhamento da(s) Vulnerabilidade(s) - Click no(s) link(s)</b>
+      <hr class="my-1">
+      <dl class="dl-horizontal">
+        {% if "cve" in finding.vuln_refs.keys %}
+        <dt>CVE:</dt>
+        <dd>
+          {% if finding.vuln_refs.cve|get_class == "list" %}
+            {% for v in finding.vuln_refs.cve %}
+              <a target="_blank"  href="https://nvd.nist.gov/vuln/detail/{{v}}">{{v}}</a>{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+          {% else %}
+            <a target="_blank"  href="https://nvd.nist.gov/vuln/detail/{{finding.vuln_refs.cve}}">{{finding.vuln_refs.cve}}</a>
+          {% endif %}
+        </dd>
+        {% endif %}
+
+        {% if "bid" in finding.vuln_refs.keys %}
+        <dt>Bugtraq ID:</dt>
+        <dd>
+          {% if finding.vuln_refs.bid|get_class == "list" %}
+            {% for v in finding.vuln_refs.bid %}
+              <a target="_blank" href="https://www.securityfocus.com/bid/{{v}}">{{v}}</a>{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+          {% else %}
+            <a target="_blank" href="https://www.securityfocus.com/bid/{{finding.vuln_refs.bid}}">{{finding.vuln_refs.bid}}</a>
+          {% endif %}
+        </dd>
+        {% endif %}
+
+        {% with "cve bid" as list %}
+        {% for key, values in finding.vuln_refs.items %}
+          {% if key not in list.split %}
+          <dt>{{ key }}:</dt>
+          <dd>
+            {% if values|get_class == "list" %}
+              {% for v in values %}
+                <a target="_blank" href="{{v|ref_url:key}}">{{v}}</a>{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+            {% else %}
+              <a target="_blank" href="{{values|ref_url:key}}">{{values}}</a>
+            {% endif %}
+          </dd>
+          {% endif %}
+        {% endfor %}
+        {% endwith %}
+      </dl>
+      {% endif %}
+    </div>
+  </div>
+
+  </div>
+
+  </div>
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+</div>
+
+<div class="container-fluid">
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+
+<script>
+
+  // function for parsing query string
+  function qs(key) {
+    key = key.replace(/[*+?^$.\[\]{}()|\\\/]/g, "\\$&"); // escape RegEx control chars
+    var match = location.search.match(new RegExp("[?&]" + key + "=([^&]+)(&|$)"));
+    return match && decodeURIComponent(match[1].replace(/\+/g, " "));
+  }
+
+  // Generate alerts
+  $('button.btn-generate-alerts').on('click', function(e){
+    finding_id = "{{finding.id|safe}}";
+    gen_alert_url = ""
+    if (qs('raw') == "true") {
+      gen_alert_url = "/findings/api/v1/gen_alerts/"+finding_id+"?raw=true";
+    } else {
+      gen_alert_url = "/findings/api/v1/gen_alerts/"+finding_id;
+    }
+    var request = $.ajax({
+      url: gen_alert_url,
+      method: "GET",
+      success: function(data){
+        $('i.alerts_summary')[0].textContent = data["nb_matches"]+" alert(s) generated";
+      }
+    });
+  });
+
+  // Update finding comments
+  $('button.btn-update-comments').on('click', function(e){
+    comments = "csrfmiddlewaretoken={{ csrf_token }}&comments="+$("textarea#comments_text").val();
+
+    if (qs('raw') == "true") {
+      comments += "&raw=true";
+    }
+
+    var request = $.ajax({
+      url: "/findings/api/v1/update_comments/{{finding.id|safe}}",
+      method: "POST",
+      data: comments,
+      success: function(data){
+        location.reload();
+      }
+    });
+  }); // End - Update finding comments
+
+
+  // Export finding
+  $('div.export-finding ul li a').on('click', function(e){
+    redir = "/findings/api/v1/export/{{finding.id|safe}}?output="+e.target.getAttribute("export-format");
+    if (qs('raw') == "true") {
+      redir = redir+"&raw=true";
+    }
+    //window.location = redir;
+    window.open(redir, '_blank');
+  });
+
+  // Fixing bootstrap tab issue
+  $('#menu_tabs > ul > li > a').click(function (e) {
+    $(this).removeClass('active');
+  });
+
+</script>
+
+{% endblock %}

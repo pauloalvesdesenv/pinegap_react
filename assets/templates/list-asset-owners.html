@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block content %}
+
+
+<section class="content-header">
+      <h1>
+      Ativos
+      <small>Todos os Proprietarios</small>
+      </h1>
+      <ol class="breadcrumb">
+      <li><a href="/"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+      <li><a href="/assets/list"><i class="fas fa-crosshairs"></i> Ativos</a></li>
+      <li class="active"> Todos os Proprietários</li>
+      </ol>
+    </section>
+    <div class="container-fluid" style="padding:15px 15px;">
+	<div class="nav-tabs-custom">
+	<ul class="nav nav-tabs">
+        <li class="dropdown">
+	<a class="dropdown-toggle" data-toggle="dropdown" href="/assets/list">
+	<i class="fas fa-crosshairs"></i>&nbsp; Ativos <span class="caret"></span>
+	</a>
+	<ul class="dropdown-menu">
+		<li role="presentation"><a role="menuitem" href="/assets/list"><i class="fa fa-list"></i> Todos os Ativos</a></li>
+		{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+		<li role="presentation"><a role="menuitem" href="/assets/add"><i class="fa fa-plus"></i>&nbsp; Criar Ativo</a></li>
+		<li role="presentation"><a role="menuitem" href="/assets/bulkadd"><i class="fa fa-upload"></i> Importar Ativos</a></li>
+		<li role="presentation"><a role="menuitem" href="/assets/api/v1/export"><i class="fa fa-download"></i> Exportar Ativos</a></li>
+		{% endif %}
+                </ul>
+		</li>
+              <li class="dropdown">
+		<a class="dropdown-toggle" data-toggle="dropdown" href="/assets/list?target=asset_group">
+		<i class="fa fa-th-list"></i>&nbsp; Grupos de Ativos <span class="caret"></span>
+	        </a>
+              <ul class="dropdown-menu">
+		<li role="presentation"><a role="menuitem" href="/assets/list?target=asset_group"><i class="fa fa-list"></i> Todos os Grupos de Ativos</a></li>
+		{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+		<li role="presentation"><a role="menuitem" href="/assets/addgroup"><i class="fa fa-plus"></i> &nbsp; Criar Grupo de Ativos</a></li>
+                <li role="presentation"><a role="menuitem" href="{% url 'export_assetgroups_api' %}"><i class="fa fa-download"></i> Exportar Grupos de Ativos</a></li>
+                {% endif %}
+                </ul>
+		</li>
+              <li class="active dropdown">
+	        <a class="dropdown-toggle" data-toggle="dropdown" href="/assets/owners/list">
+		<i class="fa fa-user-secret"></i>&nbsp; Proprietários <span class="caret"></span>
+		</a>
+	      <ul class="dropdown-menu">
+		<li role="presentation"><a role="menuitem" href="/assets/owners/list"><i class="fa fa-list"></i> Todos os Proprietários</a></li>
+		{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+		<li role="presentation"><a role="menuitem" href="/assets/owners/add"><i class="fa fa-plus"></i>&nbsp; Criar Proprietário</a></li>
+		{% endif %}
+                </ul>
+		</li>
+            </ul>
+<div class="tab-content">
+
+	
+  <!-- <a href="/assets/owners/add">+ Add a new asset owner</a><br/> -->
+  <table class="table table-bordered" data-toggle="table" data-sort-name="value" data-sort-order="desc">
+    <!-- <h2>Asset Owners</h2> -->
+    <thead>
+      <tr>
+        <!-- <th data-field="name">Name</th> -->
+        <th data-field="name">Nome</th>
+        <th data-field="nb_assets"># Ativos</th>
+        <th data-field="nb_contacts"># Contatos</th>
+        <!--th data-field="nb_documents"># Documentos</th-->
+        <th data-field="updated_at">Atualizado</th>
+	{% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <th style="width:60px;">Editar</th>
+        <th style="width:60px;">Excluir</th>
+	{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for owner in owners %}
+      <tr>
+	
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <td><a href="/assets/owners/details/{{ owner.id }}" class="text-primary">{{ owner.name }}</a></td>
+	{% else %}
+        <td><a href="#" class="text-primary">{{ owner.name }}</a></td>
+        {% endif %}
+        <td>{{ owner.nb_assets }}</td>
+        <td>{{ owner.nb_contacts }}</td>
+        <!--<td>{{ owner.nb_documents }}</td>-->
+        <td>{{ owner.updated_at|date:"d/m/Y\-H:i:s" }}</td>
+         {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+         <td>
+         <a href="/assets/owners/details/{{ owner.id }}" style="margin-left:15px;"><i class="fas fa-edit"></i></a>
+         </td>
+         <td>
+         <a href="#" data-toggle="modal" data-target="#modal-delete-owner" owner-id="{{ owner.id }}" owner-name="{{ owner.name }} / {{ owner.title }}" style="margin-left:15px;"><i class="fa fa-trash"></i></a>
+         </td>
+	{% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="notifications">
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+  <!-- Delete Owner modal -->
+  <div class="modal fade" id="modal-delete-owner" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <!-- Modal Header -->
+        <div class="modal-header bg-primary">
+          <button type="button" class="close" data-dismiss="modal">
+            <span aria-hidden="true">&times;</span>
+            <span class="sr-only">Fechar</span>
+          </button>
+          <h4 class="modal-title" id="myModalLabel">Excluir Propriet&aacuterio</h4>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-body">
+          <div id="delete-owner">
+            <!-- Content -->
+          </div>
+          Confirma Exclus&atilde;o?
+          <p class="text-danger">CUIDADO ! Todos os Contatos e documentos ser&atilde;o exclu&iacute;dos tamb&eacute;m !</p>
+          <button type="button" class="btn btn-xs btn-warning btn-delete-owner" data-dismiss="modal">Sim</button>
+          <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">N&atilde;o</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<script>
+  $(function() {
+    // jQuery
+
+    // Delete owner modal
+    $("#modal-delete-owner").on('show.bs.modal', function (e) {
+      owner_id = e.relatedTarget.getAttribute('owner-id');
+      owner_name = e.relatedTarget.getAttribute('owner-name');
+      $("div#delete-owner").attr('owner-id', owner_id);
+      $("div#delete-owner").html("Owner Name: <b>"+owner_name+"</b><br/><br/>");
+    });
+    $("button.btn-delete-owner").on('click', function (e) {
+      owner_id = $("div#delete-owner").attr('owner-id');
+      delete_owner_url = "/assets/owners/delete/"+owner_id;
+      var request = $.ajax({
+        url: delete_owner_url,
+        method: "POST",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        success: function(){
+          location.reload();
+        }
+      });
+    });
+
+  });
+</script>
+
+{% endblock %}

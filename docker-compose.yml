@@ -1,0 +1,81 @@
+version: '3'
+services:
+
+  rabbitmq:
+    image: rabbitmq:3-alpine
+    container_name: pinegap-rabbitmq
+    environment:
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error}]
+    expose:
+      - '5672'
+
+  db:
+    image: postgres:11-alpine
+    container_name: pinegap-database
+    environment:
+      - POSTGRES_DB=pinegap_db
+      - POSTGRES_USER=PINEGAP_DB_USER
+      - POSTGRES_PASSWORD=PINEGAP_DB_PASSWD_TO_CHANGE
+    expose:
+      - '5432'
+    volumes:
+      - ./var/db/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    #volumes:
+    #  - postgres_data:/var/lib/postgresql/data/
+ 
+
+
+  web:
+    container_name: pinegap-django
+    build: .
+    image: pinegap/pinegap-manager:latest
+    environment:
+      - DB_PORT_5432_TCP_HOST=db
+      - DEBUG=True
+      - RABBIT_PORT_5672_TCP=rabbitmq:5672
+    depends_on:
+      - db
+      - rabbitmq
+    expose:
+      - "8003"
+    volumes:
+      - ./staticfiles:/opt/pinegap-manager/staticfiles
+      - ./media:/opt/pinegap-manager/media
+      - ./app:/opt/pinegap-manager/app
+      - ./assets:/opt/pinegap-manager/assets
+      - ./common:/opt/pinegap-manager/common
+      - ./engines:/opt/pinegap-manager/engines
+      - ./events:/opt/pinegap-manager/events
+      - ./findings:/opt/pinegap-manager/findings
+      - ./img:/opt/pinegap-manager/img
+      - ./password_reset:/opt/pinegap-manager/password_reset
+      - ./radar:/opt/pinegap-manager/radar
+      - ./reportings:/opt/pinegap-manager/reportings
+      - ./rules:/opt/pinegap-manager/rules
+      - ./scans:/opt/pinegap-manager/scans
+      - ./search:/opt/pinegap-manager/search
+      - ./settings:/opt/pinegap-manager/settings
+      - ./static:/opt/pinegap-manager/static
+      - ./templates:/opt/pinegap-manager/templates
+      - ./templatetags:/opt/pinegap-manager/templatetags
+      - ./tests:/opt/pinegap-manager/tests
+      - ./users:/opt/pinegap-manager/users
+      - ./utils:/opt/pinegap-manager/utils
+      - ./var:/opt/pinegap-manager/var
+      - ./whitelabels:/opt/pinegap-manager/whitelabels
+    links:
+      - db
+      - rabbitmq
+
+  nginx:
+    image: nginx:latest
+    container_name: pinegap-nginx
+    ports:
+      - "8083:8083"
+    volumes:
+      - ./staticfiles:/opt/pinegap-manager/staticfiles
+      - ./media:/opt/pinegap-manager/media
+      - ./var/log:/opt/pinegap-manager/var/log
+      - ./nginx_docker.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - web

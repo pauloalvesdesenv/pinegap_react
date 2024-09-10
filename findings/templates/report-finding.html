@@ -1,0 +1,435 @@
+{% load staticfiles %}
+{% load pinegap_tags %}
+{% load i18n %}
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'staticv2/reports/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'staticv2/reports/css/reports.css' %}">
+    <title>{{site_name}} | Ocorrência - Relatório Detalhado</title>
+  </head>
+  <body>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <button onclick="javascript:pdfGen()" class="btn btn-primary ">Salvar PDF</button>
+      <a class="back" href="javascript:history.back()"><i class="fas fa-arrow-left"></i> Voltar</a>
+    </div>
+
+    <!-- Loading modal -->
+    <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modal" aria-hidden="true">
+      <div class="modal-dialog" id="modal" role="document">
+        <div class="modal-content">
+          <div class="modal-header"></div>
+          <div class="modal-body">
+            <h5 class="modal-title">Estamos gerando o seu PDF</h5>
+            <img src="{% static 'staticv2/reports/img/loader.gif' %}" />
+          </div>
+          <div class="modal-footer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Blob buffer -->
+    <div class="pdf" filename="Ocorrencia-Relatorio-Detalhado.pdf" quality="2">
+      <!--empty-->
+    </div>
+
+    <!-- document -->
+    <div class="document">
+
+        <!-- a4 model -->
+        <div class="a4-model">
+
+          <div class="a4">
+            <div class="container-fluid">
+              <!-- row -->
+              <div class="row header">
+                  <div class="col-6">
+                    <img class="logo" src="/media/{{report_logo}}" />
+                  </div>
+                  <div class="col-6">
+                    <h1>Ocorrência / Relatório Detalhado</h1>
+                    <small class="date">{% now "d" %} de {% now "F" %} de {% now "Y" %} às {% now "H:i" %}</small>
+                  </div>
+              </div>
+              <br class="space-10" />
+              <br class="space-10" />
+
+              <div class="a4-loop-content" mm="240"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="a4-loop">
+
+          <!--loop- asset-->
+          <div class="a4-loop-model" loop-item="asset-finding" mm="65">
+
+            <div class="row finding-item">
+              <div class="col-12">
+                <span class="finding-##severity##"></span>
+                <p>##type## / ##title##</p>
+
+                <table class="table table-borderless table-sm">
+                  <tbody>
+                    <tr>
+                      <td><b>Descrição</b></td>
+                      <td class="more-container">##description## <div class="more-content">##description_complete##</div></td>
+                    </tr>
+
+                    <tr after="risk_info">
+                      <td><b>Avaliação do Risco</b></td>
+                      <td></td><!-- subitems ##risk_info## -->
+                    </tr>
+                    <tr>
+                      <td style="padding-left:20px !important;">Severidade</td>
+                      <td class="finding-severity">##severity##</td>
+                    </tr>
+                    <tr after="vuln_refs">
+                      <td><b>Detalhe CPE</b></td>
+                      <td></td><!-- subitems ##vuln_refs## -->
+                    </tr>
+                    <tr>
+                      <td><b>Tags</b></td>
+                      <td>##tags##</td>
+                    </tr>
+
+                    <tr>
+                      <td><b>Status</b></td>
+                      <td class="finding-status">##status##</td>
+                    </tr>
+
+                    <tr>
+                      <td><b>Parecer Técnico</b></td>
+                      <td>##solution_complete##</td>
+                    </tr>
+
+                    <tr class="comments-complete">
+                      <td style="width:120px !important;"><b>Parecer DPO</b></td>
+                      <td class="comments-content">##comments_complete##</td>
+                    </tr>
+
+                    <tr after="links" class="links">
+                      <td><b>Informações Relacionadas</b></td>
+                      <td class="links-content"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="a4-loop-model asset-finding-comments-complete" loop-item="asset-finding-comments-complete" mm="55">
+
+            <div class="row finding-item">
+              <div class="col-12">
+                <table class="table table-borderless table-sm">
+                  <tbody>
+                    <tr class="comments-container"></tr>
+                    <tr class="links-container"></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- a4-prepend -->
+        <div class="a4-prepend">
+
+          <!-- a4 -->
+          <div class="a4">
+            <div class="container-fluid">
+
+              <!-- row -->
+              <div class="row header">
+                  <div class="col-6">
+                    <img class="logo" src="/media/{{report_logo}}" />
+                  </div>
+                  <div class="col-6">
+                    <h1>Ocorrência / Relatório Detalhado</h1>
+                    <small class="date">{% now "d" %} de {% now "F" %} de {% now "Y" %} às {% now "H:i" %}</small>
+                  </div>
+              </div>
+
+              <br class="space-10" />
+
+              <div class="row">
+                <div class="col-12">
+                  <h2>Detalhamento da Ocorrência</h2>
+                </div>
+              </div>
+
+              <br class="space-10" />
+              <br class="space-10" />
+
+              <div class="a4-loop-content" mm="240"></div>
+
+            </div>
+          </div>
+          <br />
+        </div>
+
+        <div class="a4-append">
+          <!-- a4 a4-4 -->
+          <div class="a4">
+            <div class="container-fluid">
+
+              <!-- row -->
+              <div class="row header">
+                <div class="col-6">
+                  <img class="logo" src="/media/{{report_logo}}" />
+                </div>
+                <div class="col-6">
+                  <h1>Ocorrência / Relatório Detalhado</h1>
+                  <small class="date">{% now "d" %} de {% now "F" %} de {% now "Y" %} às {% now "H:i" %}</small>
+                </div>
+              </div>
+
+              <br class="space-10" />
+              <br class="space-10" />
+
+              <!-- row -->
+              <div class="row">
+                <div class="col-12">
+                  <h3>Glossário</h3>
+                </div>
+              </div>
+
+              <br class="space-5" />
+
+              <!-- row-->
+              <div class="row">
+                <div class="col-12">
+                  <table class="table table-borderless table-sm glossary">
+                    <tr>
+                      <td style="width:120px;"><b>Ativo</b></td>
+                      <td><p>Qualquer coisa que tenha IP e tenha valor para a empresa, como por exemplo meios de armazenamento, transmissão e processamento da informação, os equipamentos necessários a isso, os sistemas utilizados para tal, os locais onde se encontram esses meios.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Ocorrência</b></td>
+                      <td><p>Evento detectado e registrado em um ativo.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Sensor</b></td>
+                      <td><p>Mecanismo técnico que funciona como um motor para fazer Scans.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Scan</b></td>
+                      <td><p>Mecanismo técnico que faz o tipo de varredura em determinado ambiente que possui ativos e que é responsável por trazer as ocorrências e vincular aos ativos corretos.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Severidade</b></td>
+                      <td><p>Classificação qualitativa de gravidade de uma ocorrência de segurança encontrada no ativo.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Nota de Segurança</b></td>
+                      <td><p>Nota de segurança dada a um ativo. Esta nota pode ir de A até F, onde A é a melhor nota (mais seguro) e F é a pior nota (menos seguro). Esta nota é dada automaticamente pelo sistema baseado na quantidade de ocorrências e severidade das mesmas.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Nota</b></td>
+                      <td><p>É o mesmo que Nota de Segurança.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Valor</b></td>
+                      <td><p>Endereço do ativo cadastrado no sistema, como IP, domínio, etc.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Endereço</b></td>
+                      <td><p>Endereço é o mesmo que valor.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Valor em Risco</b></td>
+                      <td><p>Valor monetário que potencialmente será impactado no caso de um incidente de segurança no ativo. A denominação do Valor em Risco é dada de forma livre.</p></td>
+                    </tr>
+                    <tr>
+                      <td style="width:120px;"><b>Impacto Negócio</b></td>
+                      <td><p>Classificação de importância para o negócio que um ativo possui.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Probabilidade</b></td>
+                      <td><p>É baseada na Nota de Segurança e tem como objetivo evidenciar as chances que determinado ativo tem de sofrer um incidente de segurança. A probabilidade começa com Imponderável e pode chegar até Quase Certo.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>Risco Negócio</b></td>
+                      <td><p>Resultado da matriz que correlaciona Impacto Negócio e Probabilidade, classificando o Risco do Negócio de Imponderável até Extremo.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>DPO</b></td>
+                      <td><p>O DPO (Data Protection Officer), é a pessoa responsável por garantir que a organização processe os dados pessoais da equipe, clientes, fornecedores ou quaisquer outros indivíduos (também chamados de titulares de dados), além de atuar como canal de comunicação entre o controlador, os titulares dos dados e a Autoridade Nacional de Proteção de Dados (ANPD), em conformidade com as regras de proteção de dados aplicáveis. Na Lei Geral de Proteção de Dados brasileira (LGPD), o nome do "DPO" é "Encarregado".</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>CVE</b></td>
+                      <td><p>Common Vulnerabilities and Exposures, é uma iniciativa colaborativa de diversas organizações de tecnologia e segurança que criam listas de nomes padronizados para vulnerabilidades e outras exposições de segurança. O objetivo da CVE é padronizar as vulnerabilidades e riscos conhecidos, facilitando a procura, o acesso e o compartilhamento de dados entre diversos indivíduos e empresas.</p></td>
+                    </tr>
+                    <tr>
+                      <td><b>CPE</b></td>
+                      <td><p>O CPE (Common Platform Enumeration) é um método padronizado de descrição e identificação de classes de aplicativos, sistemas operacionais e dispositivos de hardware presentes nos ativos de computação de uma empresa. </p></td>
+                    </tr>
+                    <tr>
+                      <td><b>CVSS</b></td>
+                      <td><p>Common Vulnerability Scoring System, é um padrão utilizado para qualificar e avaliar vulnerabilidades presentes nos sistemas. Usando esse modelo de numeração, fica mais fácil avaliar quais prioridades devem ser remediadas de maneira mais simples. Essa pontuação indica a gravidade do risco apontado, podendo variar entre baixa, média e alta. Baseado em uma série de critérios, o método aponta uma numeração de 0 a 10, em que, naturalmente, quanto maior a nota, maior o risco.</p></td>
+                    </tr>
+                  </table>
+              </div>
+            </div>
+          </div>
+          </div>
+
+          <br />
+
+        </div>
+
+    </div>
+
+    <script>
+      var _dataset = [];
+      _dataset['asset-finding']=[];
+
+      _dataset['asset-finding'][1] = {
+          raw_finding_id: '{{ finding.raw_finding_id }}',
+          severity: '{{ finding.severity }}',
+          type: '{{ finding.type }}',
+          status: '{{ finding.status }}',
+          title: '{{ finding.title }}',
+          confidence: '{{ finding.confidence }}',
+          comments: ''+
+          '{% filter escapejs %}
+          {{ finding.comments|truncatechars:80 }}
+          {% endfilter %}'+
+          '',
+          comments_complete: ''+
+          '{% filter escapejs %}
+          {{ finding.comments|linebreaksbr }}
+          {% endfilter %}'+
+          '',
+          description: ''+
+          '{% filter escapejs %}
+          {{ finding.description|truncatechars:80 }}
+          {% endfilter %}'+
+          '',
+          description_complete: ''+
+          '{% filter escapejs %}
+          {{ finding.description|linebreaksbr }}
+          {% endfilter %}'+
+          '',
+          solution: ''+
+          '{% filter escapejs %}
+          {{ finding.solution|truncatechars:80 }}
+          {% endfilter %}'+
+          '',
+          solution_complete: ''+
+          '{% filter escapejs %}
+          {{ finding.solution|linebreaksbr }}
+          {% endfilter %}'+
+          '',
+          tags: '{{ finding.tags | join:", " }}',
+          //{% if not finding.links %}
+          links: [{}],
+          //{% else %}
+          links: [
+          //{% for link in finding.links %}
+              { link: '{{ link }}' },
+          //{% endfor %}
+          ],
+          //{% endif %}
+          //{% if not finding.risk_info %}
+          risk_info: [{}],
+          //{% else %}
+          risk_info: [{
+            //{% for key, value in finding.risk_info.items %}
+              '{{ key }}': '{{ value }}',
+            //{% endfor %}
+          }],
+          //{% endif %}
+          //{% if not finding.vuln_refs %}
+          vuln_refs: [{}],
+          //{% else %}
+          vuln_refs: [{
+            //{% for key, value in finding.vuln_refs.items %}
+              //{% if key == "CVE" %}
+                '{{ key }}': '{{ value|joinby:"," }}',
+              //{% else %}
+                '{{ key }}': '{{ value }}',
+              //{% endif %}
+            //{% endfor %}
+          }],
+          //{% endif %}
+      };
+
+    </script>
+
+
+
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="{% static 'staticv2/reports/js/jquery-3.4.1.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/popper.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/jspdf.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/html2canvas.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/Chart.min.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/fontawesome.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/chartjs.showAllTooltips.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/replaceArray.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/pdfGen.js' %}"></script>
+    <script src="{% static 'staticv2/reports/js/dataProc.js' %}"></script>
+
+    <script>
+
+		// Severidade
+		var severity = {
+			'critical': 'Crítica',
+			'high': 'Alta',
+			'medium': 'Média',
+			'low': 'Baixa',
+			'info': 'Desconhecida'
+		};
+		var finding_severity = $('.finding-severity');
+
+		for(i=0; i < finding_severity.length; i++) {
+			var finding_severity_html =  $(finding_severity[i]).html();
+			$(finding_severity[i]).html(severity[finding_severity_html]);
+		}
+
+
+		// Status
+		var fstatus = {
+			'new': 'Nova',
+			'ack': 'Ignorada',
+			'mitigated': 'Mitigada',
+			'confirmed': 'Confirmada',
+			'patched': 'Corrigida',
+			'closed': 'Encerrada',
+			'false-positive': 'Falso-Positivo'
+		};
+		var finding_status = $('.finding-status');
+
+		for(i=0; i < finding_status.length; i++) {
+			var finding_status_html =  $(finding_status[i]).html();
+			$(finding_status[i]).html(fstatus[finding_status_html]);
+		}
+
+        // Criticidade
+        var criticity = {
+            'critical': 'Crítica',
+            'high': 'Alta',
+            'medium': 'Média',
+            'low': 'Baixa',
+            'info': 'Desconhecida'
+        };
+        var asset_criticity = $('.asset-criticity').html();
+        $('.asset-criticity').html(criticity[asset_criticity]);
+
+
+    </script>
+  </body>
+</html>

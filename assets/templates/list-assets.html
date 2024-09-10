@@ -1,0 +1,622 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% load humanize %}
+{% load l10n %}
+{% load currency %}
+{% currency_context %}
+{% block content %}
+
+
+<style>
+span.badge-risk-grade-A { background-color: limegreen; }
+span.badge-risk-grade-B { background-color: yellowgreen; }
+span.badge-risk-grade-C { background-color: orange; }
+span.badge-risk-grade-D { background-color: darkorange; }
+span.badge-risk-grade-E { background-color: orangered; }
+span.badge-risk-grade-F { background-color: red; }
+span.badge-risk-grade-- { background-color: lightgray; }
+
+
+</style>
+
+<script language="JavaScript">
+function toggle(source, element) {
+  checkboxes = document.getElementsByName(element);
+  for(var i=0, n=checkboxes.length;i<n;i++) {
+    checkboxes[i].checked = source.checked;
+  }
+}
+</script>
+<div class="container-fluid" style="padding:0;">
+	<section class="content-header">
+        <h1>
+        Ativos
+        <small> Todos os Ativos</small>
+        </h1>
+        <ol class="breadcrumb">
+        <li><a href="/"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li class="active">Todos os Ativos</li>
+      </ol>
+    </section>
+
+
+  <div id="menu_tabs" class="container-fluid" style="padding:15px 15px;">
+
+	<!--<ul class="nav nav-tabs" id="menu_tabs_ul">
+	  <a href="{% url 'export_assets_api' %}" class="btn btn-primary btn-xs" type="button">Exportar Ativos</a>
+	  <a href="{% url 'refresh_all_asset_grade_api' %}" class="btn btn-default btn-xs" type="button">Atualizar Scores</a><br/><br/>
+	  <li class="active menu_assets"><a data-toggle="tab"  href="#assets_div" >Ativos</a></li>
+      <li class="menu_assetgroups"><a data-toggle="tab" href="#assetgroups_div">Grupo de Ativos</a></li>
+    </ul>-->
+
+    <div class="nav-tabs-custom">
+
+    <ul class="nav nav-tabs">
+              <li class="asset active dropdown">
+		<a class="dropdown-toggle" data-toggle="dropdown" href="/assets/list">
+		<i class="fas fa-crosshairs"></i>&nbsp; Ativos <span class="caret"></span>
+		</a>
+                <ul class="dropdown-menu">
+              	<li role="presentation"><a role="menuitem" href="/assets/list"><i class="fa fa-list"></i> Todos os Ativos</a></li>
+                {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+		<li role="presentation"><a role="menuitem" href="/assets/add"><i class="fa fa-plus"></i>&nbsp; Criar Ativo</a></li>
+		<li role="presentation"><a role="menuitem" href="/assets/bulkadd"><i class="fa fa-upload"></i> Importar Ativos</a></li>
+		<li role="presentation"><a role="menuitem" href="{% url 'export_assets_api' %}"><i class="fa fa-download"></i> Exportar Ativos</a></li>
+                {% endif %}
+                </ul>
+		</li>
+              	<li class="asset-group dropdown">
+		<a class="dropdown-toggle" data-toggle="dropdown" href="/assets/list?target=asset_group">
+                <i class="fa fa-th-list"></i>&nbsp; Grupos de Ativos <span class="caret"></span>
+		</a>
+                <ul class="dropdown-menu">
+		<li role="presentation"><a role="menuitem" href="/assets/list?target=asset_group"><i class="fa fa-list"></i> Todos os Grupos de Ativos</a></li>
+                {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+		<li role="presentation"><a role="menuitem" href="/assets/addgroup"><i class="fa fa-plus"></i> &nbsp; Criar Grupo de Ativos</a></li>
+                <li role="presentation"><a role="menuitem" href="{% url 'export_assetgroups_api' %}"><i class="fa fa-download"></i> Exportar Grupos de Ativos</a></li>
+                {% endif %}
+		</ul>
+                </li>
+		<li class="dropdown">
+		<a class="dropdown-toggle" data-toggle="dropdown" href="/assets/owners/list">
+		<i class="fa fa-user-secret"></i>&nbsp; Proprietários <span class="caret"></span>
+		</a>
+		<ul class="dropdown-menu">
+		<li role="presentation"><a role="menuitem" href="/assets/owners/list"><i class="fa fa-list"></i> Todos os Proprietários</a></li>
+                {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+		<li role="presentation"><a role="menuitem" href="/assets/owners/add"><i class="fa fa-plus"></i>&nbsp; Criar Proprietário</a></li>
+                {% endif %}
+		</ul>
+		</li>
+              <li class="dropdown pull-right">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
+                <i class="fa fa-gear"></i>&nbsp; Ações <span class="caret"></span>
+                </a>
+              	</a>
+               	<ul class="dropdown-menu">
+                 {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+                  <li role="presentation"><a class="btn-delete-selected" role="menuitem" tabindex="-1" href="#"><i class="fa fa-trash"></i> Excluir Ativos Selecionados</a></li>
+                 {% endif %}
+                  <li role="presentation"><a data-target="#modal-update-assets" data-toggle="modal" role="menuitem" tabindex="-1" href="#"><i class="fa fa-refresh"></i> Atualizar Criticidade de Ativos</a></li>
+		</ul>
+              </li>
+              <li class="pull-right"><a href="{% url 'refresh_all_asset_grade_api' %}"><i class="fa fa-refresh"></i> Atualizar Scores</a></li>
+            </ul>
+
+
+
+    <div class="tab-content">
+      <div id="assets_div" class="tab-pane fade in active">
+        <div class="row" style="margin-top: 5px;">
+
+          <!-- search bar -->
+          <div class="has-feedback col-sm-3" style="padding-left: 25px; padding-right: 0px;">
+            <input type="text" placeholder="Busca rápida" class="form-control form-control-xs" id="asset-quick-search-name"/>
+          </div>
+
+          <!--<div class="dropdown col-sm-2" style="padding-left: 0px;">
+            <button class="btn btn-primary btn-xs dropdown-toggle" type="button" id="dropdown-menu-actions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+              Ordenar por
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdown-menu-actions">
+              <li><a onclick="sortby('name', 'assets');">Nome</a></li>
+              <li><a onclick="sortby('criticity_num', 'assets');">Criticidade</a></li>
+              <li><a onclick="sortby('-risk_level', 'assets');">Score</a></li>
+              <li><a onclick="sortby('criticity_num%1A,-risk_level', 'assets');">Criticidade + Score</a></li>
+              <li><a onclick="sortby('type', 'assets');">Tipo</a></li>
+              <li><a onclick="sortby('-updated_at', 'assets');">Atualizado em</a></li>
+            </ul>
+            <button class="btn btn-primary btn-xs" type="button" onclick="location.href='{% url "list_assets_view" %}'">
+              Reset
+            </button>
+          </div>-->
+
+        </div>
+
+        <table class="table table-bordered" data-toggle="table" data-sort-name="value" data-sort-order="desc">
+          <thead>
+            <tr>
+              <th style="width:10px;" data-field="cb"><input type="checkbox" onClick="toggle(this, 'asset')" /></th>
+              <th data-field="name"  onclick="sortby('name', 'assets');"><a href="#" data-toggle="tooltip" data-placement="top" title="" data-original-title="Ordenar por">Nome <i class="fa fa-sort-amount-desc pull-right"></i></a></th>
+              <th data-field="categories">Tags</th>
+              <th data-field="criticity" style="width:110px;" onclick="sortby('criticity_num', 'assets');"><a href="#" data-toggle="tooltip" data-placement="top" title="" data-original-title="Ordenar por">Criticidade <i class="fa fa-sort-amount-desc pull-right"></i></a></th>
+              <th data-field="score" onclick="sortby('criticity_num,1A-risk_level', 'assets');"><a href="#" data-toggle="tooltip" data-placement="top" title="" data-original-title="Ordenar por">Risco Negócio <i class="fa fa-sort-amount-desc pull-right"></i></a></th>
+              <th data-field="financeiro" style="width:130px;" onclick="sortby('financeiro', 'assets');"><a href="#" data-toggle="tooltip" data-placement="top" title="" data-original-title="Ordenar por">Valor em Risco <i class="fa fa-sort-amount-desc pull-right"></i></a></th>
+              <th data-field="score" style="width:70px;" onclick="sortby('-risk_level', 'assets');"><a href="#" data-toggle="tooltip" data-placement="top" title="" data-original-title="Ordenar por">Nota <i class="fa fa-sort-amount-desc pull-right"></i></a></th>
+              <th data-field="type" style="width:80px;" onclick="sortby('type', 'assets');"><a href="#" data-toggle="tooltip" data-placement="top" title="" data-original-title="Ordenar por">Tipo <i class="fa fa-sort-amount-desc pull-right"></i></a></th>
+              <th data-field="updated_at" onclick="sortby('-updated_at', 'assets');"><a href="#" data-toggle="tooltip" data-placement="top" title="" data-original-title="Ordenar por">Atualizado <i class="fa fa-sort-amount-desc pull-right"></i></a></th>
+              <th style="width:60px;">Ver</th>
+	          {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+              <th style="width:60px;">Editar</th>
+              <th style="width:60px;">Excluir</th>
+              {% endif %}
+             </tr>
+          </thead>
+          <tbody>
+             {% for asset in assets %}
+          <tr>
+            <td><input type="checkbox" class="radio" name="asset" value="{{ asset.id|safe }}"/></td>
+            <td><a href="/assets/details/{{ asset.id|safe }}">{{ asset.name }} ({{ asset.value|truncatechars:50 }})</a></td>
+            <td>{{ asset.cat_list|join:", "|truncatechars:40 }}</td>
+            {% if asset.criticity == 'low' %}
+            <td><span class="label label-low">Baixa</span></td>
+            {% elif asset.criticity == 'medium' %}
+            <td><span class="label label-warning">M&eacute;dia</span></td>
+            {% elif asset.criticity == 'high' %}
+            <td><span class="label label-danger">Alta</span></td>
+            {% endif %}
+            {% if  asset.get_risk_grade == '-' %}
+            <td style="width:160px !important;" class="new-grade bg-grade---low"><a href="#">Imponderável</a></td>
+            {% endif %}
+            {% if asset.criticity == 'low' and  asset.get_risk_grade  == 'A' %}
+            <td style="width:160px !important;" class="new-grade bg-grade-A-low"><a href="#">Trivial</a></td>
+            {% endif %}
+            {% if asset.criticity == 'low' and  asset.get_risk_grade == 'B' %}
+            <td style="width:160px !important;" class="new-grade bg-grade-A-low"><a href="#">Trivial</a></td>
+            {% endif %}
+            {% if asset.criticity == 'medium' and asset.get_risk_grade == 'A' %}
+            <td style="width:160px !important;" class="new-grade bg-grade-A-low"><a href="#">Trivial</a></td>
+            {% endif %}
+            {% if asset.criticity == 'high' and asset.get_risk_grade == 'A' %}
+            <td style="width:160px !important;" class="new-grade bg-grade-A-low"><a href="#">Trivial</a></td>
+            {% endif %}
+            {% if asset.criticity == 'high' and asset.get_risk_grade == 'B' %}
+            <td style="width:160px !important;" class="new-grade bg-grade-B-medium"><a href="#">Aceitável</a></td>
+            {% endif %}
+            {% if asset.criticity == 'medium' and asset.get_risk_grade == 'B' %}
+            <td style="width:160px !important;" class="new-grade bg-grade-B-medium"><a href="#">Aceitável</a></td>
+            {% endif %}
+            {% if asset.criticity == 'medium' and asset.get_risk_grade == 'C' %}
+            <td style="width:160px !important;" class="new-grade bg-grade-B-medium"><a href="#">Aceitável</a></td>
+            {% endif %}
+            {% if asset.criticity == 'low' and  asset.get_risk_grade == 'C' %}
+            <td style="width:160px !important;" class="new-grade bg-grade-B-medium"><a href="#">Aceitável</a></td>
+            {% endif %}
+            {% if asset.criticity == 'low' and asset.get_risk_grade == 'D' %}
+            <td style="width:160px !important;" class="new-grade bg-grade-B-medium"><a href="#">Aceitável</a></td>
+            {% endif %}
+            {% if asset.criticity == 'low' and  asset.get_risk_grade == 'E'  %}
+            <td style="width:160px !important;" class="new-grade bg-grade-C-high"><a href="#">Moderado</a></td>
+            {% endif %}
+            {% if asset.criticity == 'medium' and asset.get_risk_grade == 'D' %}
+            <td style="width:160px !important;" class="new-grade bg-grade-C-high"><a href="#">Moderado</a></td>
+            {% endif %}
+            {% if asset.criticity == 'high' and asset.get_risk_grade == 'C' %}
+            <td style="width:160px !important;" class="new-grade bg-grade-C-high"><a href="#">Moderado</a></td>
+            {% endif %}
+            {% if asset.criticity == 'high' and asset.get_risk_grade == 'D'  %}
+            <td style="width:160px !important;" class="new-grade bg-grade-D-high"><a href="#">Substancial</a></td>
+            {% endif %}
+            {% if asset.criticity == 'medium' and  asset.get_risk_grade == 'E'  %}
+            <td style="width:160px !important;" class="new-grade bg-grade-D-high"><a href="#">Substancial</a></td>
+            {% endif %}
+            {% if asset.criticity == 'low' and asset.get_risk_grade == 'F' %}
+            <td style="width:160px !important;" class="new-grade bg-grade-D-high"><a href="#">Substancial</a></td>
+            {% endif %}
+            {% if asset.criticity == 'medium' and asset.get_risk_grade == 'F' %}
+            <td style="width:160px !important;" class="new-grade bg-grade-E-high"><a href="#">Intolerável</a></td>
+            {% endif %}
+            {% if asset.criticity == 'high' and  asset.get_risk_grade == 'E' %}
+            <td style="width:160px !important;" class="new-grade bg-grade-E-high"><a href="#">Intolerável</a></td>
+            {% endif %}
+            {% if asset.criticity == 'high' and asset.get_risk_grade == 'F' %}
+            <td style="width:160px !important;" class="new-grade bg-grade-F-high"><a href="#">Extremo</a></td>
+            {% endif %}
+            {% if asset.financeiro == 0 or asset.financeiro == None %}
+            <td>n/a <i data-toggle="tooltip" style="color: #353C42 !important;" data-placement="top" data-original-title="Nenhum valor estipulado" class="fa fa-question-circle"></i></td>
+            {% else %}
+            <td>R$ {{ asset.financeiro|floatformat:2|intcomma }}</td>
+            {% endif %}
+            <td><span class="badge badge-risk-grade-{{ asset.get_risk_grade }}">{{asset.get_risk_grade}}</span></td>
+            <td>{{ asset.type }}</td>
+            <td>{{ asset.updated_at|date:"d/m/Y\-H:i:s" }}</td>
+	          <td><a href="/assets/details/{{ asset.id|safe }}" style="margin-left:15px;"><i class="fa fa-eye"></i></a> </td>
+            {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+            <td><a href="/assets/edit/{{ asset.id|safe }}" style="margin-left:15px;"><i class="fas fa-edit"></i></a></td>
+            <td><a href="#" data-toggle="modal" data-target="#modal-delete-asset" asset-id="{{ asset.id|safe }}" asset-value="{{ asset.value }}" style="margin-left:15px;"><i class="fa fa-trash"></i></a>
+         {% endif %}
+           </td>
+	   </tr>
+         {% endfor %}
+
+ </tbody>
+     </table>
+        <!-- Pagination -->
+        <div style="display: inline-flex;">
+          <ul class="pagination pagination-xs">
+            <li class="page-item">
+              <a class="page-link" href="#" onclick="gotopage(1, 'assets');">&laquo;&laquo;</a>
+            </li>
+            {% if assets.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href= "#" onclick="gotopage({{ assets.previous_page_number }}, 'assets');">&laquo;</a>
+            </li>
+            {% endif %}
+            {% for pn in assets.paginator.page_range %}
+            {% if pn == assets.number %}
+            <li class="page-item active">
+            {% else %}
+            <li class="page-item">
+            {% endif %}
+              <a class="page-link" href="#" onclick="gotopage({{ pn }}, 'assets');">{{ pn }}</a>
+            </li>
+            {% endfor %}
+            {% if assets.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="#" onclick="gotopage({{ assets.next_page_number }}, 'assets');">&raquo;</a>
+            </li>
+            {% endif %}
+            <li class="page-item">
+              <a class="page-link" href="#" onclick="gotopage({{ assets.paginator.num_pages }}, 'assets');">&raquo;&raquo;</a>
+            </li>
+          </ul>
+          <div style="margin: 21px;">
+            <select id="nb_rows_per_page" >
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="200">200</option>
+            </select>
+            Ativos por p&aacute;gina
+          </div>
+        </div>
+
+      </div>
+      <div id="assetgroups_div" class="tab-pane fade">
+        <!-- <h2>Asset Groups</h2> -->
+
+        <table class="table table-bordered" data-toggle="table" data-sort-name="value" data-sort-order="desc">
+          <thead>
+            <tr>
+              <th data-field="name">Nome</th>
+              <th data-field="assets">Ativos</th>
+              <!-- <th data-field="assets" width="50%">Assets</th> -->
+              <!-- <th data-field="tags">Tags</th> -->
+              <th data-field="criticity">Criticidade</th>
+              <th data-field="score">Nota</th>
+              <th data-field="updated_at">Atualizado</th>
+              <th style="width:60px;">Ver</th>
+              {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+              <th style="width:60px;">Editar</th>
+              <th style="width:60px;">Excluir</th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+          {% for asset_group in asset_groups %}
+          <tr>
+            <td><a href="/assets/groups/details/{{ asset_group.id }}">{{ asset_group.name }}</a></td>
+            <td>{{ asset_group.assets_names|truncatechars:85 }}</td>
+            <!-- <td>{{ asset_group.assets.categories.all|join:", " }}</td> -->
+            {% if asset_group.criticity == 'low' %}
+            <td><span class="label label-low">Baixa</span></td>
+            {% elif asset_group.criticity == 'medium' %}
+            <td><span class="label label-warning">M&eacute;dia</span></td>
+            {% elif asset_group.criticity == 'high' %}
+            <td><span class="label label-danger">Alta</span></td>
+            {% endif %}
+            <td><span class="badge badge-risk-grade-{{ asset_group.risk_grade }}">{{ asset_group.risk_grade }}</span></td>
+            <td>{{ asset_group.updated_at|date:"d/m/Y\-H:i:s" }}</td>
+            <td>
+            <a href="/assets/groups/details/{{ asset_group.id }}" style="margin-left:15px;"><i class="fa fa-eye"></i></a>
+            </td>
+            {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+            <td>
+            <a href="/assets/groups/edit/{{ asset_group.id }}" style="margin-left:15px;"><i class="fas fa-edit"></i></a>
+            </td>
+            <td>
+            <a href="#" data-toggle="modal" data-target="#modal-delete-asset-group" asset-group-id="{{ asset_group.id }}" asset-group-value="{{ asset_group.name }}" style="margin-left:15px;"><i class="fa fa-trash"></i></a>
+            </td>
+        {% endif %}
+          </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="notifications">
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    </div>
+  </div>
+  </div>
+
+
+  <!-- Delete Asset modal -->
+  <div class="modal fade" id="modal-delete-asset" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <!-- Modal Header -->
+        <div class="modal-header bg-primary">
+          <button type="button" class="close" data-dismiss="modal">
+            <span aria-hidden="true">&times;</span>
+            <span class="sr-only">Fechar</span>
+          </button>
+          <h4 class="modal-title" id="myModalLabel">Excluir Ativo</h4>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-body">
+          <div id="delete-asset">
+            <!-- Content -->
+          </div>
+          Confirma Exclus&atilde;o?
+          <button type="button" class="btn btn-xs btn-danger btn-delete-asset" data-dismiss="modal">Sim</button>
+          <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">N&atilde;o</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Asset Group modal -->
+  <div class="modal fade" id="modal-delete-asset-group" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <!-- Modal Header -->
+        <div class="modal-header bg-primary">
+          <button type="button" class="close" data-dismiss="modal">
+            <span aria-hidden="true">&times;</span>
+            <span class="sr-only">Fechar</span>
+          </button>
+          <h4 class="modal-title" id="myModalLabel">Excluir Grupo de Ativo(s)</h4>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-body">
+          <div id="delete-asset-group">
+            <!-- Content -->
+          </div>
+          Confirma Exclus&atilde;o?
+          <button type="button" class="btn btn-xs btn-danger btn-delete-asset-group" data-dismiss="modal">Sim</button>
+          <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">N&atilde;o</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Update Asset modal -->
+  <div class="modal fade" id="modal-update-assets" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <!-- Modal Header -->
+        <div class="modal-header bg-primary">
+          <button type="button" class="close" data-dismiss="modal">
+            <span aria-hidden="true">&times;</span>
+            <span class="sr-only">Fechar</span>
+          </button>
+          <h4 class="modal-title" id="myModalLabel">Atualizar Ativos</h4>
+        </div>
+        <!-- Modal Body -->
+        <div class="modal-body">
+          <div id="update-assets">
+            <dl class="dl-horizontal">
+              <dt>Criticidade:</dt>
+              <dd>
+                <select id="update-asset-criticity">
+                  <option value='low'>Baixa</option>
+                  <option value='medium'>M&eacute;dia</option>
+                  <option value='high'>Alta</option>
+                </select>
+              </dd>
+            </dl>
+          </div>
+          Confirma o update?
+          <button type="button" class="btn btn-xs btn-danger btn-update-assets" data-dismiss="modal">Sim</button>
+          <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">N&atilde;o</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+<script>
+
+  NB_ROWS=10;
+  url = new URL(window.location.href);
+
+  var sortby = function sortby(sort_criteria, target = "asset") {
+    url.searchParams.set("sort", sort_criteria);
+    url.searchParams.set("target", target);
+    window.location = url.search;
+  };
+
+  var gotopage = function gotopage(page_num, target = "asset") {
+    url.searchParams.set("page", page_num);
+    url.searchParams.set("target", target);
+    window.location = url.search;
+  };
+
+  $(function() {
+
+    // tab selection
+    target = url.searchParams.get("target");
+    if (target == "asset_group") {
+      $('#assets_div').removeClass('in active');
+      $('#assetgroups_div').addClass('in active');
+      $('li.menu_assets').removeClass('active');
+      $('li.menu_assetgroups').addClass('active');
+    } else {
+      $('#assetgroups_div').removeClass('in active');
+      $('#assets_div').addClass('in active');
+      $('li.menu_assetgroups').removeClass('active');
+      $('li.menu_assets').addClass('active');
+    }
+
+    // Autofill searchbar with url params
+    $('#asset-quick-search-name')[0].value = url.searchParams.get("filter");
+
+    // Quick search
+    $('#asset-quick-search-name').keyup(function(e) {
+      if(e.which == 13) { // Enter Key
+
+        var sort_options = url.searchParams.get("sort");
+        var n_options = url.searchParams.get("n");
+        if (url.searchParams.get("n") == null) {
+          n_options = NB_ROWS;
+        }
+        window.location = "{% url 'list_assets_view' %}?sort="+sort_options+"&filter="+e.target.value+"&n="+n_options;
+
+      } else if (e.which == 27) { e.target.value = ""; } // Escape Key
+    });
+
+    // Delete asset modal
+    $("#modal-delete-asset").on('show.bs.modal', function (e) {
+      id = e.relatedTarget.getAttribute('asset-id');
+      asset_value = e.relatedTarget.getAttribute('asset-value');
+      $("div#delete-asset").attr('asset-id', id);
+      $("div#delete-asset").html("Asset: <b>"+asset_value+"</b><br/><br/>");
+    });
+    $("button.btn-delete-asset").on('click', function (e) {
+      id = $("div#delete-asset").attr('asset-id');
+      delete_asset_url = "{% url 'delete_asset_api' 0 %}".replace("0", id);
+      var request = $.ajax({
+        url: delete_asset_url,
+        method: "POST",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        success: function(){
+          location.reload();
+        }
+      });
+    });
+
+    // Delete asset group modal
+    $("#modal-delete-asset-group").on('show.bs.modal', function (e) {
+      id = e.relatedTarget.getAttribute('asset-group-id');
+      asset_group_value = e.relatedTarget.getAttribute('asset-group-value');
+      $("div#delete-asset-group").attr('asset-group-id', id);
+      $("div#delete-asset-group").html("Asset Group Name: <b>"+asset_group_value+"</b><br/><br/>");
+    });
+    $("button.btn-delete-asset-group").on('click', function (e) {
+      id = $("div#delete-asset-group").attr('asset-group-id');
+      delete_asset_group_url = "{% url 'delete_assetgroup_api' 0 %}".replace("0", id);
+      var request = $.ajax({
+        url: delete_asset_group_url,
+        method: "POST",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        success: function(){
+          location.reload();
+        }
+      });
+    });
+
+    // Update asset criticities
+    $("button.btn-update-assets").on('click', function (e) {
+      assets_to_update = [];
+      $("input[name='asset']").each(function(cbx){
+        if (this.checked) {
+   assets_to_update.push(this.value);
+        }
+});
+      criticity = $("select#update-asset-criticity").val();
+      if (assets_to_update.length != 0){
+        var request = $.ajax({
+          url: "{% url 'update_criticity_assets_api' %}",
+          method: "POST",
+          headers: {"X-CSRFToken": "{{ csrf_token }}"},
+          data: JSON.stringify({'assets': assets_to_update, 'criticity': criticity}),
+          // data: JSON.stringify(assets_to_update),
+          contentType: "application/json"
+        });
+        request.done(function(response){
+          if (response.status == 'success'){location.reload()}
+        });
+      }
+ });
+
+
+    // Delete selected assets
+    $("a.btn-delete-selected").on('click', function(eventObject) {
+      assets_to_delete = [];
+      $("input[name='asset']").each(function(cbx){
+        if (this.checked) {
+          assets_to_delete.push(this.value)
+        }
+      })
+
+      if (assets_to_delete.length != 0){
+        var request = $.ajax({
+          url: "{% url 'delete_assets_api' %}",
+          method: "POST",
+          headers: {"X-CSRFToken": "{{ csrf_token }}"},
+          data: JSON.stringify(assets_to_delete),
+          contentType: "application/json"
+        });
+        request.done(function(response){
+          if (response.status == 'success'){location.reload()}
+        });
+      }
+    });
+
+    // Manage nb_rows_per_page //TODO: debug
+    _nb_rows = url.searchParams.get("n");
+    if (typeof _nb_rows === "undefined") {
+
+    } else {
+      $('#nb_rows_per_page option:eq('+_nb_rows+')').prop('selected', true);
+    }
+
+    $('#nb_rows_per_page').change(function(e){
+      nb_rows = e.target.value;
+      url.searchParams.set("n", nb_rows);
+      window.location = url.search;
+    });
+
+    // Fixing bootstrap tab issue
+    $('#menu_tabs > ul > li > a').click(function (e) {
+      $(this).removeClass('active');
+    });
+
+  });
+</script>
+
+<script>
+	$.urlParam = function(name){
+    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+    if (results==null){
+       return null;
+    }
+    else{
+       return results[1] || 0;
+    }
+}
+if($.urlParam('target')==null) {
+
+	$(".asset").addClass('active');
+	$(".asset-group").removeClass('active');
+}
+if($.urlParam('target')=='asset_group') {
+	$(".asset").removeClass('active');
+	$(".asset-group").addClass('active');
+
+}			</script>
+
+{% endblock %}

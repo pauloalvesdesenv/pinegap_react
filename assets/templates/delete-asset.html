@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container">
+  <form action="/assets/delete/{{ asset.id }}" method="post" class="form-horizontal">
+
+    <legend>Deseja realmente excluir este ativo?</legend>
+    {% csrf_token %}
+    <p>ID do Ativo: {{ asset.id }}</p>
+    <p>Endere&ccedil;o: {{ asset.value }}</p>
+    <div class="form-group">
+      <button type="submit" class="btn btn-warning">Excluir</button>
+      <button class="btn btn-primary"><a href="{% url 'list_assets_view' %}">Cancelar</a></button>
+    </div>
+  </form>
+
+
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+
+{% endblock %}

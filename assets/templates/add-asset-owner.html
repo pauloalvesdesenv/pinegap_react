@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block content %}
+
+
+
+<div class="container-fluid" style="padding:0;">
+	
+	<section class="content-header">
+      <h1>
+        Ativos
+        <small>Criar Proprietario</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="/"><i class="fas fas fa-tachometer-alt"></i> Dashboad</a></li>
+        <li><a href="/assets/list"><i class="fas fa-crosshairs"></i> Ativos</a></li>
+        <li class="active"> Criar Proprietário</li>
+      </ol>
+    </section>
+    <div class="container-fluid" style="padding:15px 15px;">
+
+		<div class="nav-tabs-custom">
+
+	
+	<ul class="nav nav-tabs">
+              <li class="dropdown">
+				<a class="dropdown-toggle" data-toggle="dropdown" href="/assets/list">
+					<i class="fas fa-crosshairs"></i>&nbsp; Ativos <span class="caret"></span>
+				</a>
+				<ul class="dropdown-menu">
+					<li role="presentation"><a role="menuitem" href="/assets/list"><i class="fa fa-list"></i> Todos os Ativos</a></li>
+					<li role="presentation"><a role="menuitem" href="/assets/add"><i class="fa fa-plus"></i>&nbsp; Criar Ativo</a></li>
+					<li role="presentation"><a role="menuitem" href="/assets/bulkadd"><i class="fa fa-upload"></i> Importar Ativos</a></li>
+					<li role="presentation"><a role="menuitem" href="/assets/api/v1/export"><i class="fa fa-download"></i> Exportar Ativos</a></li>
+                </ul>
+			  </li>
+              <li class="dropdown">
+				  <a class="dropdown-toggle" data-toggle="dropdown" href="/assets/list?target=asset_group">
+					<i class="fa fa-th-list"></i>&nbsp; Grupos de Ativos <span class="caret"></span>
+				  </a>
+				  <ul class="dropdown-menu">
+					<li role="presentation"><a role="menuitem" href="/assets/list?target=asset_group"><i class="fa fa-list"></i> Todos os Grupos de Ativos</a></li>
+					<li role="presentation"><a role="menuitem" href="/assets/addgroup"><i class="fa fa-plus"></i> &nbsp; Criar Grupo de Ativos</a></li>
+                  </ul>
+			  </li>
+              <li class="active dropdown">
+				  <a class="dropdown-toggle" data-toggle="dropdown" href="/assets/owners/list">
+					<i class="fa fa-user-secret"></i>&nbsp; Proprietários <span class="caret"></span>
+				  </a>
+				  <ul class="dropdown-menu">
+					<li role="presentation"><a role="menuitem" href="/assets/owners/list"><i class="fa fa-list"></i> Todos os Proprietários</a></li>
+					<li role="presentation"><a role="menuitem" href="/assets/owners/add"><i class="fa fa-plus"></i>&nbsp; Criar Proprietário</a></li>
+                  </ul>
+			  </li>
+            </ul>
+	
+	
+  <form action="/assets/owners/add" method="post" class="form-horizontal" style="margin:0;">
+
+    {% csrf_token %}
+
+    <!-- Name -->
+    <div class="form-group">
+      <label class="col-sm-2 control-label" for="id_name">Nome do propriet&aacuterio</label>
+      <div class="col-sm-5">
+        <input id="id_name" name="name" type="text" class="form-control" required/>
+      </div>
+    </div>
+
+    <!-- Url -->
+    <div class="form-group">
+      <label class="col-sm-2 control-label" for="id_url">URL</label>
+      <div class="col-sm-5">
+        <input id="id_url" name="url" type="url" class="form-control">
+      </div>
+    </div>
+
+    <!-- Asset selection -->
+    <div class="form-group">
+      <label class="col-sm-2 control-label" for="id_assets">Selecione o Ativo(s)</label>
+      <div class="col-sm-5">
+        {% for checkbox in form.assets %}
+          {{ checkbox }}<br/>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Comments -->
+    <div class="form-group">
+      <label class="col-sm-2 control-label" for="id_comments">Informe Adicional</label>
+      <div class="col-sm-5">
+        <textarea cols="40" id="id_comments" name="comments" rows="10" class="form-control">Comente aqui...</textarea>
+      </div>
+    </div>
+
+    <!-- Submit/Cancel buttons -->
+    <div class="form-group">
+      <button type="submit" class="btn btn-primary">Salvar</button>
+      <button class="btn btn-primary"><a href="/assets/owners/list">Cancelar</a></button>
+    </div>
+
+  </form>
+</div>
+</div>
+</div>
+
+
+<div class="notifications">
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+</div>
+
+{% endblock %}
+

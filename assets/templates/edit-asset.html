@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load currency %}
+{% load humanize %}
+{% block content %}
+
+<div class="container-fluid" style="padding:0;">
+<section class="content-header">
+      <h1>
+        Ativos
+        <small>Edição de Ativo</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="/"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li><a href="/assets/list"><i class="fas fa-crosshairs"></i> Ativos</a></li>
+        <li><a href="/assets/details/{{asset.id}}">{{asset.value}}</a></li>
+        <li class="active"> Edição de Ativo</li>
+      </ol>
+</section>
+    <div class="container-fluid" style="padding:15px 15px;">
+        <div class="nav-tabs-custom">
+             <ul class="nav nav-tabs">
+                  <li class="active dropdown">
+			<a class="dropdown-toggle" data-toggle="dropdown" href="/assets/list">
+		        	<i class="fas fa-crosshairs"></i>&nbsp; Ativos <span class="caret"></span>
+				</a>
+				<ul class="dropdown-menu">
+				<li role="presentation"><a role="menuitem" href="/assets/list"><i class="fa fa-list"></i> Todos os Ativos</a></li>
+				<li role="presentation"><a role="menuitem" href="/assets/add"><i class="fa fa-plus"></i>&nbsp; Criar Ativo</a></li>
+				<li role="presentation"><a role="menuitem" href="/assets/bulkadd"><i class="fa fa-upload"></i> Importar Ativos</a></li>
+				<li role="presentation"><a role="menuitem" href="/assets/api/v1/export"><i class="fa fa-download"></i> Exportar Ativos</a></li>
+                             </ul>
+			  </li>
+                            <li class="dropdown">
+				<a class="dropdown-toggle" data-toggle="dropdown" href="/assets/list?target=asset_group">
+			        <i class="fa fa-th-list"></i>&nbsp; Grupos de Ativos <span class="caret"></span>
+				</a>
+				<ul class="dropdown-menu">
+				<li role="presentation"><a role="menuitem" href="/assets/list?target=asset_group"><i class="fa fa-list"></i> Todos os Grupos de Ativos</a></li>
+				<li role="presentation"><a role="menuitem" href="/assets/addgroup"><i class="fa fa-plus"></i> &nbsp; Criar Grupo de Ativos</a></li>
+                  	  </ul>
+			  </li>
+             		    <li class="dropdown">
+			        <a class="dropdown-toggle" data-toggle="dropdown" href="/assets/owners/list">
+				<i class="fa fa-user-secret"></i>&nbsp; Proprietários <span class="caret"></span>
+			        </a>
+			        <ul class="dropdown-menu">
+				<li role="presentation"><a role="menuitem" href="/assets/owners/list"><i class="fa fa-list"></i> Todos os Proprietários</a></li>
+				<li role="presentation"><a role="menuitem" href="/assets/owners/add"><i class="fa fa-plus"></i>&nbsp; Criar Proprietário</a></li>
+                          </ul>
+   		  </li>
+        </ul>
+<form action="/assets/edit/{{ asset.id|safe }}" method="post" class="form-horizontal" style="margin:0;">
+
+      	<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_value">Endereço</label>
+                  <div class="col-sm-4">
+                  <input type="text" name="value" value="{{asset.value}}" id="id_value" readonly="" required="" class="form-control form-control-sm" maxlength="512">
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_name">Nome</label>
+                  <div class="col-sm-4">
+                  <input type="text" name="name" value="{{asset.name}}" required="" id="id_name" class="form-control form-control-sm" maxlength="512">
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_type">Tipo</label>
+                  <div class="col-sm-4">
+                      <select name="type" class="form-control form-control-sm" id="id_type">
+  			<option value="ip" {% if asset.type == 'ip' %} selected {% endif %}>ip</option>
+  			<option value="ip-range" {% if asset.type == 'ip-range' %} selected {% endif %}>ip-range</option>
+  			<option value="ip-subnet" {% if asset.type == 'ip-subnet' %} selected {% endif %}>ip-subnet</option>
+  			<option value="fqdn" {% if asset.type == 'fqdn' %} selected {% endif %}>fqdn</option>
+  			<option value="domain" {% if asset.type == 'domain' %} selected {% endif %}>domínio</option>
+  			<option value="url" {% if asset.type == 'url' %} selected {% endif %}>url</option>
+  			<!--<option value="keyword" {% if asset.type == 'keyword' %} selected {% endif %}>Palavra Chave</option>
+  			<option value="person" {% if asset.type == 'person' %} selected {% endif %}>Pessoa</option>
+  			<option value="organisation" {% if asset.type == 'organisation' %} selected {% endif %}>Organização</option>
+  			<option value="path" {% if asset.type == 'path' %} selected {% endif %}>path</option>
+  			<option value="application" {% if asset.type == 'application' %} selected {% endif %}>aplicação</option>-->
+		   </select>
+                  </div>
+              </div>
+                  <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_description">Descrição</label>
+                  <div class="col-sm-4">
+                  <textarea name="description" maxlength="512" value="{{asset.description}}"  id="id_description" rows="4" class="form-control form-control-sm" cols="40"></textarea>
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_criticity">Criticidade</label>
+                  <div class="col-sm-4">
+                  <select name="criticity" class="form-control form-control-sm" id="id_criticity">
+                  <option value="low" {% if asset.criticity == 'low' %} selected {% endif %}>Baixa</option>
+                  <option value="medium" {% if asset.criticity == 'medium' %} selected {% endif %}>Média</option>
+                <option value="high" {% if asset.criticity == 'high' %} selected {% endif %}>Alta</option>
+		</select>
+              </div>
+              </div>
+              <div class="form-group">
+                  	<label class="col-sm-2 control-label" for="id_financeiro">Valor em Risco (R$)</label>
+                  	<div class="col-sm-4">
+                  	 <input type="number"  step="any" value="{{asset.financeiro|safe}}" name="financeiro"  id="id_financeiro" class="form-control form-control-sm" maxlength="11">
+                   </div>
+                </div>
+              {% for field in form %}
+              {% if field.name == 'categories' %}
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_categories">Tags</label>
+                  <div class="col-sm-4">
+                  {{ field }}
+                  {% if field.help_text %}
+                  <p class="help-block"><small>{{ field.help_text }}</small></p>
+                  {% endif %}
+              </div>
+     	   </div>
+	      {% endif %}
+        {% endfor %}
+  <div class="form-group submit-div">
+        <div class="col-sm-2">
+        </div>
+        <div class="col-sm-4">
+          <button type="submit" class="btn btn-warning col-sm-12 form-control-sm">Modificar Ativo</button>
+          <br/>
+          <br/>
+          <button class="btn btn-danger col-sm-12 form-control-sm" type="button" data-toggle="modal" data-target="#modal-delete-asset"
+             asset-id="{{ asset.id }}" asset-value="{{ asset.value }}">Excluir</button>
+        </div>
+      </div>
+  </form>
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+</div>
+</div>
+<!-- Delete Asset modal -->
+<div class="modal fade" id="modal-delete-asset" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Excluir Ativo</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="delete-asset">
+          <!-- Content -->
+        </div>
+        Confirma a Exclus&atilde;o?
+        <button type="button" class="btn btn-xs btn-danger btn-delete-asset" data-dismiss="modal">Sim</button>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">N&atilde;o</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(function() {
+    // Delete asset modal
+    $("#modal-delete-asset").on('show.bs.modal', function (e) {
+      id = e.relatedTarget.getAttribute('asset-id');
+      asset_value = e.relatedTarget.getAttribute('asset-value');
+      $("div#delete-asset").attr('asset-id', id);
+      $("div#delete-asset").html("Asset: <b>"+asset_value+"</b><br/><br/>");
+    });
+    $("button.btn-delete-asset").on('click', function (e) {
+      id = $("div#delete-asset").attr('asset-id');
+      delete_asset_url = "/assets/delete/"+id;
+      var request = $.ajax({
+        url: delete_asset_url,
+        method: "POST",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        success: function(){
+          window.location = "{% url 'list_assets_view' %}";
+        }
+      });
+    });
+  });
+</script>
+
+{% endblock %}

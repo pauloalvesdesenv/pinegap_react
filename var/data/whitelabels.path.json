@@ -1,0 +1,15 @@
+[
+  {
+    "model": "whitelabels.brand",
+    "pk": 1,
+    "fields": {
+      "site_name": "PineGap Platform",
+      "academy_link": "conhecimento.pinegap.io",
+      "browser_icon": "default_logos/dist/img/favicon1.ico",
+      "interface_icon": "default_logos/dist/img/logo-pinegap-mini.png",
+      "interface_logo": "default_logos/dist/img/logo-pinegap.png",
+      "report_logo": "default_logos/reports/img/logo.png"
+
+    }
+  }
+]

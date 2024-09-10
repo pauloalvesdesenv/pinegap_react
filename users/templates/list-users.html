@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% block content %}
+
+<ul class="breadcrumb">
+  <li><a href="/settings/users/list">usu&aacute;rios</a></li>
+  <li class="active">lista</li>
+</ul>
+
+<div class="container">
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th data-field="name">Username</th>
+        <th data-field="status">Status</th>
+        <th data-field="is_authenticated">Autenticado ?</th>
+        <th data-field="updated_at">Atualizado</th>
+        <th data-field="actions">A&ccedil;&otilde;es</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for user in users %}
+    <tr class='dblclickable-row' data-href='/admin/auth/user/{{ user.id }}/change/'>
+      <td>{{ user.username }}</td>
+      <td>
+       {% if user.profile.status == 'ACTIVE' %}
+        Ativo <span class="glyphicon glyphicon-ok text-success"></span>
+        {% else %}
+        Desabilitado <span class="glyphicon glyphicon-remove text-danger"></span>
+        {% endif %}
+      </td>
+      <td>
+        {% if user.is_authenticated %}
+        Sim <span class="glyphicon glyphicon-ok text-success"></span>
+        {% else %}
+        N&atilde;o <span class="glyphicon glyphicon-remove text-warning"></span>
+        {% endif %}
+      </td>
+      <td>{{ user.profile.updated_at|date:"d/m/Y\-H:i:s" }}</td>
+      <td>
+        <button type="button" class="btn btn-default btn-xs btn-user-info" data-toggle="modal" data-target="#modal_info_{{user.id}}">
+          <span class="glyphicon glyphicon-info-sign"></span></button>
+        <div id="modal_info_{{user.id}}" class="modal fade" role="dialog">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header bg-primary">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">{{ user.username }}</h4>
+              </div>
+              <div class="modal-body">
+                <dl class="dl-horizontal">
+                  <dt>Username</dt><dd>{{user.username}}</dd>
+                  <dt>Nome</dt><dd>{{user.first_name}}</dd>
+                  <dt>Sobrenome</dt><dd>{{user.last_name}}</dd>
+                  <dt>Email</dt><dd>{{user.email}}</dd>
+                  <dt>&Uacute;ltimo login</dt><dd>{{user.last_login}}</dd>
+                  <dt>Criado</dt><dd>{{user.date_joined}}</dd>
+              </div>
+              <div class="modal-footer">
+             {% if user.is_authenticated %}
+             {% elif user.is_superuser == "true" %}
+                <button type="button" class="btn btn-warning btn-xs" data-dismiss="modal" onclick="location.href='/admin/auth/user/{{ user.id }}/change/'">Editar</button>
+             {% endif %}
+                <button type="button" class="btn btn-default btn-xs" data-dismiss="modal">Fechar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+       {% if user.is_authenticated %}
+       {% elif user.is_superuser == "true" %}
+        <button type="button" class="btn btn-default btn-xs" onclick="location.href='/admin/auth/user/{{ user.id }}/change/'">
+   	  <span class="glyphicon glyphicon-edit"></span></button>
+	<button type="button" class="btn btn-danger btn-xs" onclick="location.href='/users/unactive_user/{{user.id}}'">
+      <i class="fa fa-trash btn-delete-user"></i></button>
+      </td>
+    </tr>
+  {% endif %}
+  {% endfor %}
+  </tbody>
+  </table>
+  <a href="/users/add">+ Adicionar novo usu&aacute;rio</a>
+
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+
+{% endblock %}

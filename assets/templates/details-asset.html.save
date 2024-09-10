@@ -1,0 +1,1990 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% load mathfilters %}
+{% load currency %}
+{% currency_context %}
+{% block content %}
+
+<style>
+ul.ui-autocomplete {
+  position: fixed;
+  top: initial;
+}
+.table-sum>tbody>tr>td, .table-sum>thead>tr>th { padding: 1px; }
+.table-sum>tbody>tr>td.ct{ text-align: center; }
+
+.row.finding-stats > div {
+  margin: 0;
+  padding: 2px;
+}
+
+div.risk-grade { font-size: xx-large; padding: 10px; border-radius: 5px; }
+div.risk-grade-A { background-color: limegreen; }
+div.risk-grade-B { background-color: yellowgreen; }
+div.risk-grade-C { background-color: orange; }
+div.risk-grade-D { background-color: darkorange; }
+div.risk-grade-E { background-color: orangered; }
+div.risk-grade-F { background-color: red; }
+
+span.badge-risk-grade-A { background-color: limegreen; }
+span.badge-risk-grade-B { background-color: yellowgreen; }
+span.badge-risk-grade-C { background-color: orange; }
+span.badge-risk-grade-D { background-color: darkorange; }
+span.badge-risk-grade-E { background-color: orangered; }
+span.badge-risk-grade-F { background-color: red; }
+span.badge-risk-grade-- { background-color: lightgray; }
+
+div.tile {
+  border-width: thin;
+  border-style: solid;
+  border-left-width: 1rem;
+  border-radius: 3px;
+  padding-bottom: 15px;
+  text-align: center;
+}
+div.tile div { font-size: large; }
+div.tile-critical { border-color: #cc0500; }
+div.tile-high { border-color: #df3d03; }
+div.tile-medium { border-color: #f9a009; }
+div.tile-low { border-color: #ffcb0d; }
+div.tile-info { border-color: #3498db; }
+
+div.risk-trends {
+  border-top-color: lightgray;
+  border-top-style: solid;
+}
+
+.row {
+    margin-left: -15px;
+    margin-right: 15px;
+}
+
+</style>
+
+<div class="container-fluid" asset-id="{{asset.id}}" style="padding:0;">
+   <section class="content-header">
+      <h1>
+        Ativos
+        <small>Detalhes do Ativo</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="/"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+        <li><a href="/assets/list"><i class="fas fa-crosshairs"></i> Ativos</a></li>
+        <li class="active"> Detalhes do Ativo</li>
+      </ol>
+    </section>
+    <div class="container-fluid" style="padding:15px 15px;">
+	<div class="nav-tabs-custom">
+		<ul class="nav nav-tabs">
+                        <li class="active dropdown">
+				<a class="dropdown-toggle" data-toggle="dropdown" href="/assets/list">
+				<i class="fas fa-crosshairs"></i>&nbsp; Ativos <span class="caret"></span>
+				</a>
+				<ul class="dropdown-menu">
+				<li role="presentation"><a role="menuitem" href="/assets/list"><i class="fa fa-list"></i> Todos os Ativo</a></li>
+                                {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+				<li role="presentation"><a role="menuitem" href="/assets/add"><i class="fa fa-plus"></i>&nbsp; Criar Ativo</a></li>
+				<li role="presentation"><a role="menuitem" href="/assets/bulkadd"><i class="fa fa-upload"></i> Importar Ativos</a></li>
+				<li role="presentation"><a role="menuitem" href="/assets/api/v1/export"><i class="fa fa-download"></i> Exportar Ativos</a></li>
+				{% endif %}
+                 	</ul>
+			</li>
+             		<li class="dropdown">
+				  <a class="dropdown-toggle" data-toggle="dropdown" href="/assets/list?target=asset_group">
+			          <i class="fa fa-th-list"></i>&nbsp; Grupos de Ativos <span class="caret"></span>
+				  </a>
+				  <ul class="dropdown-menu">
+				  <li role="presentation"><a role="menuitem" href="/assets/list?target=asset_group"><i class="fa fa-list"></i> Todos os Grupos de Ativos</a></li>
+	                          {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+				  <li role="presentation"><a role="menuitem" href="/assets/addgroup"><i class="fa fa-plus"></i> &nbsp; Criar Grupo de Ativos</a></li>
+                                  <li role="presentation"><a role="menuitem" href="{% url 'export_assetgroups_api' %}"><i class="fa fa-download"></i> Exportar Grupos de Grupo</a></li>
+	                          {% endif %}
+			</ul>
+			</li>
+              		<li class="dropdown">
+                                  <a class="dropdown-toggle" data-toggle="dropdown" href="/assets/owners/list">
+			          <i class="fa fa-user-secret"></i>&nbsp; Proprietários <span class="caret"></span>
+				  </a>
+				  <ul class="dropdown-menu">
+				  <li role="presentation"><a role="menuitem" href="/assets/owners/list"><i class="fa fa-list"></i> Todos os Proprietários</a></li>
+                                  {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+				  <li role="presentation"><a role="menuitem" href="/assets/owners/add"><i class="fa fa-plus"></i>&nbsp; Criar Proprietário</a></li>
+                                  {% endif %}
+                      </ul>
+	          </li>
+            </ul>
+       <div class="tab-content">
+	    <div class="row detail-box">
+	          <div class="col-md-4">
+		  <h5><span class="fa fa-database"></span>&nbsp; Dados do Ativo</h5>
+		  <table class="table table-bordered details-table">
+		   	<tr>
+			<td style="text-align:right; font-weight:bolder; width:120px;">Nome</td>
+				<td><b>{{ asset.name }} </b> ({{asset.type}})</td>
+			</tr>
+			<tr>
+			<td style="text-align:right; font-weight:bolder;">Endereço</td>
+				<td>{{ asset.value }}</td>
+			</tr>
+			<tr>
+			<td style="text-align:right; font-weight:bolder;">Nota adicional</td>
+                                {% if asset.description == 'Asset dynamically created' %}
+				<td>Ativo Criado Automaticamente</td>
+                                {% else %}
+                                <td>{{ asset.description }}</td>
+                                {% endif %}
+			</tr>			
+			<tr>
+			<td style="text-align:right; font-weight:bolder;">Tags</td>
+			<td>
+	                {% for tag in asset.categories.all %}
+			<span class="label label-primary">{{tag.value|lower}} <i class="glyphicon glyphicon-remove text-warning delete-tag-btn " tag-id="{{tag.id}}"></i></span>
+			{% endfor %}
+                        {% if user.groups.all.0.name == 'root' or user.groups.all.0.name == 'gestor' %}
+			<a class="label label-default" href="#modal-edit-asset-tags" data-toggle="modal" data-target="#modal-edit-asset-tags">+ adicionar</a>
+			{% endif %}
+			</td>
+			</tr>
+			<tr>
+				<td style="text-align:right; font-weight:bolder;">Criticidade</td>
+				<td>
+				{% if asset.criticity == 'low' %}
+				<span class="label label-low">baixa</span>
+				{% elif asset.criticity == 'medium' %}
+				<span class="label label-medium">m&eacute;dia</span>
+				{% elif asset.criticity == 'high' %}
+				<span class="label label-critical">alta</span>
+				{% endif %}
+				</td>
+			</tr>
+			<tr>
+				<td style="text-align:right; font-weight:bolder;">Criado em</td>
+				<td>{{ asset.created_at|date:"d/m/Y\-H:i:s" }}</td>
+			</tr>
+			<tr>
+				<td style="text-align:right; font-weight:bolder;">Baixar Relatório</td>
+				<td style="width:290px;">
+				<a class="label label-low" style="color:#333 !important;" target="_blank" href="/assets/api/v1/report/json/{{ asset.id }}">json</a>
+				<a class="label label-low" style="color:#333 !important;" target="_blank" href="/assets/api/v1/report/html/{{ asset.id }}">Detalhado</a>
+        <a class="label label-low" style="color:#333 !important;" target="_blank" href="/assets/api/v1/sumarizado/html/{{ asset.id }}">Resumido</a>
+        <a class="label label-low" style="color:#333 !important;" target="_blank" href="/assets/api/v1/carta/html/{{ asset.id }}">Carta de Aceite</a>
+
+				</td>
+			  </tr>
+		</table>
+    </div><!-- End of first col -->
+
+    <div class="col-md-6 tiles"> <!-- Second col -->
+      <div class="row">
+        <h5><span class="glyphicon glyphicon-stats"></span>&nbsp; Estat&iacute;sticas das Ocorr&ecirc;ncias</h5>
+      </div>
+      <div class="row finding-stats">
+        <div class="col-md-2">
+          <div class="tile tile-critical">
+              <div>Cr&iacute;tica</div><span class="label label-critical">{{findings_stats.critical}}</span>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="tile tile-high">
+      		    <div>Alta</div><span class="label label-high">{{findings_stats.high}}</span>
+          </div>
+      	</div>
+        <div class="col-md-2">
+          <div class="tile tile-medium">
+      		    <div>M&eacute;dia</div><span class="label label-medium">{{findings_stats.medium}}</span>
+          </div>
+      	</div>
+        <div class="col-md-2">
+          <div class="tile tile-low">
+      		    <div>Baixa</div><span class="label label-low">{{findings_stats.low}}</span>
+          </div>
+      	</div>
+        <div class="col-md-3">
+          <div class="tile tile-info">
+      		    <div>Desconhecida</div><span class="label label-info">{{findings_stats.info}}</span>
+          </div>
+      	</div>
+      </div>
+      <div class="row">
+        <div style="margin-top:7px; padding-right:50px;">
+
+			<table class="table table-bordered details-table">
+				<tr>
+					<td style="text-align:right; font-weight:bolder;">Ocorr&ecirc;ncias</td>
+					<td><i>{{findings_stats.total}} - ({{findings_stats.new}} Novas, {{findings_stats.confirmed}} Confirmadas, {{findings_stats.mitigated}} Mitigadas)</i></td>
+				</tr>
+				<tr>
+					<td style="text-align:right; font-weight:bolder;">Ocorr&ecirc;ncias com CVSS > 7.0</td>
+					<td>{% if findings_stats.cvss_gte_7 > 0 %} <i class="text-danger">{{findings_stats.cvss_gte_7}}{% else %} <i>0{% endif %}</i></td>
+				</tr>
+				<tr>
+					<td style="text-align:right; font-weight:bolder;">Scans relacionados</td>
+					<td><i>{{scans_stats.performed}} realizados, {{scans_stats.defined}} definidos, {{scans_stats.running}} executando</i></td>
+				</tr>
+                                <tr>
+                                        <td style="text-align:right; font-weight:bolder;">Valor em Risco</td>
+                               {% if asset.financeiro %}
+                                        <td><i>R$ {% change_currency asset.financeiro|currency:"BRL" %}</i></td>
+                               {% else %}
+                                        <td><i>Nenhum valor foi estipulado</i></td>
+                               {% endif %}
+                                </tr>
+				<tr>
+					<td style="text-align:right; font-weight:bolder;">Sensor : Scan Id</td>
+					<td><i>
+						{% for engine, counter in engines_stats.items %}
+						{{ engine }}: {{ counter }}{% if not forloop.last %}, {% endif %}
+						{% endfor %}
+					    </i>
+					</td>
+			 	    </tr>
+		              </table>
+      	   		</div>
+      		</div>
+    	</div>
+
+    <div class="col-md-2 text-center"> <!-- Thrird col -->
+      <div class="row">
+      <i class="fa fa-globe"></i> &nbsp;Nota de Segurança &nbsp;
+       <div class="risk-grade risk-grade-{{asset_risk_grade|keyvalue:'now'}}">
+          <b>{{asset_risk_grade|keyvalue:"now"}}</b></div>
+        </div><br/>
+          <div class="row risk-trends">
+      <span style="cursor:pointer;" data-toggle="modal" data-target="#modal-asset-trends"><b>Tend&ecirc;ncias </b><span class="glyphicon glyphicon-time"></span></span>
+      </div>
+      <div class="row">
+        <div class="col-md-4" title="1 day ago">-1dia
+          {% if asset_risk_grade|keyvalue:"now" > asset_risk_grade|keyvalue:"day_ago" %}
+          <span class="glyphicon glyphicon-arrow-down text-danger"></span>
+          {% elif asset_risk_grade|keyvalue:"now" == asset_risk_grade|keyvalue:"day_ago" %}
+          <span class="glyphicon glyphicon-minus"></span>
+          {% else %}
+          <span class="glyphicon glyphicon-arrow-up text-success"></span>
+          {% endif %}
+        </div>
+        <div class="col-md-4">-1sem
+          {% if asset_risk_grade|keyvalue:"now" > asset_risk_grade|keyvalue:"week_ago" %}
+          <span class="glyphicon glyphicon-arrow-down text-danger"></span>
+          {% elif asset_risk_grade|keyvalue:"now" == asset_risk_grade|keyvalue:"week_ago" %}
+          <span class="glyphicon glyphicon-minus"></span>
+          {% else %}
+          <span class="glyphicon glyphicon-arrow-up text-success"></span>
+          {% endif %}
+        </div>
+        <div class="col-md-4">-1m&ecirc;s
+          {% if asset_risk_grade|keyvalue:"now" > asset_risk_grade|keyvalue:"month_ago" %}
+          <span class="glyphicon glyphicon-arrow-down text-danger"></span>
+          {% elif asset_risk_grade|keyvalue:"now" == asset_risk_grade|keyvalue:"month_ago" %}
+          <span class="glyphicon glyphicon-minus"></span>
+          {% else %}
+          <span class="glyphicon glyphicon-arrow-up text-success"></span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+     {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+    <a href="/assets/edit/{{ asset.id }}"><button type="button" class="btn btn-warning" style="margin-top:10px;"><i class="fas fa-edit"></i> Editar Ativo</button></a>
+   {% endif %}
+	<!--
+	 <div class="btn-group scopes-button">
+	  <button type="button" class="btn btn-warning"> Ocorrências por Escopo</button>
+	  <button type="button" class="btn btn-warning dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	  <span class="caret"></span>
+	  <span class="sr-only">Toggle Dropdown</span>
+	  </button>
+	  <ul class="dropdown-menu" role="menu">
+	  {% for scope, counter in asset_scopes %}
+	  <li>
+	  <a href="/findings/list?_scope={{ counter.id }}&_asset_id={{ asset.id }}">
+	  <i class="fa fa-circle text-red"></i>
+	  {% if counter.critical > 0 %}
+	  <i class="fa fa-circle text-red"></i> {{ scope }}: {{ counter.critical }}/{{ counter.total }}
+	  {% elif counter.high > 0 %}
+	  <i class="fa fa-circle text-red"></i> {{ scope }}: {{ counter.high }}/{{ counter.total }}
+	  {% elif counter.medium > 0 %}
+	  <i class="fa fa-circle text-red"></i>{{ scope }}: {{ counter.medium }}/{{ counter.total }}
+	  {% elif counter.low > 0 %}
+	  <i class="fa fa-circle text-red"></i> {{ scope }}: {{ counter.low }}/{{ counter.total }}
+	  {% else %}
+	  {{ scope }}: {{ counter.total }}</span>
+	  {% endif %}
+	  </a>
+	  </li>
+	  {% endfor %}
+	  <li><a class="label label-low" href="#" data-toggle="modal" style="color:#333 !important;" data-target="#modal-scopes-details"><i class="fas fa-plus"></i> Detalhes</a></li>
+	  </ul>
+	 </div>
+	{% for scope, counter in asset_scopes %}
+	<div class="modal fade" id="modal-findings_{{ counter.id }}">
+	<div class="modal-dialog modal-xl">
+	<div class="modal-content">
+	<div class="modal-header">
+	<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	<span aria-hidden="true">×</span></button>
+	<h4 class="modal-title"><i class="fa fa-map-marker"></i> &nbsp;Ocorrências por Escopo</h4>
+	</div>
+	<div class="modal-body modal-xl">
+	<iframe allowtransparency="true" src="/findings/list?_scope={{ counter.id }}&_asset_id={{ asset.id }}" width="100%" height="500px" frameborder="0"></iframe>
+	</div>
+	<div class="modal-footer">
+	<button type="button" data-dismiss="modal" class="btn btn-warning">Fechar</button>
+	</div>
+	</div>
+	<!-- /.modal-content
+	</div>
+	<!-- /.modal-dialog
+	</div>
+	{% endfor %}
+	-->
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <p>
+        {% for scope, counter in asset_scopes %}
+          <a href="#" style="text-decoration:none;">
+          {% if counter.critical > 0 %}
+          <button class="btn btn-sm label-critical">{{ scope }}: {{ counter.critical }}/{{ counter.total }}</button>
+          {% elif counter.high > 0 %}
+          <button class="btn btn-sm label-high">{{ scope }}: {{ counter.high }}/{{ counter.total }}</button>
+          {% elif counter.medium > 0 %}
+          <button class="btn btn-sm label-medium">{{ scope }}: {{ counter.medium }}/{{ counter.total }}</button>
+          {% elif counter.low > 0 %}
+          <button class="btn btn-sm label-low">{{ scope }}: {{ counter.low }}/{{ counter.total }}</button>
+          {% else %}
+          <button class="btn btn-sm label-default">{{ scope }}: {{ counter.total }}</button>
+          {% endif %}
+          </a>
+        {% endfor %}
+        <button class="btn btn-sm label-low" href="#" data-toggle="modal" style="color:#333 !important;" data-target="#modal-scopes-details">+ detalhes</button>
+      </p>
+    </div>
+  </div>
+
+</div>
+</div>
+
+
+<div class="nav-tabs-custom">
+  <ul class="nav nav-tabs" id="menu_tabs_ul">
+    <li class="active menu_findings"><a data-toggle="tab"  href="#findings_div">Ocorr&ecirc;ncias</a></li>
+    <li class="menu_remediations"><a data-toggle="tab" href="#remediations_div">Remedia&ccedil;&atilde;o</a></li>
+    <li class="menu_scans"><a data-toggle="tab" href="#scans_div">Scans</a></li>
+    <li class="menu_investigations"><a data-toggle="tab" href="#investigation_div">Investigar</a></li>
+    <li class="menu_relation"><a data-toggle="tab" href="#relations_div">Artefatos</a></li>
+    <li class="menu_owners"><a data-toggle="tab" href="#owners_div">Propriet&aacuterios</a></li>
+    <li class="menu_alerts"><a data-toggle="tab" href="#alerts_div">Alertas</a></li>
+    <li class="menu_comments"><a data-toggle="tab" href="#comments_div">Coment&aacute;rios</a></li>
+
+
+    <!--li class="menu_risk"><a data-toggle="tab" href="#risk_div">Risco Quantitativo</a></li-->
+    <!--li class="menu_topology"><a data-toggle="tab" href="#topology_div">Topologia</a></li-->
+    <!--li class="menu_geo"><a data-toggle="tab" href="#geo_div">Geolocalização</a></li-->
+
+  </ul>
+  <div class="tab-content">
+    <div id="findings_div" class="tab-pane fade in active">
+      <div class="dropdown">
+    {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <button class="btn btn-primary btn-xs dropdown-toggle" type="button" id="dropdown-menu-actions" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+          A&ccedil;&otilde;es
+          <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdown-menu-actions">
+          <li><a class="btn btn-xs btn-ack" href="#">Ignorar Ocorr&ecirc;ncia(s) Selecionada(s)</a></li>
+          <li><a class="btn btn-xs btn-compare-selected" href="#">Comparar Ocorr&ecirc;ncia(s) Selecionada(s) (2 max.)</a></li>
+          <li><a class="btn btn-xs btn-delete-selected" href="#">Excluir Ocorr&ecirc;ncia(s) Selecionada(s)</a></li>
+        </ul>
+      {% endif %}
+      </div>
+      <table class="table table-bordered" id="table" data-toggle="table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" onClick="toggle(this)" /></th>
+            <th>T&iacute;tulo</th>
+            <th>Tipo</th>
+            <th>Severidade</th>
+            <th>Status</th>
+            <th>Origem</th>
+            <th>Encontrada</th>
+            <th>Atualizada</th>
+            <th style="width:60px;">Ver</th>
+            {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+	    <th style="width:60px;">Tratar</th>
+            <th style="width:60px;">Excluir</th>
+	    {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for finding in findings %}
+          <tr class='dblclickable-row' data-href='/findings/details/{{ finding.id }}' style="cursor:pointer;">
+            <td><input type="checkbox" class="radio" name="finding" value="{{ finding.id }}"/></td>
+            <td><a href="/findings/details/{{ finding.id }}">{{ finding.title }}</a></td>
+            <td>{{ finding.type }}</td>
+            <td>
+              {% if finding.severity == 'critical' %}
+              <span class="label label-critical">Crítica</span>
+              {% elif finding.severity == 'high' %}
+              <span class="label label-high">Alta</span>
+              {% elif finding.severity == 'medium' or finding.severity == 'moderate' %}
+              <span class="label label-medium">Média</span>
+              {% elif finding.severity == 'low' %}
+              <span class="label label-low">Baixa</span>
+              {% else %}
+              <span class="label label-info">Desconhecida</span>
+              {% endif %}
+            </td>
+            {% if finding.status == 'new' %}
+            <td class="text-danger">Nova</td>
+            {% elif finding.status == 'ack' %}
+            <td class="text-danger">Ignorada</td>
+            {% elif finding.status == 'confirmed' %}
+            <td class="text-danger">Confirmada</td>
+            {% elif finding.status == 'false-positive' %}
+            <td class="text-danger">Falso-Positivo</td>
+            {% elif finding.status == 'patched' %}
+            <td class="text-danger">Corrigida</td>
+            {% elif finding.status == 'mitigated' %}
+            <td class="text-danger">Mitigada</td>
+            {% elif finding.status == 'closed' %}
+            <td class="text-danger">Encerrada</td>
+            {% else %}
+            <td>{{ finding.status }}</td>
+            {% endif %}
+            {% if finding.engine_type == 'NMAP' %}
+            <td>NETWORK</td>
+            {% else %}
+            <td>{{ finding.engine_type }}</td>
+            {% endif %}
+            <td>{{ finding.created_at|date:"d/m/Y\-H:i:s" }}</td>
+            <td>{{ finding.updated_at|date:"d/m/Y\-H:i:s" }}</td>
+
+            <td><a href="#" style="margin-left:15px;" onclick="location.href='/findings/details/{{ finding.id }}'"><i class="fa fa-eye"></i></a></td>
+            {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+	    <td><a href="#" style="margin-left:15px;" onclick="location.href='/findings/edit/{{ finding.id }}'"><i class="fa fa-hand-pointer-o"></i></a></td>
+	   <td><a href="#" style="margin-left:15px;" data-toggle="modal" data-target="#new-modal-delete-finding"finding-id="{{ finding.id }}" finding-title="{{ finding.title }}" finding-asset="{{ finding.asset_name }}" finding-severity="{{ finding.severity }}"><i class="fa fa-trash"></i></a></td>
+	    {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div id="remediations_div" class="tab-pane fade">
+      <table class="table table-bordered" id="table" data-toggle="table">
+        <thead>
+          <tr>
+            <th>Severidade</th>
+            <th>Remedia&ccedil;&atilde;o</th>
+            <th>Escopos</th>
+            <th>Ocorr&ecirc;ncias Relacionadas</th>
+            <th>Status</th>
+            <th>Atualizado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for finding in findings %}
+          {% if finding.severity != "info" %}
+          <tr>
+            <td>
+              {% if finding.severity == 'critical' %}
+              <span class="label label-critical">Crítica</span>
+              {% elif finding.severity == 'high' %}
+              <span class="label label-high">Alta</span>
+              {% elif finding.severity == 'medium' or finding.severity == 'moderate' %}
+              <span class="label label-medium">Média</span>
+              {% elif finding.severity == 'low' %}
+              <span class="label label-low">Baixa</span>
+              {% else %}
+              <span class="label label-default">{{ finding.severity }}</span>
+              {% endif %}
+            </td>
+            <td>{{ finding.solution }}</td>
+            <td>
+              {% for scope in finding.scope_list %}
+                {{scope}}{% if not forloop.last %},{% endif %}
+              {% endfor %}
+            </td>
+            <td><a href="/findings/details/{{ finding.id }}">{{ finding.id }}</a></td>
+            {% if finding.status == 'new' %}
+            <td class="text-danger">Nova</td>
+            {% elif finding.status == 'ack' %}
+            <td class="text-danger">Ignorada</td>
+            {% elif finding.status == 'confirmed' %}
+            <td class="text-danger">Confirmada</td>
+            {% elif finding.status == 'false-positive' %}
+            <td class="text-danger">Falso-Positivo</td>
+            {% elif finding.status == 'patched' %}
+            <td class="text-danger">Corrigida</td>
+            {% elif finding.status == 'mitigated' %}
+            <td class="text-danger">Mitigada</td>
+            {% elif finding.status == 'closed' %}
+            <td class="text-danger">Encerrada</td>
+            {% else %}
+            <td>{{ finding.status }}</td>
+            {% endif %}
+            <td>{{ finding.updated_at|date:"d/m/Y\-H:i:s" }}</td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+
+
+
+    <div id="scans_div" class="tab-pane fade">
+      <h5>Defini&ccedil;&otilde;es de Scan: {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}<a href="/scans/defs/add?asset_id={{asset.id}}" class="label label-default">Adicionar nova</a>{% endif %}</h5>
+      <table class="table table-bordered" id="table" data-toggle="table">
+        <thead>
+          <tr>
+            <th>ID do Scan</th>
+            <th>Scans</th>
+            <th>Tipo</th>
+            <th>Sensor</th>
+            <th>Status</th>
+            <th>Atualizado</th>
+            {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+            <th style="width:60px;">Editar</th>
+            <th style="width:60px;">Executar</th>
+            <th style="width:60px;">Excluir</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for scan_def in scan_defs %}
+          <tr>
+            <td><a href="/scans/defs/details/{{ scan_def.id }}" class="text-primary">{{ scan_def.id }}</a></td>
+            <td>{{ scan_def.scan_set_count }}</td>
+            {% if scan_def.scan_type == "periodic" %}
+            <td>Recorrente/Automático</td>
+            {% elif scan_def.scan_type == "single" %}
+            <td>Pontual/Manual</td>
+            {% elif scan_def.scan_type == "scheduled" %}
+            <td>Agendado/Hibrido</td>
+            {% endif %}
+            <td>{{ scan_def.engine_type_name }}</td>
+            {% if scan_def.scan_type == "periodic" %}
+              {% if scan_def.enabled %}
+              <td><span class="label label-success">Habilitado</span></td>
+              {% else %}
+              <td><span class="label label-danger">Desabilitado</span></td>
+              {% endif %}
+            {% elif scan_def.scan_type == "single" %}
+                <td><span class="label label-default">Pronto</span></td>
+            {% elif scan_def.scan_type == "scheduled" %}
+                <td><span class="label label-warning">Agendado</span></td>
+            {% endif %}
+            <td>{{ scan_def.updated_at|date:"d/m/Y\-H:i:s" }}</td>
+	    {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+            <td>
+              <a style="margin-left:15px;" href="#" aria-haspopup="true" aria-expanded="false" onclick="location.href='/scans/defs/edit/{{ scan_def.id }}'">
+                <i class="fas fa-edit"></i></a>
+            </td>
+	    {% endif %}
+            <td>
+              {% if scan_def.scan_type == "periodic" %}
+                {% if scan_def.enabled %}
+                <button type="button" class="btn btn-danger btn-xs btn-change-status" aria-haspopup="true" aria-expanded="false" scan-id="{{ scan_def.id }}">
+                <!--a href="#" class="btn btn-xs btn-change-status" aria-haspopup="true" aria-expanded="false" scan-id="{{ scan_def.id }}"-->
+                  Desabilitar</button>
+                {% else %}
+                <button type="button" class="btn btn-success btn-xs btn-change-status" aria-haspopup="true" aria-expanded="false" scan-id="{{ scan_def.id }}">
+                  Habilitar</button>
+                {% endif %}
+                {% elif scan_def.scan_type == "single" %}
+                {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+                <!--<a href="#" class="btn-run-now" scan-id="{{ scan_def.id }}" scan-title="{{ scan_def.title }}" data-toggle="modal" data-target="#modal-run-scan">-->
+                <button type="button" class="btn btn-warning btn-xs btn-run-now" scan-id="{{ scan_def.id }}" scan-title="{{ scan_def.title }}" data-toggle="modal"  data-target="#modal-run-scan">Executar</button>
+                {% elif scan_def.scan_type == "scheduled" %}
+		<!--<a href="#" class="btn-run-now" scan-id="{{ scan_def.id }}" scan-title="{{ scan_def.title }}" data-toggle="modal" data-target="#modal-run-scan">-->
+		<button type="button" class="btn btn-warning btn-xs btn-run-now" scan-id="{{ scan_def.id }}" scan-title="{{ scan_def.title }}" data-toggle="modal" data-target="#modal-run-scan">Executar</button>
+	      {% endif %}
+              {% endif %}
+             </td>
+            {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+             <td>
+               <a style="margin-left:15px;" href="#" data-toggle="modal" data-target="#modal-delete-scan-def" scan-id="{{ scan_def.id }}" scan-title="{{ scan_def.title }}">
+               <i class="fas fa-trash"></i></a>
+            {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <hr>
+
+      <h5>Scans executados</h5>
+      <table class="table table-bordered" id="table" data-toggle="table">
+        <thead>
+          <tr>
+            <th data-field="title">Sensor / Scan ID</th>
+            <th data-field="status">Status</th>
+            <th data-field="progress" style="width:20%">Progresso</th>
+            <th data-field="started_at">Iniciado</th>
+            <th data-field="finished_at">Finalizado</th>
+            <th data-field="actions" style="width:60px;">Detalhes</th>
+            {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+            <th data-field="actions" style="width:60px;">Excluir</th>
+            {% endif %}
+	  </tr>
+        </thead>
+        <tbody>
+          {% for scan in scans %}
+            <tr class='dblclickable-row' data-href='/scans/details/{{scan.id}}'>
+              <td>{{ scan.engine_type_name }} / {{ scan.id }}</td>
+              {% if scan.status == "started" %}
+              <td class="text-center"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate" style="color:orange" title="Iniciado"></span></td>
+              {% elif scan.status == "stopping"  %}
+              <td class="text-center"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate" style="color:red" title="Parando"></span></td>
+              {% elif scan.status == "stopped"  %}
+              <td class="text-center"><span class="glyphicon glyphicon-remove" style="color:red" title="Parado"></span></td>
+              {% elif scan.status == "finished"  %}
+              <td class="text-center"><span class="glyphicon glyphicon-ok" style="color:green" title="Finalizado"></span></td>
+              {% elif scan.status == "scheduled"  %}
+              <td class="text-center"><span class="glyphicon glyphicon-time" style="color:blue" title="Agendado"></span></td>
+              {% elif scan.status == "enqueued"  %}
+              <td class="text-center"><span class="glyphicon glyphicon-pushpin" style="color:orange" title="Na Fila"></span></td>
+              {% elif scan.status == "error"  %}
+              <td class="text-center"><span class="glyphicon glyphicon-fire" style="color:red" title="Falha"></span></td>
+              {% else %}
+              <td>{{ scan.status }}</td>
+              {% endif %}
+
+              <!--  -->
+              <td class="scan-progress" style="vertical-align: middle;">
+                <div class="progress" id="pb-{{ scan.id }}" style="margin-bottom: 3px;">
+                  {% if scan.status == "finished" %}
+                  <div class="progress-bar progress-bar-striped progress-bar-critical" role="progressbar" data-width="{{ scan.summary.critical  | perc:scan.summary.total }}">
+                    {{ scan.summary.critical }}
+                  </div>
+                  <div class="progress-bar progress-bar-striped progress-bar-high" role="progressbar" data-width="{{ scan.summary.high | perc:scan.summary.total }}">
+                    {{ scan.summary.high }}
+                  </div>
+                  <div class="progress-bar progress-bar-striped progress-bar-medium" role="progressbar" data-width="{{ scan.summary.medium | perc:scan.summary.total }}">
+                    {{ scan.summary.medium }}
+                  </div>
+                  <div class="progress-bar progress-bar-striped progress-bar-low" role="progressbar" data-width="{{ scan.summary.low | perc:scan.summary.total }}">
+                    {{ scan.summary.low }}
+                  </div>
+                  <div class="progress-bar progress-bar-striped progress-bar-info" role="progressbar" data-width="{{ scan.summary.info | perc:scan.summary.total }}">
+                    {{ scan.summary.info }}
+                  </div>
+                  {% else %}
+                  <div class="progress-bar progress-bar-striped active" role="progressbar">
+                    -
+                  </div>
+                  {% endif %}
+                </div>
+              </td>
+              <td>{{ scan.started_at|date:"d/m/Y\-H:i:s" }}</td>
+             <td>{{ scan.finished_at|date:"d/m/Y\-H:i:s" }}</td>
+              <td>
+                <a style="margin-left:15px;" href="#" title="Detalhes" onclick="location.href='/scans/details/{{ scan.id }}'">
+                  <i class="fas fa-eye"></i></a>
+              </td>
+             {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+              <td>
+                <a style="margin-left:15px;" href="#" data-toggle="modal" data-target="#modal-delete-scan"
+                  scan-id="{{ scan.id }}" scan-title="{{ scan.title }}">
+                  <i class="fas fa-trash"></i></a>
+              </td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div id="investigation_div" class="tab-pane fade">
+      <h4>Links de Investiga&ccedil;&atilde;o Online</h4>
+      <script>
+
+
+	  </script>
+      <table class="table table-bordered table-investigation">
+      {% for link in investigation_links %}
+        <tr>
+	<td><a class="link-investigation external-link" href="{{ link|keyvalue:'link' }}" target="_blank" data-toggle="modal" data-name="{{ link|keyvalue:'name' }}" data-target=".external-modal">{{ link|keyvalue:"name" }}</a></td>
+	<td>Informações complementares</td>
+	</tr>
+      {% endfor %}
+       </table>
+       <script>
+         $('.link-investigation').each(function(){
+           var str = $(this).attr('href');
+           var a = str.search("alienvault");
+           if(a!=(-1)) {
+             $(this).removeClass('external-link');
+             $(this).removeAttr('data-toogle');
+             $(this).removeAttr('data-target');
+             $(this).removeAttr('data-name');
+           }
+         });
+       </script>
+
+    </div>
+    <div id="relations_div" class="tab-pane fade">
+      <h4><i class="fa fa-th-list"></i>  &nbsp;Grupo de Ativos Relacionados</h4>
+      {% if asset.assetgroup_set.all|length == 0 %}
+      Nenhum Grupo de Ativos.
+      {% else %}
+      <table class="table table-bordered" data-toggle="table" data-sort-name="value" data-sort-order="desc">
+        <thead>
+          <tr>
+            <th data-field="name">Nome</th>
+            <th data-field="assets">Ativos</th>
+            <th data-field="criticity">Criticidade</th>
+            <th data-field="score">Score</th>
+            <th data-field="updated_at">Atualizado</th>
+	    {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor' %}
+            <th data-field="actions">A&ccedil;&otilde;es</th>
+	    {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+        {% for asset_group in asset.assetgroup_set.all %}
+        <tr>
+          <td><a href="/assets/groups/details/{{ asset_group.id }}" class="label label-info" >{{ asset_group.name }}</a></td>
+          <td>{{ asset_group.get_asset_names|truncatechars:128 }}</td>
+          {% if asset_group.criticity == 'low' %}
+          <td><span class="label label-low">Baixa</span></td>
+          {% elif asset_group.criticity == 'medium' %}
+          <td><span class="label label-medium">M&eacute;dia</span></td>
+          {% elif asset_group.criticity == 'high' %}
+          <td><span class="label label-critical">Alta</span></td>
+          {% endif %}
+          <td><span class="badge badge-risk-grade-{{ asset_group.get_risk_grade }}">{{ asset_group.get_risk_grade }}</span></td>
+          <td>{{ asset_group.updated_at|date:"d/m/Y\-H:i:s" }}</td>
+	  {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor' %}
+          <td>
+            <button type="button" class="btn btn-default btn-xs" aria-haspopup="true" aria-expanded="false" onclick="location.href='/assets/groups/details/{{ asset_group.id }}'">
+              <span class="glyphicon glyphicon-eye-open"></span></button>
+            <button type="button" class="btn btn-warning btn-xs" aria-haspopup="true" aria-expanded="false" onclick="location.href='/assets/groups/edit/{{ asset_group.id }}'">
+              <span class="glyphicon glyphicon-pencil"></span></button>
+            <button type="button" class="btn btn-danger btn-xs" data-toggle="modal" data-target="#modal-delete-asset-group"
+              asset-group-id="{{ asset_group.id }}" asset-group-value="{{ asset_group.name }}">
+              <span class="glyphicon glyphicon-remove"></span></button>
+          </td>
+	  {% endif %}
+        </tr>
+      {% endfor %}
+      </tbody>
+      </table>
+      {% endif %}
+      <hr>
+      <h4><i class="fa fa-link"></i> &nbsp;Refer&ecirc;ncias Externas</h4>
+      <!-- Todo (CVE, advisories, ...). -->
+      {% if references|length == 0 %}
+        Nenhuma Refer&ecirc;ncia externa encontrada.
+      {% else %}
+        {% for ref in references %}
+          {{ref}}: {{references|keyvalue:ref|join:", "}}
+          <br/>
+        {% endfor %}
+      {% endif %}
+
+    </div>
+    <div id="owners_div" class="tab-pane fade">
+    {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor' %}
+    <a class="btn btn-sm btn-primary" style="color:#fff !important;" href="/assets/owners/add"><i class="fas fa-plus"></i> Adicionar Novo</a>
+    {% endif %}
+    {% for owner in asset.assetowner_set.all %}
+      <dl class="dl-horizontal">
+        <dt>Nome</dt>
+        <dd>{{ owner.name }} (<a href="{{ owner.url }}">link</a>)</dd>
+
+        <dt>Comment&aacute;rio</dt>
+        <dd>{{ owner.comments|linebreaks }}</dd>
+
+        <dt>Lista de Contatos</dt>
+        <dd>
+          <ul>
+          {% for contact in owner.contacts.all %}
+            <li>{{ contact.name }} - {{ contact.phone }} - <a href="mailto:{{ contact.email }}">{{ contact.email }}</a></li>
+          {% endfor %}
+          </ul>
+        </dd>
+
+        <!--dt>Documentos</dt-->
+        <!--dd-->
+          <!--a href="#" data-toggle="modal" data-target="#modalDocument">+ adicionar documento</a-->
+          <!--ul-->
+          <!--{% for doc in owner.documents.all %}-->
+            <!--li-->
+              <!--{% if doc.tlp_color == 'red' %}-->
+              <!--a href="/assets/owners/getdoc/{{doc.id}}">{{ doc.filename }}</a> - {{ doc.doctitle }} <span class="label label-danger">TLP:Vermelho</span> ({{ doc.updated_at|date:"d/m/Y\-H:i:s" }}) -->
+              <!--{% elif doc.tlp_color == 'amber' %}-->
+              <!--a href="/assets/owners/getdoc/{{doc.id}}">{{ doc.filename }}</a> - {{ doc.doctitle }} <span class="label label-warning">TLP:Laranja</span> ({{ doc.updated_at|date:"d/m/Y\-H:i:s" }}) -->
+              <!--{% elif doc.tlp_color == 'green' %}-->
+              <!--a href="/assets/owners/getdoc/{{doc.id}}">{{ doc.filename }}</a> - {{ doc.doctitle }} <span class="label label-success">TLP:Verde</span> ({{ doc.updated_at|date:"d/m/Y\-H:i:s" }}) -->
+              <!--{% elif doc.tlp_color == 'white' %}-->
+              <!--a href="/assets/owners/getdoc/{{doc.id}}">{{ doc.filename }}</a> - {{ doc.doctitle }} <span class="label label-white" style="color: black;">TLP:Branco</span>({{ doc.updated_at|date:"d/m/Y\-H:i:s" }}) -->
+            <!--{% endif %}-->
+             <!--/li-->
+          <!--{% endfor %}-->
+          <!--/ul-->
+        <!--/dd-->
+      <!--/dl-->
+      <!--{% endfor %}-->
+    </div>
+    <div id="alerts_div" class="tab-pane fade">
+      <h4><i class="fa fa-bell"></i> &nbsp;Alertas</h4>
+      Nenhum Alerta definido.
+    </div>
+    <div id="comments_div" class="tab-pane fade">
+					<div class="box-body">
+						<h3><i class="fa fa-commenting"></i>&nbsp; Comentários</h3>
+						<p>Nenhum coment&aacute;rio Anterior.</p>
+
+						<!--
+						<div class="box box-widget">
+
+							<div class="box-footer box-comments">
+							  <div class="box-comment">
+								<!-- User image
+								<img class="img-circle img-sm" src="/static/staticv2/dist/img/vinicius.png" alt="User Image">
+
+								<div class="comment-text">
+									  <span class="username">
+										Vinicius Durbano
+										<span class="text-muted">8:03 21-08-2019</span>
+									  </span><!-- /.username
+								  <span class="label bg-red">Remediação</span> Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+								</div>
+								<!-- /.comment-text
+							  </div>
+							  <!-- /.box-comment
+							  <div class="box-comment">
+								<!-- User image
+								<img class="img-circle img-sm" src="/static/staticv2/dist/img/vinicius.png" alt="User Image">
+
+								<div class="comment-text">
+									  <span class="username">
+										Vinicius Durbano
+										<span class="text-muted">8:03 21-08-2019</span>
+									  </span><!-- /.username
+								  <span class="label bg-red">Remediação</span> Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+								</div>
+								<!-- /.comment-text
+							  </div>
+							  <!-- /.box-comment
+							</div>
+							<!-- /.box-footer
+
+					</div>
+					<!-- /.box-body -->
+				</div>
+
+
+    </div>
+    <div id="risk_div" class="tab-pane fade">
+      <div class="tab-pane active" id="tab_7">
+					<div class="box-body">
+
+						  <div class="col-md-3">
+							<table class="risk-table-large">
+								<tbody><tr>
+									<td class="td-a">
+										<div class="tile tile-critical">
+											<div>Crítica</div>
+											<span class="label label-critical">{{findings_stats.critical}}</span>
+										</div>
+										<i class="fa fa-arrow-right"></i>
+									</td>
+									<td class="td-b">
+										<small>Perdas Estimadas</small>
+										<span class="num-matriz">{{asset.summary.financeiro}}</span>
+									</td>
+								</tr>
+								<tr>
+									<td class="td-a">
+										<div class="tile tile-high">
+											<div>Alta</div>
+											<span class="label label-high">{{findings_stats.high}}</span>
+										</div>
+										<i class="fa fa-arrow-right"></i>
+									</td>
+									<td class="td-b">
+										<small>Perdas Estimadas</small>
+										<span class="num-matriz"> {{asset.financeiro}}</span>
+									</td>
+								</tr>
+								<tr>
+									<td class="td-a">
+										<div class="tile tile-medium">
+											<div>Média</div>
+											<span class="label label-medium">{{findings_stats.medium}}</span>
+										</div>
+										<i class="fa fa-arrow-right"></i>
+									</td>
+									<td class="td-b">
+										<small>Perdas Estimadas</small>
+										<span class="num-matriz"> {{asset.financeiro}}</span>
+									</td>
+								</tr>
+							</tbody></table>
+						  </div>
+						  <div class="col-md-3">
+							<table class="risk-table-large">
+								<tbody><tr>
+									<td class="td-a">
+										<div class="tile tile-low">
+											<div>Baixa</div>
+											<span class="label label-low">{{findings_stats.low}}</span>
+										</div>
+										<i class="fa fa-arrow-right"></i>
+									</td>
+									<td class="td-b">
+										<small>Perdas Estimadas</small>
+										<span class="num-matriz"> {{asset.financeiro }}</span>
+									</td>
+								</tr>
+								<tr>
+									<td class="td-a">
+										<div class="tile tile-info">
+											<div style="font-size:14px;">Desconhecida</div>
+											<span class="label label-info">{{findings_stats.info}}</span>
+										</div>
+										<i class="fa fa-arrow-right"></i>
+									</td>
+									<td class="td-b">
+										<small>Perdas Estimadas</small>
+										<span class="num-matriz">  {{ asset.financeiro}}</span>
+									</td>
+								</tr>
+							</tbody></table>
+						  </div>
+
+
+
+						  <div class="col-md-3">
+							<div class="col-sm-12" style="text-align:center;">
+								<b style="border-bottom:solid 1px #fff;">Probabilidade de Incidentes</b>
+							</div>
+							<div class="col-sm-4">
+
+								<table class="risk-table-small">
+									<tbody><tr>
+										<td class="td-time" colspan="2"><span class="time">1dia</span></td>
+									</tr>
+									<tr>
+										<td class="td-a">
+											<small class="num-matriz">{{asset.financeiro}}%
+												<span>&nbsp;</span>
+											</small>
+
+										</td>
+										<td class="td-b">
+											<span class="label label-critical">{{counter.critical}}</span>
+										</td>
+									</tr>
+									<tr>
+										<td class="td-a">
+											<small class="num-matriz">90%
+												<span>&nbsp;</span>
+											</small>
+
+										</td>
+										<td class="td-b">
+											<span class="label label-high">{{counter.high}}</span>
+										</td>
+									</tr>
+									<tr>
+										<td class="td-a">
+											<small class="num-matriz">90%
+												<span>&nbsp;</span>
+											</small>
+
+										</td>
+										<td class="td-b">
+											<span class="label label-medium">{{counter.medium}}</span>
+										</td>
+									</tr>
+
+									<tr>
+										<td class="td-a">
+											<small class="num-matriz">90%
+												<span>&nbsp;</span>
+											</small>
+
+										</td>
+										<td class="td-b">
+											<span class="label label-low">{{counter.low}}</span>
+										</td>
+									</tr>
+
+									<tr>
+										<td class="td-a">
+											<small class="num-matriz">90%
+												<span>&nbsp;</span>
+											</small>
+
+										</td>
+										<td class="td-b">
+											<span class="label label-info">{{counter.info}}</span>
+										</td>
+									</tr>
+
+								</tbody></table>
+							</div>
+							<div class="col-sm-4">
+								<table class="risk-table-small">
+									<tbody><tr>
+										<td class="td-time" colspan="2"><span class="time">1sem</span></td>
+									</tr>
+									<tr>
+										<td class="td-a">
+											<small class="num-matriz">90%
+												<span>&nbsp;</span>
+											</small>
+
+										</td>
+										<td class="td-b">
+											<span class="label label-critical">{{counter.critical}}</span>
+										</td>
+									</tr>
+									<tr>
+										<td class="td-a">
+											<small class="num-matriz">90%
+												<span>&nbsp;</span>
+											</small>
+
+										</td>
+										<td class="td-b">
+											<span class="label label-high">{{counter.high}}</span>
+										</td>
+									</tr>
+									<tr>
+										<td class="td-a">
+											<small class="num-matriz">90%
+												<span>&nbsp;</span>
+											</small>
+
+										</td>
+										<td class="td-b">
+											<span class="label label-medium">{{counter.medium}}</span>
+										</td>
+									</tr>
+
+									<tr>
+										<td class="td-a">
+											<small class="num-matriz">90%
+												<span>&nbsp;</span>
+											</small>
+
+										</td>
+										<td class="td-b">
+											<span class="label label-low">{{counter.low}}</span>
+										</td>
+									</tr>
+
+									<tr>
+										<td class="td-a">
+											<small class="num-matriz">90%
+												<span>&nbsp;</span>
+											</small>
+
+										</td>
+										<td class="td-b">
+											<span class="label label-info">{{counter.info}}</span>
+										</td>
+									</tr>
+
+								</tbody></table>
+							</div>
+							<div class="col-sm-4">
+								<table class="risk-table-small">
+									<tbody><tr>
+										<td class="td-time" colspan="2"><span class="time">1mês</span></td>
+									</tr>
+									<tr>
+										<td class="td-a">
+											<small class="num-matriz">90%
+												<span>&nbsp;</span>
+											</small>
+
+										</td>
+										<td class="td-b">
+											<span class="label label-critical">{{counter.critical}}</span>
+										</td>
+									</tr>
+									<tr>
+										<td class="td-a">
+											<small class="num-matriz">90%
+												<span>&nbsp;</span>
+											</small>
+
+										</td>
+										<td class="td-b">
+											<span class="label label-high">0</span>
+										</td>
+									</tr>
+									<tr>
+										<td class="td-a">
+											<small class="num-matriz">90%
+												<span>&nbsp;</span>
+											</small>
+
+										</td>
+										<td class="td-b">
+											<span class="label label-medium">0</span>
+										</td>
+									</tr>
+
+									<tr>
+										<td class="td-a">
+											<small class="num-matriz">90%
+												<span>&nbsp;</span>
+											</small>
+
+										</td>
+										<td class="td-b">
+											<span class="label label-low">0</span>
+										</td>
+									</tr>
+
+									<tr>
+										<td class="td-a">
+											<small class="num-matriz">90%
+												<span>&nbsp;</span>
+											</small>
+
+										</td>
+										<td class="td-b">
+											<span class="label label-info">0</span>
+										</td>
+									</tr>
+
+								</tbody></table>
+							</div>
+						  </div>
+						  <div class="col-md-3">
+							<br>
+							<p style="text-align:center;">Potencial Total de Perda deste Ativo
+							</p><div class="risk-grade risk-grade-F" style="background:#EF8224 !important; color:#fff; position:relative; display:block;">
+								<span style="position:absolute; left:10px; top:10px; font-size:12px;">R$</span>
+								<h3 style="text-align:center;">{{ asset.financeiro}}</h3>
+							</div>
+						  </div>
+					</div>
+					<!-- /.box-body -->
+				</div>
+
+
+    </div>
+    <div id="topology_div" class="tab-pane fade">
+
+		    <style>
+			body { background-color: #30303d; color: #fff; }
+			#chartdiv {
+			  width: 100%;
+			height:550px;
+			}
+			</style>
+
+			<script src="/static/staticv2/dist/amcharts4/core.js"></script>
+			<script src="/static/staticv2/dist/amcharts4/charts.js"></script>
+			<script src="/static/staticv2/dist/amcharts4/plugins/forceDirected.js"></script>
+			<script src="/static/staticv2/dist/amcharts4/themes/dark.js"></script>
+			<script src="/static/staticv2/dist/amcharts4/themes/animated.js"></script>
+
+
+			<!-- Chart code -->
+			<script>
+			am4core.ready(function() {
+
+			// Themes begin
+			am4core.useTheme(am4themes_dark);
+			am4core.useTheme(am4themes_animated);
+			// Themes end
+
+			var chart = am4core.create("chartdiv", am4plugins_forceDirected.ForceDirectedTree);
+			var networkSeries = chart.series.push(new am4plugins_forceDirected.ForceDirectedSeries())
+
+			chart.data = [
+			  {
+				name: "Core",
+				children: [
+				  {
+					name: "First",
+					children: [
+					  { name: "A1", value: 100 },
+					  { name: "A2", value: 60 }
+					]
+				  },
+				  {
+					name: "Second",
+					children: [
+					  { name: "B1", value: 135 },
+					  { name: "B2", value: 98 }
+					]
+				  },
+				  {
+					name: "Third",
+					children: [
+					  {
+						name: "C1",
+						children: [
+						  { name: "EE1", value: 130 },
+						  { name: "EE2", value: 87 },
+						  { name: "EE3", value: 55 }
+						]
+					  },
+					  { name: "C2", value: 148 },
+					  {
+						name: "C3", children: [
+						  { name: "CC1", value: 53 },
+						  { name: "CC2", value: 30 }
+						]
+					  },
+					  { name: "C4", value: 26 }
+					]
+				  },
+				  {
+					name: "Fourth",
+					children: [
+					  { name: "D1", value: 415 },
+					  { name: "D2", value: 148 },
+					  { name: "D3", value: 89 }
+					]
+				  },
+				  {
+					name: "Fifth",
+					children: [
+					  {
+						name: "E1",
+						children: [
+						  { name: "EE1", value: 33 },
+						  { name: "EE2", value: 40 },
+						  { name: "EE3", value: 89 }
+						]
+					  },
+					  {
+						name: "E2",
+						value: 148
+					  }
+					]
+				  }
+
+				]
+			  }
+			];
+
+			networkSeries.dataFields.value = "value";
+			networkSeries.dataFields.name = "name";
+			networkSeries.dataFields.children = "children";
+			networkSeries.nodes.template.tooltipText = "{name}:{value}";
+			networkSeries.nodes.template.fillOpacity = 1;
+			networkSeries.manyBodyStrength = -20;
+			networkSeries.links.template.strength = 0.8;
+			networkSeries.minRadius = am4core.percent(2);
+
+			networkSeries.nodes.template.label.text = "{name}"
+			networkSeries.fontSize = 10;
+
+			}); // end am4core.ready()
+			</script>
+			<!-- HTML -->
+			<div id="chartdiv"></div>
+
+    </div>
+    <div id="geo_div" class="tab-pane fade">
+      <h4>Localização Geográfica</h4>
+     </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="container">
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      <!-- <div class="alert alert-dismissible alert-success fade in">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <p{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>
+      </div> -->
+      {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+
+<!-- Scope details modal -->
+<div class="modal fade" id="modal-scopes-details" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Detalhes</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="scopes-details">
+          <!-- Content -->
+          <table class="table table-sum table-bordered">
+            <thead>
+              <tr>
+                <th>Escopos</th>
+                <th>Cr&iacute;tica</th>
+                <th>Alta</th>
+                <th>M&eacute;dia</th>
+                <th>Baixa</th>
+                <th>Info</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for scope, counter in asset_scopes %}
+              <tr>
+                <td>{{scope}}</td>
+                <td class="col-md-1 ct">
+                  {% if counter.critical > 0 %}
+                  <span class="label label-critical">{{counter.critical}}</span>
+                  {% else %}
+                  {{counter.critical}}
+                  {% endif %}
+                </td>
+                <td class="col-md-1 ct">
+                  {% if counter.high > 0 %}
+                  <span class="label label-high">{{counter.high}}</span>
+                  {% else %}
+                  {{counter.high}}
+                  {% endif %}
+                </td>
+                <td class="col-md-1 ct">
+                  {% if counter.medium > 0 %}
+                  <span class="label label-medium">{{counter.medium}}</span>
+                  {% else %}
+                  {{counter.medium}}
+                  {% endif %}
+                </td>
+                <td class="col-md-1 ct">
+                  {% if counter.low > 0 %}
+                  <span class="label label-low">{{counter.low}}</span>
+                  {% else %}
+                  {{counter.low}}
+                  {% endif %}
+                </td>
+                <td class="col-md-1 ct">{% if counter.info > 0 %}
+                  <span class="label label-info">{{counter.info}}</span>
+                  {% else %}
+                  {{counter.info}}
+                  {% endif %}
+                </td>
+                <td class="col-md-1 ct"><strong>{{counter.total}}</strong></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <button type="button" class="btn btn-xs btn-primary col-sm-12" data-dismiss="modal">Cancelar</button><br/>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete findings modal -->
+<div class="modal fade" id="new-modal-delete-finding" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Apagar Ocorr&ecirc;ncia</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="delete-finding">
+          <!-- Content -->
+        </div>
+        Voc&ecirc; deseja apagar esta ocorr&ecirc;ncia ?
+        <button type="button" class="btn btn-xs btn-warning btn-delete-finding" data-dismiss="modal" autofocus>Sim</button>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">N&atilde;o</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Edit tags -->
+<div class="modal fade" id="modal-edit-asset-tags" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Adicionar tags</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="asset-tags">
+          <!-- Content -->
+          <b>Tags Atuais</b>: {{ asset.categories.all|join:", " }}<br/>
+          <p class="text-warning">
+            CUIDADO: <br/>
+            1/ Todas as sub-tags ser&atilde;o exclu&iacute;das se uma tag pai for adicionada<br/>
+            2/ A tag pai ser&aacute; exclu&iacute;da se uma tag filha for adicionada</p>
+
+          <form class="search-asset-tags-form" action="/assets/api/v1/details/{{asset.id}}/add_tag" method="post">
+            {% csrf_token %}
+            <input type="text" style="background:#353C42 !important; border-color:#353C42 !important;" id="input-search-tags" name="input-search-tags"/> &nbsp; <button class="btn btn-xs btn-warning" type="submit"><i class="fas fa-plus"></i></button>
+          </form>
+
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-xs btn-default" data-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete scan modal -->
+<div class="modal fade" id="modal-delete-scan" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Excluir Scan</h4>
+      </div>
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="delete-scan">
+          <!-- Content -->
+        </div>
+        Voc&ecirc; Confirma a Exclus&atilde;o?
+        <button type="button" class="btn btn-xs btn-warning btn-delete-scan" data-dismiss="modal">Sim</button>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">N&atilde;o</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="modal-delete-scan-def" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Excluir Definição de Scan</h4>
+      </div>
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="delete-scan">
+          <!-- Content -->
+        </div>
+        Voc&ecirc; Confirma a Exclus&atilde;o?
+        <button type="button" class="btn btn-xs btn-warning btn-delete-scan-def" data-dismiss="modal">Sim</button>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">N&atilde;o</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Run single scan modal -->
+<div class="modal fade" id="modal-run-scan" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Varredura Direta</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="run-scan">
+          <!-- Content -->
+        </div>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Asset Security Trends modal -->
+<div class="modal fade" id="modal-asset-trends" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" align="center" id="myModalLabel">Tend&ecirc;ncias de seguran&ccedil;a do ativo</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="asset-trends-buttons" style="text-align: center;">
+          <button class="btn btn-xs" style="color:#333 !important;" onclick="print_asset_trends_chart('week', 10);">&Uacute;ltima Semana</button>
+          <button class="btn btn-xs" style="color:#333 !important;" onclick="print_asset_trends_chart('month');">&Uacute;ltimo M&ecirc;s</button>
+          <button class="btn btn-xs" style="color:#333 !important;" onclick="print_asset_trends_chart('trimester');">&Uacute;ltimo Trimestre</button>
+          <button class="btn btn-xs" style="color:#333 !important;" onclick="print_asset_trends_chart('year');">&Uacute;ltimo Ano</button>
+        </div>
+        <div id="asset-trends">
+          <!-- Content -->
+
+          <canvas id="chart-asset-trends"/>
+        </div>
+        <button type="button" class="btn btn-xs btn-primary col-sm-12" data-dismiss="modal">Cancelar</button><br/>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  function toggle(source) {
+    checkboxes = document.getElementsByName('finding');
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+      checkboxes[i].checked = source.checked;
+    }
+  };
+
+  var asset_trends_chart;
+
+  function print_asset_trends_chart(period = "week", max_ticks = 20){
+    if(asset_trends_chart){ asset_trends_chart.destroy(); }
+    // update the findings stat pies
+    asset_trends_chart_url = "/assets/api/v1/trends/{{asset.id}}?period_by="+period+"&max_ticks="+max_ticks;
+
+    //data_labels_id = [];
+    data_labels_date = [];
+    data_datasets_total = [];
+    data_datasets_new = [];
+    data_datasets_info = [];
+    data_datasets_low = [];
+    data_datasets_medium = [];
+    data_datasets_high = [];
+    data_datasets_critical = [];
+    data_datasets_grade = [];
+
+    xhr = $.get(asset_trends_chart_url, function(resp) {
+      for (i = 0; i < resp.length; i++){
+        data_labels_date.push(resp[i]["date"]);
+        data_datasets_total.push(resp[i]["total"]);
+        data_datasets_new.push(resp[i]["new"]);
+        data_datasets_info.push(resp[i]["info"]);
+        data_datasets_low.push(resp[i]["low"]);
+        data_datasets_medium.push(resp[i]["medium"]);
+        data_datasets_high.push(resp[i]["high"]);
+        data_datasets_critical.push(resp[i]["critical"]);
+        data_datasets_grade.push(resp[i]["risk_grade"]);
+      };
+
+      asset_trends_chart_config = {
+        type: 'bar',
+        data: {
+          datasets: [],
+          borderWidth: 1
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          legend: {
+            display: true,
+            position: 'top',
+            //fullWidth: true,
+            labels: {
+              boxWidth: 20
+            }
+          },
+          scales: {
+            xAxes: [{
+              stacked: true,
+              gridLines: {
+                display: false
+              }
+            }],
+            yAxes:[{
+              id: 'findings',
+              position: 'left',
+              scaleLabel: {
+                display: true,
+              labelString: 'Ocorrências encontradas'
+              },
+              stacked: true,
+              ticks: {
+                beginAtZero: true,
+                callback: function(value, index, values) {
+                  if (Math.floor(value) === value) {
+                    return value;
+                  }
+                }
+              }
+            }, {
+              id: 'grades',
+              position: 'right',
+              scaleLabel: {
+                display: true,
+                labelString: 'Classe de Segurança do Ativo'
+              },
+              gridLines : {
+                  display : false
+              },
+              ticks: {
+                min: 0,
+                max: 6,
+                stepSize: 1,
+                callback: function(label, index, labels) {
+                  switch (label) {
+                    case 0:
+                      return 'n/a';
+                    case 1:
+                      return 'F';
+                    case 2:
+                      return 'E';
+                    case 3:
+                      return 'D';
+                    case 4:
+                      return 'C';
+                    case 5:
+                      return 'B';
+                    case 6:
+                      return 'A';
+                  }
+                }
+              }
+            }]
+          },
+          tooltips: {
+            mode: 'index',
+            //yAlign: 'bottom',
+            position: 'nearest',
+            callbacks: {
+              title: function(tooltipItems, data) {
+                return data_labels_date[tooltipItems[0].index];
+              }
+            }
+          }
+        }
+      }
+
+      config = jQuery.extend(true, {}, asset_trends_chart_config);
+      config["data"]["labels"] = data_labels_date;
+      config["data"]["datasets"].push(
+        {
+          "type": "line",
+          "label": "Grade",
+          "data": data_datasets_grade,
+          "fill": false, "lineTension": 0.1, "borderColor": "#2c3e50", "backgroundColor": "#FFFFFF",
+          "yAxisID": "grades"
+        },
+        {
+          "type": "line",
+          "label": "Total",
+          "data": data_datasets_total,
+          "fill": false, "lineTension": 0, "borderColor": "#000000", "backgroundColor": "#FFFFFF",
+          "hidden": true,
+          "yAxisID": "findings"
+        },
+        {
+          "type": "line",
+          "label": "Novas",
+          "data": data_datasets_new,
+          "fill": false, "lineTension": 0.1, "borderColor": "#FF0000", "backgroundColor": "#FFFFFF",
+          "hidden": true,
+          "yAxisID": "findings"
+        },
+        {
+          "label": "Desconhecida",
+          "data": data_datasets_info,
+          "fill": false, "lineTension": 0.1, "backgroundColor": "#3498db",
+          "hidden": true,
+          "yAxisID": "findings"
+        },
+        {
+          "label": "Baixa",
+          "data": data_datasets_low,
+          "fill": false, "lineTension": 0.1, "backgroundColor": "#ffcb0d",
+          "yAxisID": "findings"
+        },
+        {
+          "label": "Média",
+          "data": data_datasets_medium,
+          "fill": false, "lineTension": 0.1, "backgroundColor": "#f9a009",
+          "yAxisID": "findings"
+        },
+        {
+          "label": "Alta",
+          "data": data_datasets_high,
+          "fill": false, "lineTension": 0.1, "backgroundColor": "#df3d03",
+          "yAxisID": "findings"
+        },
+        {
+          "label": "Crítica",
+          "data": data_datasets_critical,
+          "fill": false, "lineTension": 0.1, "backgroundColor": "#cc0500",
+          "yAxisID": "findings"
+        }
+      );
+
+      var canvas_asset_trends = document.getElementById("chart-asset-trends");
+      var ctx = canvas_asset_trends.getContext("2d");
+      asset_trends_chart = new Chart(canvas_asset_trends, config);
+
+      // canvas_findings.onclick = function (evt) {
+      //   var activePoints = findingsByScanDef_chart.getElementsAtEvent(evt);
+      //   if (typeof activePoints != "undefined" && activePoints != null && activePoints.length > 0){
+      //     var chartData = activePoints[0]['_chart'].config.data;
+      //     var idx = activePoints[0]['_index'];
+      //     var label = chartData.labels[idx];
+      //     //var value = chartData.datasets[0].data[idx];
+      //     window.location = "/scans/details/"+label;
+      //   }
+      // };
+    });
+  }; // End fo function print_asset_trends_chart()
+
+  $(function() {
+
+	//load insvestigation iframe
+	//$(".table-investigation a").click(function(){
+	 // var href = $(this).attr('href');
+	 // var name = $(this).data('name');
+	 // $('#modal-investigation iframe').attr('src', href);
+	 // $('#modal-investigation .modal-title').html('<i class="fas fa-search"></i> &nbsp; '+name);
+	//});
+
+    // Delete selected findings
+    $("a.btn-delete-selected").on('click', function(eventObject) {
+      findings_to_delete = []
+      $("input[name='finding']").each(function(cbx){
+        if (this.checked) {
+          findings_to_delete.push(this.value)
+        }
+      })
+
+      if (findings_to_delete.length != 0){
+        delete_url="{% url 'delete_findings_api' %}";
+        var request = $.ajax({
+          url: delete_url,
+          method: "POST",
+          headers: {"X-CSRFToken": "{{ csrf_token }}"},
+          data: JSON.stringify(findings_to_delete),
+          contentType: "application/json"
+        });
+        request.done(function(response){
+          if (response.status == 'success'){location.reload()}
+        });
+      }
+    });
+
+    // Delete scan modal
+    $("#modal-delete-scan").on('show.bs.modal', function (e) {
+      id = e.relatedTarget.getAttribute('scan-id');
+      scan_title = e.relatedTarget.getAttribute('scan-title');
+      $("div#delete-scan").attr('scan-id', id);
+      $("div#delete-scan").html("Title: <b>"+scan_title+"</b><br/><br/>");
+    });
+    $("button.btn-delete-scan").on('click', function (e) {
+      id = $("div#delete-scan").attr('scan-id');
+      var request = $.ajax({
+        url: "{% url 'delete_scan_api' 0 %}".replace("0", id),
+        method: "DELETE",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        success: function(){
+          location.reload();
+        }
+      });
+    });
+
+       // Delete scan definition modal
+    $("#modal-delete-scan-def").on('show.bs.modal', function (e) {
+      scan_id = e.relatedTarget.getAttribute('scan-id');
+      scan_title = e.relatedTarget.getAttribute('scan-title');
+      $("div#delete-scan-def").attr('scan-id', scan_id);
+      $("div#delete-scan-def").html("Title: <b>"+scan_title+"</b><br/><br/>");
+    });
+    $("button.btn-delete-scan-def").on('click', function (e) {
+      scan_id = $("div#delete-scan-def").attr('scan-id');
+      delete_scan_def_url = "/scans/defs/delete/"+scan_id;
+      var request = $.ajax({
+        url: delete_scan_def_url,
+        method: "POST",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        success: function(){
+          location.reload();
+        }
+      });
+    });
+
+    // Run direct scan now Event
+    $("#modal-run-scan").on('show.bs.modal', function (e) {
+      scan_title = e.relatedTarget.getAttribute('scan-title');
+      $("div#run-scan").html("Scan started: <b>"+scan_title+"</b><br/><br/>");
+
+      //Hide the modal 3 seconds later
+      var myModal = $(this);
+      clearTimeout(myModal.data('hideInterval'));
+      myModal.data('hideInterval', setTimeout(function(){
+          myModal.modal('hide');
+          location.reload();
+      }, 2000));
+    });
+    // run now
+    $("button.btn-run-now").on('click', function(eventObject) {
+      scan_id = eventObject.target.getAttribute('scan-id');
+      scan_url = "{% url 'run_scan_def_api' 0 %}".replace("0", scan_id);
+      var xhr = $.get(scan_url, function(data) {
+      })
+    });
+
+    // Change the status on seleted findings
+    $("a.btn-ack").on('click', function(eventObject) {
+      findings_to_ack = [];
+      $("input[name='finding']").each(function(cbx){
+        if (this.checked) {
+          findings_to_ack.push({'ack': this.value});
+        }
+      })
+
+      if (findings_to_ack.length != 0){
+        ack_url="{% url 'change_findings_status_api' %}";
+        var request = $.ajax({
+          url: ack_url,
+          method: "POST",
+          headers: {"X-CSRFToken": "{{ csrf_token }}"},
+          data: JSON.stringify(findings_to_ack),
+          contentType: "application/json"
+        });
+        request.done(function(response){
+          if (response.status == 'success'){
+            location.reload();
+          }
+        });
+      }
+    });
+
+    // Compare findings
+    $("a.btn-compare-selected").on('click', function (e) {
+      findings_to_compare = [];
+      $("input[name='finding']").each(function(cbx){
+        if (this.checked) {
+          findings_to_compare.push(this.value);
+        }
+      });
+      if(findings_to_compare.length == 2){
+        window.location.href ="/findings/compare?finding_a_id="+findings_to_compare[0]+"&finding_b_id="+findings_to_compare[1];
+      }
+    });
+
+    // Delete tag
+    $("i.delete-tag-btn").on('click', function(eventObject) {
+      del_url="/assets/api/v1/details/{{asset.id}}/del_tag";
+      tag_id = eventObject.currentTarget.getAttribute('tag-id');
+      var request = $.ajax({
+        url: del_url,
+        method: "POST",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        data: "tag_id="+tag_id,
+        success: function(data, textStatus, xhr){
+          location.reload();
+        }
+      });
+    });
+
+    // Autocomplete tags modal searchbar
+    $("#input-search-tags").autocomplete({
+      source: function(req, response) {
+         $.ajax({
+          url: "{% url 'get_asset_tags_api' %}",
+          // url: "/assets/get_tags",
+          dataType: "json",
+          success: function( data ) {
+            var re = $.ui.autocomplete.escapeRegex(req.term);
+            var matcher = new RegExp(re, "i" ); //Start with
+            response($.grep(data, function(item){return matcher.test(item.value || item.label || item);}) );
+            }
+          });
+       },
+      minLength: 2,
+      appendTo: ".search-asset-tags-form",
+      autoFocus: true
+    });
+
+    // Delete finding modal
+    $("#new-modal-delete-finding").on('show.bs.modal', function (e) {
+	  finding_id = e.relatedTarget.getAttribute('finding-id');
+      finding_title = e.relatedTarget.getAttribute('finding-title');
+      $("div#delete-finding").attr('finding-id', finding_id);
+      //$("div#delete-finding").html("Finding: <b>"+finding_title+"</b><br/><br/>");
+
+      return;
+    });
+    $("button.btn-delete-finding").on('click', function (e) {
+      finding_id = $("div#delete-finding").attr('finding-id');
+      delete_finding_url = "/findings/delete/"+finding_id;
+      var request = $.ajax({
+        url: delete_finding_url,
+        method: "POST",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        success: function(){
+          location.reload();
+        }
+      });
+    });
+
+    // Fixing bootstrap tab issue
+    $('#menu_tabs_ul > li > a').click(function(e) {
+      $(this).removeClass('active');
+    });
+
+    print_asset_trends_chart('week');
+
+  });
+
+</script>
+<script>
+  $(function() {
+
+    // Change periodic scan status Event
+    $("button.btn-change-status").on('click', function(eventObject) {
+      scan_id = eventObject.target.getAttribute('scan-id');
+      scan_url = "{% url 'toggle_scan_def_status_api' 0 %}".replace("0", scan_id);
+      var xhr = $.get( scan_url, function(data) {
+        location.reload();
+        if (xhr.status == 200) {
+          $("div.notifications").html('<div class="alert alert-dismissible alert-success fade in"><button type="button" class="close" data-dismiss="alert">&times;</button>')
+          $("div.notifications>div").delay(3000).fadeOut(
+            function () {
+                $("div.notifications>div").remove();
+            }
+        );
+        }
+      })
+    });
+
+</script>
+
+{% endblock %}

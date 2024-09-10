@@ -1,0 +1,5 @@
+Endereço_do_Ativo;Nome_do_Ativo;Tipo_do_Ativo;Descricao_do_Ativo;Criticidade_do_Ativo;Valor_em_Risco;Grupo_do_Ativo;Categoria_do_Ativo
+xpto-1.com;XPTO 1 ;domain;descreva aqui;medium;1000;Grupo 1;Linux
+xpto-2.com;XPTO 2;domain;descreva aqui;low;2000;Grupo 2;Windows
+xpto-3.com;XPTO 3;domain;descreva aqui;medium;3000;Grupo 3;AIX
+xpto-4.com;XPTO 4;domain;descreva aqui;high;4000;Grupo 4;Mac OS

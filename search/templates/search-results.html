@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container-fluid" style="padding:0;">
+	
+	<section class="content-header">
+      <h1>
+        Ativos
+        <small> Todos os Ativos</small>
+      </h1>
+      <ol class="breadcrumb">
+        <li><a href="/"><i class="fa fa-dashboard"></i> Dashboad</a></li>
+        <li class="active">Todos os Ativos</li>
+      </ol>
+    </section>
+    
+    
+  <div id="menu_tabs" class="container-fluid" style="padding:15px 15px;">
+	  
+  <h2>Pesquisar Resultados para '{{ search_term }}':</h2>
+  <table class="table table-bordered" data-toggle="table" data-sort-name="value" data-sort-order="desc">
+    <tr>
+      <th data-field="type">Tipo</th>
+      <th data-field="value">Item</th>
+    </tr>
+    {% for result in results %}
+    <tr>
+      <td>{{ result.type }}</td>
+      <td><a href="{{ result.link }}">{{ result.value }}</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+
+
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+  
+  </div>
+</div>
+
+{% endblock %}

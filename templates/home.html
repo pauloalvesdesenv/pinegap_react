@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+.label-new {
+  min-width: 100px !important;
+  display: inline-block !important;
+  color: #2c3e50;
+}
+</style>
+
+<ul class="breadcrumb">
+  <li><a href="/home" class="active">home</a></li>
+</ul>
+
+<div class="container">
+    <div class="row">
+        <div class="jumbotron">
+            <h1>Ol&aacute; '{{ user.username }}'</h1>
+            <p>Bem vindo | {{site_name}}</p>
+        </div>
+    </div>
+
+</div>
+<div class="container">
+  <div class="row">
+    <div id="canvas-holder-findings" class="col-sm-3 text-center">
+      <h4>Todoas as Ocorr&ecirc;ncias</h4>
+      <canvas id="chart-findings" height="200px"/>
+    </div>
+    <div id="new-findings-div" class="col-sm-3 text-left">
+      <h4>Novas Ocorr&ecirc;ncias</h4>
+      <p></p>
+    </div>
+    <div id="scan-stats-div" class="col-sm-3 text-left">
+      <h4>Scans</h4>
+      <p></p>
+    </div>
+    <div id="canvas-holder-assets" class="col-sm-3 text-left">
+      <h4>Criticidade de Ativos</h4>
+      <canvas id="chart-assets" height="100px"/>
+    </div>
+  </div>
+</div>
+
+
+
+<div class="container hidden">
+  <table class="table table-hover" style="width:40%">
+    <thead>
+      <tr>
+        <th data-field="title">M&eacute;trica</th>
+        <th data-field="type">Valor</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><th>Dados do Usu&aacute;rios</th></tr>
+      <tr><td>- Nome do Usu&aacute;rio Logado:</td><td>{{ user.username }}</td></tr>
+      <tr><td>- Usu&aacute;rio Logado ID:</td><td>{{ user.id }}</td></tr>
+      <tr><td>- &Uacute;ltimo Login do Usu&aacute;rio Logado:</td><td>{{ user.last_login }}</td></tr>
+      <tr><td>- Grupos do Usu&aacute;rio Logado:</td><td>{{ user.groups }}</td></tr>
+
+      <tr><th>Dados dos Ativos</th></tr>
+      <tr><td>- Ativos :</td><td>{{ assets.count }} (baixa: {{ assets.count_low }}, m&eacute;dia: {{ assets.count_medium }}, Alta: {{ assets.count_high }})</td></tr>
+      <tr><td>- Grupos de Ativos :</td><td>{{ assets.countgroups }} (baixa: {{ assets.countgroups_low }}, m&eacute;dia: {{ assets.countgroups_medium }}, alta: {{ assets.countgroups_high }})</td></tr>
+
+      <tr><th>Dados de Ocorr&ecirc;ncias</th></tr>
+      <tr><td>- Ocorr&ecirc;ncias :</td><td>{{ findings.count }} (info: {{ findings.count_info }}, baixa: {{ findings.count_low }}, m&eacute;dia: {{ findings.count_medium }}, alta: {{ findings.count_high }})</td></tr>
+
+      <tr><th>Dados dos Scans</th></tr>
+      <tr><td>- Scans :</td><td>{{ scans.count_scans }}</td></tr>
+      <tr><td>- Scans campaigns :</td><td>{{ scans.count_scan_campaigns }}</td></tr>
+      <tr><td>- Scan definitions :</td><td>{{ scans.count_scan_definitions }} (#Ativados: {{ scans.count_active_periodic_scans }})</td></tr>
+
+      <tr><th>Dados dos Sensores</th></tr>
+      <tr><td>- Sensores :</td><td>{{ engines.count }}: {{ engines.names }}</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  $(function() {
+
+    // update the findings stat pies
+    findings_url = "/findings/api/v1/stats"
+    assets_url = "/assets/api/v1/stats"
+    finding_config = {
+      type: 'pie',
+      data: {
+          datasets: [{
+              backgroundColor: [
+                  "#FF0000",
+                  "#FF8000",
+                  "#FFFF00",
+                  "#66D2FF"
+              ],
+          }],
+          labels: ["High", "Medium", "Low", "Info"]
+      },
+      options: {
+        responsive: true,
+        legend: {
+          display: false
+        }
+      }
+    };
+    var xhr = $.get(findings_url, function(resp) {
+      config_findings = jQuery.extend(true, {}, finding_config);
+      config_findings["data"]["datasets"][0]["data"] = new Array(resp["nb_high"], resp["nb_medium"], resp["nb_low"], resp["nb_info"])
+      var ctx_findings = document.getElementById("chart-findings").getContext("2d");
+      window.myPie = new Chart(ctx_findings, config_findings);
+
+      // config_news_findings = config
+      // config_news_findings["data"]["datasets"][0]["data"] = new Array(resp["nb_new_high"], resp["nb_new_medium"], resp["nb_new_low"], resp["nb_new_info"])
+      // var ctx_new_findings = document.getElementById("chart-new-findings").getContext("2d");
+      // window.myPie = new Chart(ctx_new_findings, config_news_findings);
+
+      $("#new-findings-div > p").html(
+        "<span class='label label-new label-danger'>high: "+ resp["nb_new_high"]+"</span><br/>" +
+        "<span class='label label-new label-warning'>medium: "+ resp["nb_new_medium"]+"</span><br/>" +
+        "<span class='label label-new label-danger' style='background-color: yellow'>low: "+ resp["nb_new_low"]+"</span><br/>" +
+        "<span class='label label-new label-danger' style='background-color: #66D2FF'>info: "+ resp["nb_new_info"]+"</span><br/>"
+      );
+
+    });
+
+    var xhr = $.get(assets_url, function(resp) {
+      config = {
+        type: 'bar',
+        data: {
+            datasets: [{
+                backgroundColor: [
+                    "#FF0000",
+                    "#FF8000",
+                    "#FFFF00"
+                ],
+            }],
+            labels: ["High", "Medium", "Low"]
+        },
+        options: {
+          responsive: true,
+          legend: {
+            display: false
+          }
+        }
+      };
+      config_assets = config
+      config_assets = jQuery.extend(true, {}, config);
+      //config_assets["type"]= "bar"
+      config_assets["data"]["datasets"][0]["data"] = new Array(resp["nb_assets_high"], resp["nb_assets_medium"], resp["nb_assets_low"])
+      var ctx_assets = document.getElementById("chart-assets").getContext("2d");
+      window.myPie = new Chart(ctx_assets, config_assets);
+    });
+
+
+    // update the scans stats
+    scan_url = "/scans/api/v1/stats"
+    var xhr = $.get(scan_url, function(resp) {
+      //console.log(resp)
+      $("#scan-stats-div > p").html(
+        "<a href='/scans/defs/list'> Scans defined <span class='badge'>"+resp["nb_scans_defined"]+"</span></a><br/>" +
+        "<a href='/scans/list'> Scans performed <span class='badge'>"+resp["nb_scans_performed"]+"</span></a><br/>" +
+        "<a href='/scans/defs/list'> Active periodic Scans <span class='badge'>"+resp["nb_active_periodic_scans"]+"</span></a><br/>"
+      );
+    });
+
+  });
+
+</script>
+
+{% endblock %}

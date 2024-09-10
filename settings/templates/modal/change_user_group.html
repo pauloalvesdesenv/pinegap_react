@@ -1,0 +1,31 @@
+<form action="/../users/change_user_group/{{user.id}}" method="post"  enctype="multipart/form-data">{% csrf_token %}
+  <div id="modal_user_group_change_{{user.id}}" class="modal fade" role="dialog" style="text-align:left !important;">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-primary">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Edição de Grupo de Usuário</h4>
+          </div>
+          <div class="modal-body">
+            <dl class="dl-horizontal">
+              <dt>Usuário:</dt>
+              <dd>{{ user.username }}</dd>
+              <br />
+              <dt>Grupos:</dt><dd>
+                <select name="id_group">
+                  {% for grupo in all_groups %}
+                      <option {% if user.groups.all.0.name == grupo.name %} selected {% endif %} value="{{grupo.id}}">{{grupo.name}}</option>
+                  {% endfor %}
+                </select>
+              </dd>
+
+          </div>
+          <div class="modal-footer">
+
+          <button class="btn btn-primary" type="submit">Salvar</button>
+
+          </div>
+          </div>
+          </div>
+        </div>
+    </form>

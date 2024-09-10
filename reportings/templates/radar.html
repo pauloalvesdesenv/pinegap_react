@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% block content %}
+<style>
+/* Radar */
+p  { font-size:13px; text-align:center; }
+h2 { color:#fff !important; }
+
+.radar-body {
+	margin:0;
+	padding:0;
+	background: #272C30;
+	font-family: 'Source Sans Pro',sans-serif;
+	transform: scale(0.72);
+	margin-top:160px;
+}
+.radar {
+	position:absolute;
+	top:50%;
+	left:50%;
+	transform: translate(-50%,-50%);
+	margin:0;
+	padding:0;
+	width:380px;
+	height:380px;
+	border-radius: 50%;
+	border: 10px solid #EF8224;	
+	background: url('/staticv2/dist/img/world-map.png');
+	background-size:cover;
+	box-shadow: inset 0 0 100px rgba(0, 0, 0,1);
+	overflow:hidden; 
+}
+
+.circles li {
+	list-style:none;
+	position:absolute;
+	transform: translate(-50%,-50%);
+	margin:0;
+	padding:0;
+	width:120px;
+	height:120px;
+	border-radius: 50%;
+	border: 3px solid #EF8224;	
+	box-shadow: inset 0 0 30px rgba(0, 0, 0,1);
+}
+
+.circles li span:nth-child(1) {
+	position:absolute;
+	top:50%;
+	height:1px;
+	width:100%;
+	background:#EF8224;
+}
+.circles li span:nth-child(2) h2, 
+.circles li span:nth-child(2) p,  
+.circles li span:nth-child(3) h2,
+.circles li span:nth-child(3) p
+{
+	color:#BEC5CB;
+	padding:0;
+	margin:0;
+	font-weight:normal;
+	
+}
+
+.circles li span:nth-child(2) h2,
+.circles li span:nth-child(3) h2 {
+	color:#000;
+}
+
+
+.circles li span:nth-child(2) {
+	position:absolute;
+	top:10px;
+	left:35px;
+}
+.circles li span:nth-child(3) {
+	position:absolute;
+	bottom:10px;
+	left:35px;
+}	
+
+.circles li:nth-child(1) {
+	top:-135px;
+	left:-20px;
+}
+.circles li:nth-child(2) {
+	top:0px;
+	left:-20px;
+}
+.circles li:nth-child(3) {
+	top:135px;
+	left:-20px;
+}
+.circles li:nth-child(4) {
+	top:-135px;
+	right:-145px;
+}
+.circles li:nth-child(5) {
+	top:0px;
+	right:-145px;
+}
+.circles li:nth-child(6) {
+	top:135px;
+	right:-145px;
+}
+	
+.radar::before {
+	content: '';
+	position: absolute;
+	top:80%;
+	left:55%;
+	width:10px;
+	height:10px;
+	background: #EF8224;
+	border-radius:50%;
+
+	animation: glow 2s linear infinite;
+}
+.radar::after {
+	content: '';
+	position: absolute;
+	top:65%;
+	left:45%;
+	width:10px;
+	height:10px;
+	background: #EF8224;
+	border-radius:50%;
+
+	animation: glow 2s linear infinite;
+}
+.radar li:nth-child(1),
+.radar li:nth-child(2),
+.radar li:nth-child(3),
+.radar li:nth-child(4)
+{
+	list-style:none;
+	position:absolute;
+	top:50%;
+	height:1px;
+	width:100%;
+	border-radius: 50%;
+	background:#000;
+}
+
+.radar li:nth-child(2) {
+	transform: rotate(90deg);
+}
+.radar li:nth-child(3) {
+	transform: rotate(45deg);
+}
+.radar li:nth-child(4) {
+	transform: rotate(-45deg);
+}
+.radar li:nth-child(5),
+.radar li:nth-child(6),
+.radar li:nth-child(7) {
+	list-style:none;
+	position:absolute;
+	top:50%;
+	left:50%;
+	transform: translate(-50%,-50%);
+	border:1px solid rgba(0,0,0,1);
+	background:transparent;
+	border-radius: 50%;
+}
+.radar li:nth-child(5) {
+	width:100px;
+	height:100px;
+	background: rgba(0, 0, 0, 0.1);
+	position: absolute;
+	text-align:center; 
+	color:#fff;
+	font-weight:bold;
+}
+.radar li:nth-child(6) {
+	width:200px;
+	height:200px;
+}
+.radar li:nth-child(7) {
+	width:300px;
+	height:300px;
+}
+.radar li:nth-child(8) {
+	list-style:none;
+	position:absolute;
+	top:50%;
+	left:50%;
+	width:200px;
+	height:200px;
+	transform-origin: top left; 
+	background: linear-gradient(45deg, #EF8224 0%, transparent 50%);
+	animation: animate 3s linear infinite;
+}
+
+@keyframes animate
+{
+	0%
+	{
+		transform: rotate(0deg);
+	}
+	100%
+	{
+		transform: rotate(360deg);
+	}
+}
+@keyframes glow 
+{
+	0%
+	{
+		opacity: 0;	
+	}
+	50%
+	{
+		opacity: 1;	
+	}
+	100%
+	{
+		opacity: 0;	
+	}	
+}
+
+</style>	
+<body class="radar-body">
+		
+		<ul class="circles">
+			<li>
+				<span></span>
+				<span>
+					<h2>128</h2>
+					<p>ativos</p> 
+				</span>
+				<span>
+					
+					<p>políticas</p>
+					<h2>425</h2>
+				</span>
+			</li>
+			<li>
+				<span></span>
+				<span>
+					<h2>128</h2>
+					<p>ativos</p> 
+				</span>
+				<span>
+					
+					<p>políticas</p>
+					<h2>425</h2>
+				</span>
+			</li>
+			<li>
+				<span></span>
+				<span>
+					<h2>128</h2>
+					<p>ativos</p> 
+				</span>
+				<span>
+					
+					<p>políticas</p>
+					<h2>425</h2>
+				</span>
+			</li>
+			<li>
+				<span></span>
+				<span>
+					<h2>128</h2>
+					<p>ativos</p> 
+				</span>
+				<span>
+					
+					<p>políticas</p>
+					<h2>425</h2>
+				</span>
+			</li>
+			<li>
+				<span></span>
+				<span>
+					<h2>128</h2>
+					<p>ativos</p> 
+				</span>
+				<span>
+					
+					<p>políticas</p>
+					<h2>425</h2>
+				</span>
+			</li>
+			<li>
+				<span></span>
+				<span>
+					<h2>128</h2>
+					<p>ativos</p> 
+				</span>
+				<span>
+					
+					<p>políticas</p>
+					<h2>425</h2>
+				</span>
+			</li>
+		</ul>
+			
+		<ul class="radar">
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li><h2 style="margin-top:37px; font-weight:normal;">02</h2></li>
+			<li></li>
+			<li></li>
+			<li></li>
+		</ul>
+	</body>
+</html>
+
+{% endblock %}					

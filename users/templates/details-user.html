@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% block content %}
+
+<div class="container">
+  <h2>Detalhes do Usu&aacute;rio</h2>
+
+  <dl class="dl-horizontal">
+    <dt>User ID</dt><dd>{{ user.id }}</dd>
+    <dt>Username</dt><dd>{{ user.username }}</dd>
+    <dt>API Token</dt><dd>{{ apitoken }}</dd>
+    <dt>Nome</dt><dd>{{ user.first_name }}</dd>
+    <dt>Sobrenome</dt><dd>{{ user.last_name }}</dd>
+    <dt>Email</dt><dd>{{ user.email }}</dd>
+    <dt>Est&aacute; Ativo?</dt><dd>{{ user.is_active }}</dd>
+    <dt>&eacute; Superuser?</dt><dd>{{ user.is_superuser }}</dd>
+    <dt>Faz parte Staff?</dt><dd>{{ user.is_staff }}</dd>
+    <dt>&Uacute;ltimo Login</dt><dd>{{ user.last_login }}</dd>
+    <dt>Permiss&otilde;es</dt><dd>{{ user.permissions.all }}</dd>
+    <dt>Grupos</dt><dd>{{ user.groups.all|join:", " }}</dd>
+    <dt>Grupo de Permiss&otilde;es</dt><dd>{{ user.get_group_permissions|sort_by:""|join:"<br/>" }}</dd>
+  </dl>
+
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+
+
+{% endblock %}

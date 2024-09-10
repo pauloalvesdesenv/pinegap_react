@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container-fluid" style="padding:0;">
+
+  <section class="content-header">
+        <h1>
+          Sensores
+          <small> Novo Tipo de Sensor</small>
+        </h1>
+        <ol class="breadcrumb">
+          <li><a href="#"><i class="fas fa-tachometer-alt"></i> Dashboad</a></li>
+          <li class="active">Novo Tipo de Sensor</li>
+        </ol>
+      </section>
+  
+      <div id="menu_tabs" class="container-fluid" style="padding:15px 15px;">
+  
+      <div class="nav-tabs-custom">
+  
+      <ul class="nav nav-tabs">
+                <li class="active dropdown">
+          <a class="dropdown-toggle" data-toggle="dropdown" href="/engines/list">
+            <i class="fas fa-satellite-dish"></i>&nbsp; Sensores de Scan <span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu">
+            <li role="presentation"><a role="menuitem" href="/engines/list"><i class="fa fa-list"></i> Listar Sensores</a></li>
+            <li role="presentation"><a role="menuitem" href="/engines/add"><i class="fa fa-plus"></i>&nbsp; Criar Novo Sensor</a></li>
+            <li role="presentation" class="divider"></li>
+            <li role="presentation"><a role="menuitem" href="/engines/types/list"><i class="fa fa-list"></i> Tipos de Sensores</a></li>
+            <li role="presentation"><a role="menuitem" href="/engines/types/add"><i class="fa fa-plus"></i>&nbsp; Criar Novo Tipo</a></li>
+              </ul>
+          </li>
+                <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" href="/engines/policies/list">
+            <i class="fa fa-th-list"></i>&nbsp; Políticas de Scanner <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+            <li role="presentation"><a role="menuitem" href="/engines/policies/list"><i class="fa fa-list"></i> Listar Políticas</a></li>
+            <li role="presentation"><a role="menuitem" href="/engines/policies/add"><i class="fa fa-plus"></i>&nbsp; Criar Políticas</a></li>
+            <li role="presentation" class="divider"></li>
+            <li role="presentation"><a role="menuitem" href="/engines/policies/import"><i class="fa fa-upload"></i> Importar Políticas</a></li>
+            <li role="presentation"><a role="menuitem" href="/engines/policies/export?all=true"><i class="fa fa-download"></i> Exportar Políticas</a></li>
+                    </ul>
+          </li>
+                <li class="pull-right"><a href="#" class="btn-refresh-all-engines"><i class="fa fa-refresh"></i>&nbsp; Atualizar Status</a></li>
+          {% if autorefresh_status %}
+          <li class="pull-right"><a href="#" class="btn-autorefresh-all-engines"><i class="fa fa-refresh"></i>&nbsp; Dasabilitar Auto-refresh</a></li>
+          {% else %}
+          <li class="pull-right"><a href="#" class="btn-autorefresh-all-engines"><i class="fa fa-refresh"></i>&nbsp; Habilitar Auto-refresh</a></li>
+          {% endif %}
+  </ul>
+{% csrf_token %}
+<form action="/engines/add" method="post" class="form-horizontal" style="margin:0;">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{csrf_token}}">
+          {% for field in form %}
+           {% if field.name == 'engine' %}
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_engine">Sensor</label>
+                  <div class="col-sm-4">
+                    {{ field }}
+                  {% if field.help_text %}
+                  <p class="help-block"><small>{{ field.help_text }}</small></p>
+                  {% endif %}
+                  </div>
+              </div>
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_name">Nome</label>
+                  <div class="col-sm-4">
+              <input type="text" name="name" id="id_name" required="" class="form-control form-control-sm" maxlength="200">
+              </div>
+              </div>
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_api_url">API</label>
+                  <div class="col-sm-4">
+              <input type="url" name="api_url" id="id_api_url" required="" class="form-control form-control-sm" maxlength="256">
+              </div>
+              </div>
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_enabled">Habilitado</label>
+                  <div class="col-sm-4">
+                <input type="checkbox" name="enabled" checked="" id="id_enabled">
+              </div>
+              </div>
+              <div class="form-group">
+                  <label class="col-sm-2 control-label" for="id_authentication_method">Autenticação</label>
+                  <div class="col-sm-4">
+                  <select name="authentication_method" class="form-control form-control-sm" id="id_authentication_method">
+  <option value="None" selected="">Nenhuma</option>
+  <option value="HTTPBasic">HTTP Baásico</option>
+  <option value="APIKEY">API com Chave</option>
+</select>
+              </div>
+              </div>
+               <div class="form-group hidden">
+                  <label class="col-sm-2 control-label" for="id_api_key">Chave da Api</label>
+                  <div class="col-sm-4">
+  		<input type="text" name="api_key" id="id_api_key" class="form-control form-control-sm" maxlength="100">
+              </div>
+              </div>
+              <div class="form-group hidden">
+                  <label class="col-sm-2 control-label" for="id_username">Usuário</label>
+                  <div class="col-sm-4">
+                  <input type="text" name="username" id="id_username" class="form-control form-control-sm" maxlength="100">
+              </div>
+              </div>
+                  <div class="form-group hidden">
+                  <label class="col-sm-2 control-label" for="id_password">Senha</label>
+                  <div class="col-sm-4">
+                      <input type="password" name="password" id="id_password" class="form-control form-control-sm" maxlength="100">
+                  </div>
+              </div>
+      <div class="form-group submit-div">
+        <div class="col-sm-2">
+        </div>
+        <div class="col-sm-4">
+          <button type="submit" class="btn btn-warning col-sm-12">Instalar Sensor</button>
+        </div>
+      </div>
+{% endif %}
+{% endfor %}
+  </form>
+</div>
+</div>
+</div>
+<script>
+  $('#id_username').parent().parent().addClass("hidden");
+  $('#id_password').parent().parent().addClass("hidden");
+  $('#id_api_key').parent().parent().addClass("hidden");
+
+  $('#id_authentication_method').change(function(e){
+    if($('#id_authentication_method').val() == "HTTPBasic") {
+      $('#id_username').parent().parent().removeClass("hidden");
+      $('#id_password').parent().parent().removeClass("hidden");
+      $('#id_api_key').parent().parent().addClass("hidden");
+    } else if ($('#id_authentication_method').val() == "APIKEY") {
+      $('#id_username').parent().parent().addClass("hidden");
+      $('#id_password').parent().parent().addClass("hidden");
+      $('#id_api_key').parent().parent().removeClass("hidden");
+    } else {
+      $('#id_username').parent().parent().addClass("hidden");
+      $('#id_password').parent().parent().addClass("hidden");
+      $('#id_api_key').parent().parent().addClass("hidden");
+    }
+  });
+</script>
+{% endblock %}

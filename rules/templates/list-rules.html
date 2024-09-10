@@ -1,0 +1,484 @@
+{% extends 'base.html' %}
+{% load pinegap_tags %}
+{% block content %}
+
+<div class="container-fluid" style="padding:0;">
+
+
+<section class="content-header">
+      <h1>
+      Automação
+      <small> Listar Regras</small>
+      </h1>
+      <ol class="breadcrumb">
+      <li><a href="#"><i class="fa fa-tachometer-alt"></i> Dashboad</a></li>
+      <li class="active">Listar Regras</li>
+      </ol>
+      </section>
+   <div id="menu_tabs" class="container-fluid" style="padding:15px 15px;">
+	<div class="tab-content">
+  	<table class="table table-bordered" data-toggle="table">
+    <thead>
+      <tr>
+        <th data-field="cb"><input type="checkbox" onClick="chkSelectAll" /></th>
+        <th data-field="name">Nome</th>
+        <th data-field="scope">Escopo</th>
+        <!-- <th data-field="scope_attr">Attribute</th> -->
+        <th data-field="condition">Condi&ccedil;&atilde;o</th>
+        <th data-field="trigger">Gatilho</th>
+        <!--th data-field="severity">Prioridade</th> -->
+        <th data-field="target">Ação</th>
+        <th data-field="status">Status</th>
+        <th data-field="updated_at">Atualizado</th>
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <th style="width:60px;">Duplicar</th>
+        <th style="width:60px;">Excluir</th>
+	{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for rule in rules %}
+      <tr>
+        <td><input type="checkbox" class="radio" name="rule" value="{{ rule.id }}"/></td>
+        <td>{{ rule.title }}</td>
+        {% if rule.scope == "asset" and rule.scope_attr == "criticity" %}
+        <td>Criticidade do Ativo</td>
+        {% endif %}
+        {% if rule.scope == "asset" and  rule.scope_attr == "type" %}
+        <td>Tipo do Ativo</td>
+        {% endif %}
+        {% if rule.scope == "asset" and rule.scope_attr == "name" %}
+        <td>Nome do Ativo</td>
+        {% endif %}
+        {% if rule.scope == "asset" and rule.scope_attr == "value" %}
+        <td>Endereço do Ativo</td>
+        {% endif %}
+        {% if rule.scope == "asset" and rule.scope_attr == "description" %}
+        <td>Descrição do Ativo</td>
+       {% endif %}
+        {% if rule.scope == "finding" and rule.scope_attr == "status" %}
+        <td>Status da Ocorrência</td>
+       {% endif %}
+        {% if rule.scope == "finding" and rule.scope_attr == "hash" %}
+        <td>Hash da Ocorrência</td>
+       {% endif %}
+        {% if rule.scope == "finding" and rule.scope_attr == "description" %}
+        <td>Descrição da Ocorrência</td>
+       {% endif %}
+        {% if rule.scope == "finding" and rule.scope_attr == "title" %}
+        <td>Título da Ocorrência</td>
+       {% endif %}
+        {% if rule.scope == "finding" and  rule.scope_attr == "solution" %}
+        <td>Solução da Ocorrência</td>
+       {% endif %}
+        {% if rule.scope == "finding" and rule.scope_attr == "type" %}
+        <td>Tipo da Ocorrência</td>
+       {% endif %}
+        {% if rule.scope == "finding" and rule.scope_attr == "severity" %}
+        <td>Severidade da Ocorrência</td>
+       {% endif %}
+        {% if rule.scope == "scan" and rule.scope_attr == "status" %}
+        <td>Status do Scan</td>
+       {% endif %}
+        <td>
+
+             {% if rule.condition|keyvalue:"__exact" == "low" %}
+             'Baixa'
+             {% elif rule.condition|keyvalue:"__exact" == "medium" %}
+             'Média'
+             {% elif rule.condition|keyvalue:"__exact" == "high" %}
+             'Alta'
+             {% elif rule.condition|keyvalue:"__exact" == "info" %}
+             'Desconhecida'
+             {% elif rule.condition|keyvalue:"__exact" == "critical" %}
+             'Crítica'
+             {% elif rule.condition|keyvalue:"__exact" == "ack" %}
+             'Ignorada'
+             {% elif rule.condition|keyvalue:"__exact" == "new" %}
+             'Nova'
+	     {% elif rule.condition|keyvalue:"__exact" == "ip" %}
+             'IP'
+	     {% elif rule.condition|keyvalue:"__exact" == "domain" %}
+             'Domínio'
+	     {% elif rule.condition|keyvalue:"__exact" == "url" %}
+             'URL'
+
+          {% elif rule.condition.keys|join:"" == "__istartswith" %}
+            Começa com: '{{rule.condition|keyvalue:"__istartswith"}}'
+          {% elif rule.condition.keys|join:"" == "__iendswith" %}
+            Termina com: '{{rule.condition|keyvalue:"__iendswith"}}'
+          {% elif rule.condition.keys|join:"" == "__icontains" %}
+            Contêm: '{{rule.condition|keyvalue:"__icontains"}}'
+          {% elif rule.condition.keys|join:"" == "__iexact" %}
+            Exatamente: '{{rule.condition|keyvalue:"__iexact"}}'
+          {% endif %}
+        </td>
+        {% if rule.trigger == "ondemand" %}
+        <td>Pontual</td>
+        {% elif rule.trigger == "periodic" %}
+        <td>Sob demanda</td>
+        {% elif rule.trigger == "auto" %}
+        <td>Recorrente</td>
+        {% endif %}
+        <!--<td>{{ rule.severity }}</td> -->
+        {% if rule.target == "slack" %}
+        <td>Slack Msg</td>
+        {% elif rule.target == "splunk" %}
+        <td>Log no Splunk </td>
+        {% elif rule.target == "logfile" %}
+        <td>Log em Arquivo </td>
+        {% elif rule.target == "thehive" %}
+        <td>Log ECOFIR </td>
+        {% elif rule.target == "email" %}
+        <td>Enviar e-mail</td>
+        {% elif rule.target == "event" %}
+        <td>Gerar Evento</td>
+        {% elif rule.target == "hostsgreen" %}
+        <td>Hosts Green</td>
+       {% endif %}
+        {% if rule.enabled %}
+        <td><span class="label label-success rule-status" rule-id="{{ rule.id }}">Habilitado</span></td>
+        {% else %}
+        <td><span class="label label-danger rule-status" rule-id="{{ rule.id }}">Desabilitado</span></td>
+        {% endif %}
+        <td>{{ rule.updated_at|date:"d-m-Y H:i:s" }}</td>
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <td>
+        <a  class="btn-duplicate-rule" rule-id="{{ rule.id }}" style="margin-left:15px;"><i class="fas fa-clone"></i></a>
+	 </td>
+	{% endif %}
+        {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+        <td>
+        <a href="#" data-toggle="modal" data-target="#modal-delete-rule" rule-id="{{ rule.id }}" rule-title="{{ rule.title }}" style="margin-left:15px;"><i class="fa fa-trash"></i></a>
+        </td>
+	{% endif %}
+      </tr>
+      {% endfor %}
+      {% if user.groups.all.0.name == 'root'  or  user.groups.all.0.name == 'gestor'  %}
+      <tr class="add-new-rule-form">
+        <td><span class="glyphicon glyphicon-plus text-warning"></span></td>
+        <td><!-- Title -->
+          <input id="title_id" name="title" type="text" class="form-control form-control-sm" placeholder="Nome da regra."/>
+        </td>
+        <td><!-- Scope -->
+          <select id="scope_id" name="scope" class="form-control form-control-sm">
+            {% for scope_id, scope_value in form_options.rule_scopes %}
+               <option value="{{ scope_id }}">{{scope_value}}</option>
+            {% endfor %}
+          </select>
+         <!--/td>
+        <td-->
+          <!-- Scope attribute -->
+          <select id="scope_attr_id" name="scope_attr" class="form-control form-control-sm">
+            <!-- filled by jQuery -->
+           <option value="-">-</option>
+          </select>
+        </td>
+        <td><!-- Condition -->
+          <select id="condition_id" name="condition" class="form-control form-control-sm">
+            <!-- filled by jQuery -->
+            <option value="-">-</option>
+          </select>
+          <div id="criteria_div">
+            <!-- filled by jQuery -->
+            <!-- input or select -->
+          </div>
+        </td>
+        <td><!-- Trigger -->
+          <select id="trigger_id" name="trigger" class="form-control form-control-sm">
+            {% for trigger_id, trigger_value in form_options.rule_triggers %}
+              <option value="{{ trigger_id }}">{{trigger_value}}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <!--td><!-- Scope -->
+          <!--select id="severity_id" name="severity" class="form-control form-control-sm"-->
+            <!--{% for severity_id, severity_value in form_options.rule_severities %}-->
+              <!--option value="{{ severity_id }}">{{severity_value}}</option-->
+            <!--{% endfor %}-->
+          <!--/select-->
+        <!--/td-->
+        <td><!-- Target -->
+          <select id="target_id" name="target" class="form-control form-control-sm">
+            {% for target_id, target_value in form_options.rule_targets %}
+              <option value="{{ target_id }}">{{target_value}}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td><!-- Enable -->
+          <select id="enable_id" name="enable" class="form-control form-control-sm">
+            <option value="enabled">Habilitar</option>
+            <option value="disabled">Desabilitar</option>
+          </select>
+        </td>
+        <td colspan="3">
+          <button type="submit" class="btn btn-sm btn-success btn-add-rule col-sm-12">
+            Adicionar</button>
+        </td>
+      </tr>
+	{% endif %}
+    </tbody>
+  </table>
+  <!-- {{ form_options.rule_scope_attributes }} -->
+
+  {% if messages %}
+  <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+
+</div>
+</div>
+
+<!-- Delete rule modal -->
+<div class="modal fade" id="modal-delete-rule" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+          <span class="sr-only">Fechar</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabel">Excluir Regra ?</h4>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div id="delete-rule">
+          <!-- Content -->
+        </div>
+        Confirma Exclus&atilde;o?
+        <button type="button" class="btn btn-xs btn-warning btn-delete-rule" data-dismiss="modal">Sim</button>
+        <button type="button" class="btn btn-xs btn-primary" data-dismiss="modal">N&atilde;o</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+  $(function() {
+
+    // global variables for common rules attributes
+    scope_attributes = JSON.parse("{{form_options.rule_scope_attributes|escapejs}}");
+    rules_conditions = JSON.parse("{{form_options.rule_conditions|escapejs}}");
+    var scope;
+    var scope_attrs;
+    refresh_scope_attributes();
+
+		// translate option
+    function translate_option(index) {
+
+        var transaltion = {
+          mitigated: 'Mitigada',
+          confirmed: 'Confirmada',
+          patched: 'Corrigida',
+          closed: 'Encerrada',
+          'false-positive': 'Falso Positivo',
+					criticity: 'criticidade',
+					type: 'tipo',
+					name: 'nome',
+					value: 'endereço',
+					description: 'descrição',
+	        title: 'título',
+	        solution: 'Parecer Técnico',
+	        ack: 'Ignorada',
+	        type: 'tipo',
+	        severity: 'severidade',
+					domain: 'domínio',
+					new: 'nova',
+					info: 'desconhecida',
+	        low: 'baixa',
+	        medium: 'média',
+	        high: 'alta',
+	        critical: 'crítica'
+				};
+				for(attr in transaltion) {
+						if(index==attr) {
+								return transaltion[attr].charAt(0).toUpperCase() + transaltion[attr].slice(1)
+						}
+				}
+        return index.charAt(0).toUpperCase() + index.slice(1);
+		}
+
+    function refresh_scope_attributes(){
+      scope = $('#scope_id').val();
+      scope_attrs = Object.keys(scope_attributes[scope]);
+
+      // reset and replace the options available
+      $("#scope_attr_id").empty();
+      for (var i = 0; i < scope_attrs.length; i++) {
+        $("#scope_attr_id").append("<option value='"+scope_attrs[i]+"'>"+translate_option(scope_attrs[i])+"</option>");
+      }
+
+      // update the condition criterias
+      refresh_conditions();
+    }
+
+    // Refresh the condition inputs&selects
+    function refresh_conditions(){
+      // update the condition criterias
+      $("#condition_id").empty();
+      $("#criteria_div").empty();
+      scope_attr = $("#scope_attr_id").val();
+      condition_type = scope_attributes[scope][scope_attr]["type"];
+      condition_types = Object.entries(rules_conditions);
+      for (var i=0; i<condition_types.length; i++){
+        //console.log(condition_types[i][0]);
+        if (condition_type == condition_types[i][0] && condition_type != 'list' ) {
+          conditions = condition_types[i][1]
+          for (var k in conditions) {
+            if (conditions.hasOwnProperty(k)) {
+               $("#condition_id").append("<option value='"+k+"'>"+translate_option(conditions[k])+"</option>");
+            }
+          }
+
+          $("#criteria_div").append("<input type='text' name='criteria' id='criteria_id' class='form-control form-control-sm'/>");
+          break;
+        } else if (condition_type == 'list') {
+           $("#condition_id").append("<option value='__exact'>=</option>");
+           list_choices = scope_attributes[scope][scope_attr]["values"];
+           choices = ""
+           for (c in list_choices) {
+             choices += "<option value='"+list_choices[c]+"'>"+translate_option(list_choices[c])+"</option>"
+           }
+           $("#criteria_div").append("<select name='criteria' id='criteria_id' class='form-control form-control-sm'>"+choices+"</select>");
+           break;
+        }
+      }
+    }
+
+    $("#scope_id").on('change', function(e){
+      refresh_scope_attributes();
+    });
+    $("#scope_attr_id").on('change', function(e){
+      refresh_conditions();
+    });
+
+    // Add rule
+    $("button.btn-add-rule").on('click', function(eventObject) {
+      rule_args = {
+        "title": $("#title_id").val(),
+        "scope": $("#scope_id").val(),
+        "scope_attr": $("#scope_attr_id").val(),
+        "condition": $("#condition_id").val(),
+        "criteria": $("#criteria_id").val(),
+        "trigger": $("#trigger_id").val(),
+        "target": $("#target_id").val(),
+        "enable": $("#enable_id").val()
+      }
+
+      var request = $.ajax({
+        url: "{% url 'add_rule_api' %}",
+        method: "POST",
+        data: JSON.stringify(rule_args),
+        contentType: "application/json",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"}
+      });
+      request.done(function(response){
+        if (response.status == 'success'){location.reload()}
+      });
+    });
+
+    // Duplicate rule
+    $("a.btn-duplicate-rule").on('click', function(e) {
+      rule_id = e.currentTarget.getAttribute('rule-id');
+
+      var request = $.ajax({
+        url: "{% url 'duplicate_rule_api' 0 %}".replace("0", rule_id),
+        method: "GET",
+      });
+      request.done(function(response){
+        if (response.status == 'success'){location.reload()}
+      });
+    });
+
+    // toggle rule status (enable/disable)
+    $('span.rule-status').on('dblclick', function(e){
+      rule_id = e.currentTarget.getAttribute('rule-id');
+      var request = $.ajax({
+        url: "/rules/api/v1/change_status/"+rule_id,
+        method: "GET",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        success: function(){
+          if (e.currentTarget.textContent == "Desabilitado") {
+            $(e.currentTarget).removeClass("label-danger");
+            $(e.currentTarget).addClass("label-success");
+            e.currentTarget.textContent = "Habilitado";
+          } else {
+            $(e.currentTarget).removeClass("label-success");
+            $(e.currentTarget).addClass("label-danger");
+            e.currentTarget.textContent = "Desabilitado";
+          }
+        }
+      });
+    });
+
+    // $('button.btn-eval-rule').on('click', function(e){
+    //   rule_id = e.currentTarget.getAttribute('rule-id');
+    //   var request = $.ajax({
+    //     url: "/rules/api/v1/evaluate/"+rule_id,
+    //     method: "GET",
+    //     success: function(){
+    //       location.reload();
+    //     }
+    //   });
+    // });
+
+    // Delete rule modal
+    $("#modal-delete-rule").on('show.bs.modal', function (e) {
+      rule_id = e.relatedTarget.getAttribute('rule-id');
+      rule_title = e.relatedTarget.getAttribute('rule-title');
+      $("div#delete-rule").attr('rule-id', rule_id);
+      $("div#delete-rule").html("Name: <b>"+rule_title+"</b><br/>");
+    });
+    $("button.btn-delete-rule").on('click', function (e) {
+      delete_rule_args = {
+        "rule_id": $("div#delete-rule").attr('rule-id')
+      }
+      delete_rule_args = []
+      delete_rule_args.push($("div#delete-rule").attr('rule-id'))
+      delete_rule_url = "/rules/api/v1/delete";
+      var request = $.ajax({
+        url: delete_rule_url,
+        method: "POST",
+        data: JSON.stringify(delete_rule_args),
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        success: function(){
+          location.reload();
+        }
+      });
+    });
+
+
+    // Delete selected rules
+    $("a.btn-delete-selected").on('click', function(eventObject) {
+      rules_to_delete = [];
+      $("input[name='rule']").each(function(cbx){
+        if (this.checked) {
+          rules_to_delete.push(this.value)
+        }
+      })
+
+      if (rules_to_delete.length != 0){
+        delete_url="/rules/delete"
+        var request = $.ajax({
+          url: delete_url,
+          method: "POST",
+          // data: JSON.stringify(rules_to_delete),
+          data: rules_to_delete,
+          contentType: "application/json"
+        });
+        request.done(function(response){
+          if (response.status == 'success'){location.reload()}
+        });
+      }
+    });
+
+  });
+</script>
+{% endblock %}

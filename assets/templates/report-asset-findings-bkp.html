@@ -1,0 +1,610 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    {% load pinegap_tags %}
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+    <title>PineGap Security Report</title>
+    <style type="text/css" media="all">
+    	UL.ulist {padding: 0 10px; line-height:25px; margin-bottom:0px; margin-top:0px;};
+    	LI.list  {padding: 0 10px; line-height:25px; margin-bottom:0px; margin-top:0px; list-style: disc;}
+    	LI.list0 {padding: 0 10px; line-height:25px; margin-bottom:0px; margin-top:0px; list-style: disc; color:#357abd;}
+    	LI.list1 {padding: 0 10px; line-height:25px; margin-bottom:0px; margin-top:0px; list-style: disc; color:#4cae4c;}
+    	LI.list2 {padding: 0 10px; line-height:25px; margin-bottom:0px; margin-top:0px; list-style: disc; color:#fdc431;}
+    	LI.list3 {padding: 0 10px; line-height:25px; margin-bottom:0px; margin-top:0px; list-style: disc; color:#ee9336;}
+    	LI.list4 {padding: 0 10px; line-height:25px; margin-bottom:0px; margin-top:0px; list-style: disc; color:#d43f3a;}
+
+    	html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+    		margin: 0;
+    		padding: 0;
+    		border: 0;
+    		font-size: 100%;
+    		font: inherit;
+    		vertical-align: baseline;
+    		-webkit-text-size-adjust: none;
+    	}
+
+    	html, body {
+    		font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    		width: 100%;
+    		color: #263645;
+    		font-size: 12px;
+    		background: #efefef;
+    	}
+
+    	a, a:visited, a:active {
+    		color: #004a97;
+    	}
+
+    	a:hover {
+    		color: #00253d;
+    	}
+
+    	.container_16 {
+    		margin: 0 auto;
+    		padding: 0 14px 14px 14px;
+    		background: #fff;
+    		border-top: #e08e0b solid 8px;
+    		box-shadow: 0 2px 10px rgba(0, 0, 0, .2);
+    		margin-bottom: 20px;
+    		border-radius: 0 0 5px 5px;
+    	}
+
+    	#reportContent {
+    		width: 100%;
+    	}
+
+    	h1.classtitle {
+    		padding: 15px 0 10px 0;
+    		border-bottom: 1px dotted #ccc;
+    		margin: 0 0 15px 0;
+    	}
+
+    	h2.classtitle {
+    		color: #e08e0b;
+    		font-weight: normal;
+    		font-size: 22px;
+    		margin: 0;
+    		padding: 0;
+    	}
+
+    	h2.date {
+    		font-size: 14px;
+    		color: #768591;
+    		margin: 0;
+    		padding: 0;
+    		font-weight: normal;
+    	}
+
+    	.reportinfo {
+    		display: block;
+    		width: 100%;
+    		font-size: 16px;
+    		padding: 0 0 15px 0;
+    		margin: 0 0 5px 0;
+    		font-weight: normal;
+    		border-bottom: 1px dotted #ccc;
+    	}
+
+    	.reportpadding {
+    		padding: 15px 0 0 0 !important;
+    	}
+
+    	.classtoc {
+    		display: block;
+    		font-size: 18px;
+    		color: #777779;
+    		padding: 15px 0;
+    		margin: 15px 0 0 0;
+    	}
+
+    	h1.classchapter {
+    		background: #2C3E50;
+    		color: #fff;
+    		font-weight: bold;
+    		font-size: 16px;
+    		padding: 6px 10px;
+    		margin: 10px 0 0 0;
+    		border-radius: 4px 4px 0 0;
+    	}
+
+    	h2.classsection {
+    		display: block;
+    		background: #425363;
+    		color: #fff;
+    		font-weight: bold;
+    		font-size: 14px;
+    		padding: 6px 10px;
+    		margin: 30px 0 0 0;
+    		border-radius: 4px 4px 0 0;
+    	}
+
+    	h2.classh1  {
+    		display: block;
+    		background: #efefef;
+    		font-weight: bold;
+    		font-size: 13px;
+    		padding: 6px 10px;
+    	}
+
+    	.classtext {
+    		font-size: 13px;
+    		line-height: 18px;
+    	}
+
+    	div#reportContent div span.classtext {
+    		padding: 6px 10px;
+    		display: inline-block;
+    	}
+
+    	h2.classsubsection {
+    		background: #768591;
+    		color: #fff;
+    		font-weight: bold;
+    		font-size: 13px;
+    		padding: 6px 10px;
+    	}
+
+    	.classheader h1 {
+    		color: #fff;
+    		font-weight: bold;
+    		font-size: 15px;
+    		padding: 0 10px;
+    		text-align: center;
+    	}
+
+    	.reportinfo b {
+    		font-weight: bold;
+    	}
+
+    	h3.classtitle  {
+    		color: #69737b;
+    		font-size: 16px;
+    		padding: 0 10px;
+    	}
+
+    	.classsection_sub tr, td {
+    		color: #053958;
+    		font-size: 13px;
+    		padding: 0 10px;
+    	}
+
+    	td {
+    		padding: 6px 10px;
+    	}
+
+    	h2.classsection, h2.classsection0, h2.classsection1, h2.classsection2, h2.classsection3, h2.classsection4 {
+    		background: #95a5a6;
+    		color: #fff;
+    		font-weight: bold;
+    		font-size: 13px;
+    		padding: 6px 10px;
+    		margin-bottom: 0px;
+    		margin-top: 10px;
+    	}
+
+        .classcell5, h2.classsection5 {
+            background-color: #cc0500;
+        }
+
+    	.classcell4, h2.classsection4 {
+    		background-color: #df3d03;
+    	}
+
+    	.classcell3, h2.classsection3 {
+    		background-color: #f9a009;
+    	}
+
+    	.classcell2, h2.classsection2 {
+    		background-color: #ffcb0d;
+    	}
+
+    	.classcell1, h2.classsection1 {
+    		background-color: #3498db;
+    	}
+
+
+    	#copyright {
+    		display: block;
+    		width: 100%;
+    		text-align: center;
+    		font-size: 12px;
+    		color: #A9A8A9;
+    		padding: 6px 0 20px 0;
+    	}
+
+    	#copyright a, #copyright a:visited, #copyright a:active {
+    		color: #A9A8A9;
+    	}
+
+    	div.icon {
+    		display: none;
+    	}
+
+    	.nopadding {
+    		padding: 0 !important;
+    	}
+
+    	body.email h2.classh1 {
+    		display: block;
+    		margin: 20px 0 0 0;
+    		background: #425363;
+    		color: #fff;
+    		font-weight: bold;
+    		font-size: 14px;
+    		padding: 6px 10px;
+    		border-radius: 4px 4px 0 0;
+    	}
+
+    	body.email div#reportContent div span.classtext {
+    		padding: 0;
+    		display: inline;
+    	}
+
+    	body.email h2.tips {
+    		background: #004a97 !important;
+    	}
+
+    	body.email h2.errors {
+    		background: #c00 !important;
+    	}
+
+    	body.email h2.classsection {
+    		display: none;
+    	}
+
+    	.classtoc1 a {
+    		font-size: 16px;
+    	}
+
+    	.classtoc2 a {
+    		font-size: 13px;
+    		padding: 0 20px;
+    	}
+
+    	h2.classh2  {
+    		background: #f8f8f8;
+    		font-weight: bold;
+    		font-size: 13px;
+    		padding: 6px 10px;
+    	}
+
+    	.classpre {
+    		display: block;
+    		font-size: 13px;
+    		font-family: Courier New, Courier, monospace;
+    		padding: 10px;
+    		color: #000;
+    	}
+
+    	.classh1_grey h2 {
+    		background: #f9f9f9;
+    		color:#053958;
+    		font-size: 13px;
+    		padding: 0 10px;
+    		margin-top:0px;
+    		margin-bottom:2px;
+    	}
+
+    	@media only screen and (max-device-width: 480px) {
+    		html, body {
+    			display: block;
+    			min-width: 480px;
+    			background: #fff;
+    		}
+
+    		table {
+    			table-layout: auto !important;
+    		}
+
+    		table td {
+    			word-wrap: break-word;
+    		}
+
+    		table.container_16 {
+    			width: 100%;
+    			padding: 0 4% 20px 4%;
+    			background: #fff;
+    			border-top: #425363 solid 7px;
+    			box-shadow: none !important;
+    			margin-bottom: 20px;
+    			border-radius: 0;
+    		}
+
+    		#copyright {
+    			display: block;
+    			width: 90%;
+    			text-align: center;
+    			font-size: 10px;
+    			color: #A9A8A9;
+    			padding: 5px 0 20px 0;
+    			border-top: 1px dotted #ccc;
+    			margin: 0 auto;
+    			line-height: 16px;
+    		}
+
+    		.classtitle img {
+    			display: block;
+    			margin: 0 auto;
+    		}
+    	}
+
+    	/* printbar */
+    	.printbar {
+			height:50px;
+			background:#272C30;
+		}
+		.printbar p {
+			float:left;
+			color:#ccc;
+			margin-top:10px;
+		}
+		.printbar button {
+			float:right;
+			margin-top:5px;
+		}
+		.signature {
+			text-align:right !important;
+			padding:50px 0;
+			float:right;
+			display:none;
+		}
+		.signature td {
+			padding:50px 0;
+		}
+		.signature p {
+			border-top:solid 1px #777;
+			width:250px;
+		}
+		@media print {
+			.printbar {
+				display:none;
+			}
+			.signature {
+				display:block;
+			}
+			.signature p {
+				float:right;
+			}
+		}
+    </style>
+    <script type="text/javascript">
+		function toggle(divId) {
+			var divObj = document.getElementById(divId);
+			if (divObj) {
+				var displayType = divObj.style.display;
+				if (displayType == "" || displayType == "block") {
+					divObj.style.display = "none";
+				} else {
+					divObj.style.display = "block";
+				}
+			}
+		}
+
+		function ceall(flag) {
+			var divs = document.getElementsByTagName("div");
+			var i = 0;
+			for (i = 0; i < divs.length; i++) {
+				if (divs[i].getAttribute("id") != null && divs[i].getAttribute("id").match('ptag-')) {
+					if (flag == 0) {
+						divs[i].style.display = "none";
+					} else {
+						divs[i].style.display = "block";
+					}
+				}
+			}
+		}
+		</script>
+  </head>
+  <body>
+    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+	  <!-- printbar -->
+	  <tr>
+		<td class="printbar">
+			<p>Imprimir carta de aceite de risco</p>
+			<button onclick="window.print()">Imprimir</button>
+		</td>
+	  </tr>
+	  <!-- end printbar -->
+      <tr>
+        <td align="center" valign="top" class="nopadding" style="vertical-align: top">
+		  <br />
+          <table cellpadding="0" cellspacing="0" border="0" width="80%" bgcolor="#FFFFFF" class="container_16">
+            <tr>
+              <td>
+                <table xmlns="" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td class="nopadding">
+                      <h1 class="classtitle">
+                       <img src="https://pinegap.io/wp-content/uploads/2019/06/pinegap-logo-fundobranco-pequeno.png" alt="PineGap Platform" height="42" width="161">
+                      </h1>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="nopadding">
+                      <h2 class="classtitle">PineGap - Cybernetic Security Risk Report</h2>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="nopadding">
+                      <h2 class="date">{% now "jS F Y H:i" %}</h2>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="reportpadding">
+                      <div class="reportinfo"></div>
+                    </td>
+                  </tr>
+                </table>
+                <div class="reportContent">
+                  <span class="classtoc">DOCUMENTO CLASSIFICADO - "CONFIDENCIAL"</span>
+                  <table>
+                    <tr>
+                      <td>
+                        <span class="classtoc1"><a href="#id_asset_info">Informa&ccedil;&otilde;es dos Ativos Analisados</a></span><br/>
+                        <span class="classtoc1"><a href="#id_findings">Ocorr&ecirc;ncias</a></span>
+                      </td>
+                    </tr>
+                  </table>
+                  <h1 xmlns="" class="classchapter" id="id_asset_info">Informa&ccedil;&atilde;o do Ativo</h1>
+                  <h2 xmlns="" class="classh1 " style="vertical-align: middle;">Descri&ccedil;&atilde;o</h2>
+                  <table xmlns="" width="100%">
+                    <tr>
+                      <td width="20%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">Nome:</span></td>
+                      <td width="80%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">{{ asset.name }}</span></td>
+                    </tr>
+                    <tr>
+                      <td width="20%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">Valor:</span></td>
+                      <td width="80%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">{{ asset.value }} ({{ asset.type }})</span></td>
+                    </tr>
+                    <tr>
+                      <td width="20%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">Descri&ccedil;&atilde;o:</span></td>
+                      <td width="80%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">{{ asset.description }}</span></td>
+                    </tr>
+                    <tr>
+                      <td width="20%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">Criticidade:</span></td>
+                      <td width="80%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">{{ asset.criticity }}</span></td>
+                    </tr>
+                    <tr>
+                      <td width="20%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">Security rating:</span></td>
+                      <td width="80%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">{{ asset.get_risk_grade }}</span></td>
+                    </tr>
+                    <tr>
+                      <td width="20%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">Data da Cria&ccedil;&atilde;o:</span></td>
+                      <td width="80%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">{{ asset.created_at|date:"Y/m/d\-H:i:s" }}</span></td>
+                    </tr>
+                  </table>
+
+                  <h1 xmlns="" class="classchapter" id="id_findings">Ocorr&ecirc;ncias encontradas nos ativos</h1>
+                  <h2 xmlns="" class="classh1 " style="vertical-align: middle;">Resultados Classificados por Severidade</h2>
+                  <table xmlns="" width="100%">
+                    <tr>
+                      <td width="16%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">Cr&iacute;tica</span></td>
+                      <td width="16%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">Alta</span></td>
+                      <td width="16%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">M&eacute;dia</span></td>
+                      <td width="16%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">Baixa</span></td>
+                      <td width="16%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">Info</span></td>
+                      <td width="16%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">Total</span></td>
+                    </tr>
+                    <tr>
+                      <td width="16%" valign="top" class="classcell"><span class="classtext" style="color: #e43725; font-weight: normal;">{{ findings_stats.critical }}</span></td>
+                      <td width="16%" valign="top" class="classcell"><span class="classtext" style="color: #ee9336; font-weight: normal;">{{ findings_stats.high }}</span></td>
+                      <td width="16%" valign="top" class="classcell"><span class="classtext" style="color: #fdc431; font-weight: normal;">{{ findings_stats.medium }}</span></td>
+                      <td width="16%" valign="top" class="classcell"><span class="classtext" style="color: #4cae4c; font-weight: normal;">{{ findings_stats.low }}</span></td>
+                      <td width="16%" valign="top" class="classcell"><span class="classtext" style="color: #357abd; font-weight: normal;">{{ findings_stats.info }}</span></td>
+                      <td width="16%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">{{ findings_stats.total }}</span></td>
+                    </tr>
+                  </table>
+
+                  <h2 xmlns="" class="classh1 " style="vertical-align: middle;">Resultados Detalhados</h2>
+                  {% for finding in findings %}
+                  <span xmlns="" class="classh1_grey">
+                    <h2>
+                      <span class="classsection_sub">
+                        <table width="100%">
+                          <tr width="100%" onclick="toggle('ptag-{{ finding.raw_finding_id }}')" onmouseover="this.style.cursor='pointer'" title="Collapse/Expand" style="cursor: pointer;">
+                            <td width="5%" height="50%">
+                              <table style="table-layout: fixed;" width="30px" height="15px" >
+                                <tr width="100%">
+                                  {% if finding.severity == 'critical' %}
+                                  <td width="100%" class="classcell5"></td>
+                                  {% elif finding.severity == 'high' %}
+                                  <td width="100%" class="classcell4"></td>
+                                  {% elif finding.severity == 'medium' %}
+                                  <td width="100%" class="classcell3"></td>
+                                  {% elif finding.severity == 'low' %}
+                                  <td width="100%" class="classcell2"></td>
+                                  {% elif finding.severity == 'info' %}
+                                  <td width="100%" class="classcell1"></td>
+                                  {% endif %}
+                                </tr>
+                              </table>
+                            </td>
+                            <td align="left" width="85%">{{ finding.type }} // {{ finding.title }}</td>
+                            <td align="right" width="10%">[-/+]</td>
+                          </tr>
+                        </table>
+                      </span>
+                    </h2>
+                  </span>
+                  <div xmlns="" id="ptag-{{ finding.raw_finding_id }}" style="display: none;">
+                    <!-- <h2 class="classh1 " style="vertical-align: middle;">Synopsis</h2>
+                    <span class="classtext" style="color: #263645; font-weight: normal;">{{ finding.title }}</span> -->
+                    <h2 class="classh1 " style="vertical-align: middle;">Descri&ccedil;&atilde;o</h2>
+                    <span class="classtext" style="color: #263645; font-weight: normal;">{{ finding.description|linebreaks }}</span>
+
+                    <h2 class="classh1 " style="vertical-align: middle;">Mais informa&ccedil;&otilde;es relacionadas</h2>
+                    <table width="100%">
+                      {% if not finding.links %}
+                        Nenhum link de informa&ccedil;&atilde; relacionada foi gerado.
+                      {% else %}
+                        {% for link in finding.links %}
+                        <tr><td width="100%" valign="top" class="classcell"><a href="{{link}}" target="_blank">{{link}}</a></td></tr>
+                        {% endfor %}
+                      {% endif %}
+                    </table>
+
+                    <h2 class="classh1 " style="vertical-align: middle;">Solu&ccedil;&atilde;o</h2>
+                    <span class="classtext" style="color: #263645; font-weight: normal;">{{ finding.solution|linebreaks }}</span>
+
+                    <h2 class="classh1 " style="vertical-align: middle;">Avalia&ccedil;&atilde;o do Risco</h2>
+                    <table width="100%">
+                      <tr><td width="100%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">Chances de um Incidente: {{ finding.confidence }}</span></td></tr>
+                      <tr><td width="100%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">Severidade: {{ finding.severity }}</span></td></tr>
+                      <tr><td width="100%" valign="top" class="classcell"><span class="classtext" style="color: #263645; font-weight: normal;">
+                        {% if not finding.risk_info %}
+                        Nenhuma informa&ccedil;&atilde;o de avalia&ccedil;&atilde;o de risco foi adicionada nesta análise
+                        {% else %}
+                          {% for key, value in finding.risk_info.items %}
+                            {{ key }}: {{ value }}<br/>
+                          {% endfor %}
+                        {% endif %}
+                      </span></td></tr>
+                    </table>
+
+                    <h2 class="classh1 " style="vertical-align: middle;">Informa&ccedil;&otilde;es Complementares</h2>
+                    <span class="classtext" style="color: #263645; font-weight: normal;">
+                      {% if not finding.vuln_refs %}
+                        n/a.
+                      {% else %}
+                        {% for key, value in finding.vuln_refs.items %}
+                          {% if key == "CVE" %}
+                            {{ key }}: {{ value|joinby:"," }}<br/>
+                          {% else %}
+                            {{ key }}: {{ value }}<br/>
+                          {% endif %}
+                        {% endfor %}
+                      {% endif %}
+                    </span>
+                    <h2 class="classh1 " style="vertical-align: middle;">Tags</h2>
+                    <span class="classtext" style="color: #263645; font-weight: normal;">
+                      {{ finding.tags | join:", " }}
+                    </span>
+                  </div>
+
+                  {% endfor %} <!-- End of 'for finding in findings|dictsort:"severity"|dictsort:"type"' -->
+
+                </div>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+      <!-- signature -->
+		  <tr class="signature" align="right">
+				<td align="right">
+					<p></p>
+				</td>
+			</tr>
+			<!-- end signature -->
+
+    </table>
+
+    <!-- <div id="copyright">
+     This is a report issued from the
+      <a xmlns="" href="http://pinegap.io/" target="_blank">PineGap - Security Monitoring</a> tool
+     .<br xmlns="">
+     <br/>
+     2018-2019 PineGap ©. All rights reserved.
+   </div> -->
+  </body>
+</html>
