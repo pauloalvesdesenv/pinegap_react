@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.forms.models import model_to_dict
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from rest_framework.decorators import api_view
-from .models import Engine, EngineInstance, EnginePolicy
+from .models import Engine, EngineInstance, EnginePolicy, EnginePolicyScope
 from .tasks import refresh_engines_status_task
 from .tasks import get_engine_status_task, get_engine_info_task, test_task
 from scans.models import Scan
@@ -191,6 +191,34 @@ def list_engines_intances_api(requests):
             "running_scans": running_scans
         }, safe=False)
 
+@api_view(['GET'])
+def list_engines_intances_api_v2(requests):
+    engines = []
+    for engine in EngineInstance.objects.all().order_by("name"):
+        engines.append({
+            "engine": engine.engine.name,
+            "id": engine.id,
+            "name": engine.name,
+            "status": engine.status,
+            "enabled": engine.enabled,
+            "version": engine.version,
+            "api_url": engine.api_url,
+            "enabled": engine.enabled,
+            "status": engine.status,
+            "authentication_method": engine.authentication_method,
+            "api_key": engine.api_key,
+            "username": engine.username,
+            "password": engine.password,
+            "options": engine.options,
+            "created_at": engine.created_at,
+            "updated_at": engine.updated_at,
+           })
+    running_scans = Scan.objects.filter(status__in=["enqueued", "started"]).count()
+    return JsonResponse({
+            "engines": engines,
+            "running_scans": running_scans
+        }, safe=False)
+
 
 # Scan policies
 @api_view(['GET'])
@@ -205,6 +233,13 @@ def get_policies_api(request):
     for policy in EnginePolicy.objects.all():
         policies.append(policy.as_dict())
     return JsonResponse(policies, safe=False)
+
+@api_view(['GET'])
+def get_policy_scopes(request):
+    scopes = []
+    for scope in EnginePolicyScope.objects.all():
+        scopes.append(scope.as_dict())
+    return JsonResponse(scopes, safe=False)
 
 
 @api_view(['GET'])

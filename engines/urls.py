@@ -49,6 +49,8 @@ urlpatterns = [
     url(r'^api/v1/by-id/(?P<engine_id>[0-9]+)$', apis.list_instances_by_id_api, name='list_instances_by_id_api'),
     # ex: /engines/api/v1/list
     url(r'^api/v1/instances/list$', apis.list_engines_intances_api, name='list_engines_intances_api'),
+    # ex: /engines/api/v1/list/all
+    url(r'^api/v1/instances/list/all$', apis.list_engines_intances_api_v2, name='list_engines_intances_api_v2'),
     # ex: /engines/api/v1/list/by_name/nmap
     url(r'^api/v1/list/by_name/(?P<engine_name>[a-zA-Z]+)$', apis.list_instances_by_name_api, name='list_instances_by_name_api'),
     # ex: /engines/api/v1/instances/by-id/1
@@ -62,6 +64,8 @@ urlpatterns = [
     # ex: /engines/api/v1/instance/info/1
     url(r'^api/v1/instance/info/(?P<engine_id>[0-9]+)$', apis.info_engine_api, name='info_engine_api'),
     # ex: /engines/api/v1/policies/list
+    url(r'^api/v1/policy/scopes/list$', apis.get_policy_scopes, name='get_policy_scopes'),
+    # ex: /engines/api/v1/policies/by-id/2
     url(r'^api/v1/policies/list$', apis.get_policies_api, name='get_policies_api'),
     # ex: /engines/api/v1/policies/by-id/2
     url(r'^api/v1/policies/by-id/(?P<policy_id>[0-9]+)$', apis.get_policy_api, name='get_policy_api'),

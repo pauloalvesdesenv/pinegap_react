@@ -126,6 +126,15 @@ class EnginePolicyScope(models.Model):
             self.updated_at = timezone.now()
         return super(EnginePolicyScope, self).save(*args, **kwargs)
 
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'priority': self.priority,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at
+        }
+
     def __str__(self):
         return self.name
 
@@ -225,7 +234,9 @@ class EnginePolicy(models.Model):
             'file': file_b64,
             'status': self.status,
             'scopes': [s.id for s in self.scopes.all()],
-            'scope_names': [s.name for s in self.scopes.all()]
+            'scope_names': [s.name for s in self.scopes.all()],
+            'created_at': self.created_at,
+            'updated_at': self.updated_at
         }
 
 

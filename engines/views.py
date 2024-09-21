@@ -3,6 +3,7 @@
 from django.conf import settings
 from django.http import HttpResponseRedirect
 from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
 from django.core.files import File
 from django.shortcuts import render, redirect, get_object_or_404
 from django_celery_beat.models import PeriodicTask
@@ -17,6 +18,8 @@ from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.http import Http404
+from django.http import JsonResponse
+
 
 ######################################################################
 
@@ -31,7 +34,6 @@ def list_engines_view(request):
         'engines': engines,
         'autorefresh_status': autorefresh_status
     })
-
 
 
 # Add Bloqueio de URL - By BILL
@@ -325,6 +327,7 @@ def add_engine_types_view(request):
 @user_passes_test(lambda u: u.groups.filter(name='visitante').count() == 0, login_url='/engines/deny/')
 @user_passes_test(lambda u: u.groups.filter(name='analista').count() == 0,  login_url='/engines/deny/')
 @user_passes_test(lambda u: u.groups.filter(name='dpo').count() == 0, login_url='/engines/deny/')
+@csrf_exempt
 def edit_engine_type_view(request, engine_id):
     engine = get_object_or_404(Engine, id=engine_id)
     form = None
@@ -351,9 +354,7 @@ def edit_engine_type_view(request, engine_id):
 
 
 # Add Bloqueio de URL - By BILL
-@user_passes_test(lambda u: u.groups.filter(name='visitante').count() == 0, login_url='/engines/deny/')
-@user_passes_test(lambda u: u.groups.filter(name='analista').count() == 0,  login_url='/engines/deny/')
-@user_passes_test(lambda u: u.groups.filter(name='dpo').count() == 0, login_url='/engines/deny/')
+@csrf_exempt
 def delete_engine_type_view(request, engine_id):
     engine = get_object_or_404(Engine, id=engine_id)
 

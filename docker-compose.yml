@@ -6,8 +6,9 @@ services:
     container_name: pinegap-rabbitmq
     environment:
       - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error}]
-    expose:
-      - '5672'
+    ports:
+      - "15672:15672"
+      - "5672:5672"
 
   db:
     image: postgres:11-alpine
@@ -16,13 +17,14 @@ services:
       - POSTGRES_DB=pinegap_db
       - POSTGRES_USER=PINEGAP_DB_USER
       - POSTGRES_PASSWORD=PINEGAP_DB_PASSWD_TO_CHANGE
-    expose:
-      - '5432'
+    ports:
+      - "5432:5432"
     volumes:
-      - ./var/db/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+      - ./dump_2024-08-28_14_26_17.sql:/docker-entrypoint-initdb.d/dump_2024-08-28_14_26_17.sql
+      # - ./var/db/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
     #volumes:
     #  - postgres_data:/var/lib/postgresql/data/
- 
+
 
 
   web:
@@ -33,11 +35,12 @@ services:
       - DB_PORT_5432_TCP_HOST=db
       - DEBUG=True
       - RABBIT_PORT_5672_TCP=rabbitmq:5672
+      - DJANGO_SETTINGS_MODULE=app.settings
     depends_on:
       - db
       - rabbitmq
-    expose:
-      - "8003"
+    ports:
+      - "8003:8003"
     volumes:
       - ./staticfiles:/opt/pinegap-manager/staticfiles
       - ./media:/opt/pinegap-manager/media
