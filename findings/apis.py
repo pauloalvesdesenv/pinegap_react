@@ -21,11 +21,15 @@ def get_raw_finding_api(request, finding_id):
     finding = get_object_or_404(Finding, id=finding_id)
     return JsonResponse(finding.raw_data, safe=False)
 
-
 @api_view(['GET'])
 def list_findings_api(request):
+    status = request.GET.get('status', None)
     findings_list = []
-    for f in _search_findings(request):
+    if status:
+        findings = _search_findings(request).filter(status=status)
+    else:
+        findings = _search_findings(request)
+    for f in findings:
         findings_list.append(f.to_dict())
     return JsonResponse(findings_list, safe=False)
 

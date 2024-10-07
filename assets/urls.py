@@ -36,8 +36,6 @@ urlpatterns = [
     # ex: /assets/owners/details/8
     url(r'^owners/details/(?P<asset_owner_id>[0-9]+)$', views.details_asset_owner_view, name='details_asset_owner_view'),
 
-
-
     # REST-API endpoints
     # ex: /assets/api/v1/by-id/2
     url(r'^api/v1/by-id/(?P<asset_id>[0-9]+)$', apis.get_asset_api, name='get_asset_api'),
@@ -45,8 +43,12 @@ urlpatterns = [
     url(r'^api/v1/by-id/(?P<asset_id>[0-9]+)/findings$', apis.get_asset_findings_api, name='get_asset_findings_api'),
     # ex: /assets/api/v1/list
     url(r'^api/v1/list$', apis.list_assets_api, name='list_assets_api'),
-    # ex: /assets/api/v1/list-billing
-    #url(r'^api/v1/list$', apis.list_assets_api, name='list_assets_api'),
+    # ex: /assets/api/v1/list/assets
+    url(r'^api/v1/list/assets$', apis.list_all_assets_api, name='list_all_assets_api'),
+    # ex: /assets/api/v1/list/groups/assets
+    url(r'^api/v1/list/groups/assets$', apis.list_all_group_assets_api, name='list_all_group_assets_api'),
+    # ex: /assets/api/v1/list/assets/detailed
+    url(r'^api/v1/list/assets/detailed$', apis.list_assets_detailed_api, name='/assets/api/v1/list/assets/detailed'),
     # ex: /assets/api/v1/billing
     url(r'^api/v1/billing$', apis.billing_assets_api, name='billing_assets_api'),
     # ex: /assets/api/v1/billing

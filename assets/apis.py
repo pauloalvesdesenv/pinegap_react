@@ -27,6 +27,10 @@ import os
 import mimetypes
 import datetime
 import urllib
+from django.db.models import Case, When
+from django.contrib.postgres.aggregates import ArrayAgg
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.core.serializers.json import DjangoJSONEncoder
 
 
 
@@ -107,11 +111,6 @@ def get_asset_details_api(request, asset_name):
     return JsonResponse(response, json_dumps_params={'indent': 2}, safe=False)
 
 
-
-
-
-
-
 @api_view(['GET'])
 def get_asset_trends_api(request, asset_id):
     asset = get_object_or_404(Asset, id=asset_id)
@@ -179,6 +178,116 @@ def list_assets_api(request):
             .values('id', 'value', 'format', 'name'))
     return JsonResponse(assets + assetgroups, safe=False)
 
+
+
+@api_view(['GET'])
+def list_all_assets_api(request):
+    q = request.GET.get("q", None)
+    if q:
+        assets = list(Asset.objects
+            .filter(Q(value__icontains=q) | Q(name__icontains(q)))
+            .values())
+    else:
+        assets = list(Asset.objects.values())
+    return JsonResponse(assets, safe=False)
+
+@api_view(['GET'])
+def list_all_group_assets_api(request):
+    q = request.GET.get("q", None)
+    if q:
+        asset_groups = list(AssetGroup.objects
+            .filter(Q(name__icontains=q))
+            .values())
+    else:
+        asset_groups = list(AssetGroup.objects.values())
+    return JsonResponse(asset_groups, safe=False)
+
+
+class AssetCategoryEncoder(DjangoJSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, AssetCategory):
+            return model_to_dict(obj)
+        return super(AssetCategoryEncoder, self).default(obj)
+    
+class AssetEncoder(DjangoJSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Asset):
+            return model_to_dict(obj)
+        return super(AssetEncoder, self).default(obj)
+
+##//----
+
+@api_view(['GET'])
+def list_assets_detailed_api(request):
+    # Check sorting options
+    allowed_sort_options = ["id", "name", "criticity_num", "financeiro", "score", "type",
+                            "updated_at", "created_at", "risk_level", "risk_level__grade",
+                            "-id", "-name", "-criticity_num", "-financeiro", "-score","-created_at",
+                            "-type", "-updated_at", "-risk_level",
+                            "-risk_level__grade"]
+
+    sort_options = request.GET.get("sort", "-updated_at")
+    sort_options_valid = []
+    for s in sort_options.split(","):
+        if s in allowed_sort_options and s not in sort_options_valid:
+            sort_options_valid.append(str(s))
+
+    # Check Filtering options
+    filter_options = request.GET.get("filter", "")
+
+    # Todo: filter on fields - risco quantitativo - "financeiro"
+    allowed_filter_fields = ["id", "name", "criticity", "financeiro", "type", "score"]
+    filter_criterias = filter_options.split(" ")
+    filter_fields = {}
+    filter_opts = ""
+    for criteria in filter_criterias:
+        field = criteria.split(":")
+        if len(field) > 1 and field[0] in allowed_filter_fields:
+            # allowed field
+            if field[0] == "score":
+                filter_fields.update({"risk_level__grade": field[1]})
+            else:
+                filter_fields.update({str(field[0]): field[1]})
+        else:
+            filter_opts = filter_opts + str(criteria.strip())
+
+    # Query
+    assets_list = Asset.objects.filter(**filter_fields).filter(
+        Q(value__icontains=filter_opts) |
+        Q(name__icontains=filter_opts) |
+        Q(description__icontains=filter_opts)
+        ).annotate(
+            criticity_num=Case(
+                When(criticity="high", then=Value("1")),
+                When(criticity="medium", then=Value("2")),
+                When(criticity="low", then=Value("3")),
+                default=Value("1"),
+                output_field=CharField())
+            ).annotate(cat_list=ArrayAgg('categories__value')).order_by(*sort_options_valid)
+
+    # Pagination assets - Modificado Python3
+    nb_rows = request.GET.get('n', 16)
+    assets_paginator = Paginator(assets_list, nb_rows)
+    page = request.GET.get('page')
+    try:
+        assets = assets_paginator.page(page)
+    except PageNotAnInteger:
+        assets = assets_paginator.page(1)
+    except EmptyPage:
+        assets = assets_paginator.page(assets_paginator.num_pages)
+
+    # Convert assets to list of dictionaries
+    assets_serialized = []
+    for asset in assets:
+        asset_dict = model_to_dict(asset)
+        asset_dict['categories'] = [category.to_dict() for category in asset.categories.all()]
+        asset_dict['criticity_num'] = asset.criticity_num
+        asset_dict['cat_list'] = asset.cat_list
+        assets_serialized.append(asset_dict)
+
+    # Return JSON response
+    return JsonResponse(assets_serialized, safe=False)
+    
 @api_view(['GET'])
 def billing_assets_api(request):
     q = request.GET.get("q", None)

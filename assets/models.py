@@ -133,6 +133,14 @@ class AssetCategory(models.Model):
         for c in AssetCategory.objects.filter(parent=self).order_by('value'):
             r.extend(c.show_children(level=level+1))
         return r
+    
+    def to_dict(self):
+        data = model_to_dict(self)
+        if self.parent:
+            data['parent'] = self.parent.id
+        else:
+            data['parent'] = None
+        return data
 
 
 @receiver(post_save, sender=AssetCategory)
