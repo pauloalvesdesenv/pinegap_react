@@ -319,3 +319,24 @@ def test_task_api(request):
         ignore_result=True
     )
     return JsonResponse({"status": "enqueued"})
+
+@api_view(['POST'])
+def create_engine_policy_api(request):
+    data = request.data
+    engine = get_object_or_404(Engine, id=data.get('engine_id'))
+    policy = EnginePolicy(
+        engine=engine,
+        name=data.get('name'),
+        description=data.get('description'),
+        owner=request.user,
+        default=data.get('default', False),
+        options=data.get('options', {}),
+        file=data.get('file'),
+        status=data.get('status', 'inactive'),
+        is_default=data.get('is_default', False)
+    )
+    policy.save()
+    if 'scopes' in data:
+        policy.scopes.set(data['scopes'])
+    policy.save()
+    return JsonResponse(policy.as_dict(), status=201)

@@ -48,7 +48,11 @@ urlpatterns = [
     # ex: /assets/api/v1/list/groups/assets
     url(r'^api/v1/list/groups/assets$', apis.list_all_group_assets_api, name='list_all_group_assets_api'),
     # ex: /assets/api/v1/list/assets/detailed
-    url(r'^api/v1/list/assets/detailed$', apis.list_assets_detailed_api, name='/assets/api/v1/list/assets/detailed'),
+    url(r'^api/v1/list/assets/detailed$', apis.list_assets_detailed_api, name='list_assets_detailed_api'),
+    # ex: /assets/api/v1/list/assets/detailed
+    url(r'^api/v1/list/groups/assets/detailed$', apis.list_asset_groups_api, name='list_asset_groups_api'),
+    # ex: /assets/api/v1/list/assets-owners
+    url(r'^api/v1/list/assets-owners$', apis.list_asset_owners, name='list_asset_owners'),
     # ex: /assets/api/v1/billing
     url(r'^api/v1/billing$', apis.billing_assets_api, name='billing_assets_api'),
     # ex: /assets/api/v1/billing

@@ -304,6 +304,8 @@ class Asset(models.Model):
         risk_score = risk_score + (self.risk_level['high'] * 10)
 
         return risk_score
+    
+    
 
 ######################  Automate  Rule  Asset - By BILL #########################
 
@@ -453,6 +455,15 @@ class AssetGroup(models.Model):
         risk_score = risk_score + (self.risk_level['high'] * 10)
 
         return risk_score
+    
+    def to_dict(self):
+        data = model_to_dict(self, exclude=["assets", "categories"])
+        data.update({
+            "assets": [model_to_dict(asset, fields=["value", "id"]) for asset in self.assets.all()],
+            "categories": [model_to_dict(category, fields=["value", "id"]) for category in self.categories.all()]
+        })
+        return json.loads(json.dumps(data, default=json_serial))
+        
 
 
 @receiver(post_save, sender=AssetGroup)
@@ -595,6 +606,16 @@ class AssetOwner(models.Model):
                 pass
 
         return super(AssetOwner, self).delete(*args, **kwargs)
+    
+    def to_dict(self):
+        data = model_to_dict(self, exclude=["assets", "contacts", "documents"])
+        data.update({
+            "assets": [model_to_dict(asset, fields=["value", "id"]) for asset in self.assets.all()],
+            "contacts": [model_to_dict(contact, fields=["name", "id"]) for contact in self.contacts.all()],
+            "documents": [model_to_dict(document, fields=["doctitle", "id"]) for document in self.documents.all()]
+        })
+        return json.loads(json.dumps(data, default=json_serial))
+
 
 
 @receiver(post_save, sender=AssetOwner)

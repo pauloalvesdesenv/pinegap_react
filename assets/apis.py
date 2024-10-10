@@ -215,8 +215,6 @@ class AssetEncoder(DjangoJSONEncoder):
             return model_to_dict(obj)
         return super(AssetEncoder, self).default(obj)
 
-##//----
-
 @api_view(['GET'])
 def list_assets_detailed_api(request):
     # Check sorting options
@@ -287,6 +285,20 @@ def list_assets_detailed_api(request):
 
     # Return JSON response
     return JsonResponse(assets_serialized, safe=False)
+
+@api_view(['GET'])
+def list_asset_groups_api(request):
+    asset_groups = []
+    for asset_group in AssetGroup.objects.all():
+        ag = asset_group.to_dict()
+        # Extract asset names to display
+        asset_list = [asset.value for asset in asset_group.assets.all()]
+        ag["assets_names"] = ", ".join(asset_list)
+        ag["risk_grade"] = asset_group.get_risk_grade()
+        asset_groups.append(ag)
+    
+    return JsonResponse(asset_groups, safe=False)
+    
     
 @api_view(['GET'])
 def billing_assets_api(request):
@@ -331,6 +343,19 @@ def refresh_asset_grade_api(request, asset_id=None):
         for asset in Asset.objects.all():
             asset.calc_risk_grade()
     return redirect('list_assets_view')
+
+
+@api_view(['GET'])
+def list_asset_owners(request):
+    owners = []
+    for owner in AssetOwner.objects.all():
+        tmp_owner = owner.to_dict()
+        tmp_owner["nb_assets"] = owner.assets.all().count()
+        tmp_owner["nb_contacts"] = owner.contacts.all().count()
+        tmp_owner["nb_documents"] = owner.documents.all().count()
+        owners.append(tmp_owner)
+        return JsonResponse(owners, safe=False)
+
 
 
 @api_view(['GET'])

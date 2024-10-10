@@ -79,4 +79,7 @@ urlpatterns = [
     url(r'^api/v1/policies/export/(?P<policy_id>[0-9]+)$', apis.export_policy_api, name='export_policy_api'),
     # ex: /engines/api/v1/policies/duplicate/2
     url(r'^api/v1/policies/duplicate/(?P<policy_id>[0-9]+)$', apis.duplicate_policy_api, name='duplicate_policy_api'),
+    # ex: /engines/api/v1/create-policy
+    url(r'^api/v1/policies/create-policiy$', apis.create_engine_policy_api, name='create_engine_policy_api'),
+        
 ]

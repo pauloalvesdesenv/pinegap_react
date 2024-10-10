@@ -19,6 +19,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.http import Http404
 from django.http import JsonResponse
+import logging
 
 
 ######################################################################
@@ -243,9 +244,14 @@ def add_policy_view(request):
             policy.scopes = form.cleaned_data['scopes']
             policy.save()
             messages.success(request, 'Política criada com sucesso')
+
+            logger = logging.getLogger(__name__)
+            logger.info('Policy args: %s', policy_args)
             return HttpResponseRedirect('list')
 
     return render(request, 'add-engine-policy.html', {'form': form})
+
+
 
 
 # Add Bloqueio de URL - By BILL
