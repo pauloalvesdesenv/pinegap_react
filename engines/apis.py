@@ -333,10 +333,34 @@ def create_engine_policy_api(request):
         options=data.get('options', {}),
         file=data.get('file'),
         status=data.get('status', 'inactive'),
-        is_default=data.get('is_default', False)
     )
     policy.save()
     if 'scopes' in data:
         policy.scopes.set(data['scopes'])
     policy.save()
     return JsonResponse(policy.as_dict(), status=201)
+
+@api_view(['PATCH'])
+def update_engine_policy_api(request):
+    data = request.data
+    policy = get_object_or_404(EnginePolicy, id=data.get('id'))
+
+    if 'engine_id' in data:
+        policy.engine = get_object_or_404(Engine, id=data.get('engine_id'))
+    if 'name' in data:
+        policy.name = data['name']
+    if 'description' in data:
+        policy.description = data['description']
+    if 'default' in data:
+        policy.default = data['default']
+    if 'options' in data:
+        policy.options = data['options']
+    if 'file' in data:
+        policy.file = data['file']
+    if 'status' in data:
+        policy.status = data['status']
+    if 'scopes' in data:
+        policy.scopes.set(data['scopes'])
+
+    policy.save()
+    return JsonResponse(policy.as_dict(), status=200)
