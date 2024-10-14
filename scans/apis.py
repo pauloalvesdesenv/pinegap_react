@@ -373,3 +373,4 @@ def add_scan_def_api(request):
         return JsonResponse({'status': 'success', 'scan_def_id': scan_def.id})
     else:
         return JsonResponse({'status': 'failed'}, status=403)
+    

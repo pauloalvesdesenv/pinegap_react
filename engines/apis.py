@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.forms.models import model_to_dict
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
+from engines.forms import EngineInstanceForm
 from rest_framework.decorators import api_view
 from .models import Engine, EngineInstance, EnginePolicy, EnginePolicyScope
 from .tasks import refresh_engines_status_task
@@ -14,6 +15,9 @@ from scans.views import _update_celerybeat
 import requests
 import json
 import time
+from django.contrib.auth.decorators import user_passes_test
+from engines.forms import EngineForm
+from django.shortcuts import redirect, render
 
 
 @api_view(['GET'])
@@ -364,3 +368,101 @@ def update_engine_policy_api(request):
 
     policy.save()
     return JsonResponse(policy.as_dict(), status=200)
+
+@api_view(['POST'])
+def create_engine_api(request):
+    form = EngineInstanceForm(request.data)
+
+    if form.is_valid():
+        engine_args = {
+            'engine': form.cleaned_data['engine'],
+            'name': form.cleaned_data['name'],
+            'api_url': form.cleaned_data['api_url'],
+            'enabled': form.cleaned_data['enabled'] is True,
+            'authentication_method': form.cleaned_data['authentication_method'],
+            'api_key': form.cleaned_data['api_key'],
+            'username': form.cleaned_data['username'],
+            'password': form.cleaned_data['password'],
+        }
+
+        engine = EngineInstance(**engine_args)
+        engine.save()
+        return JsonResponse('', status=201)
+    else:
+        return JsonResponse(form.errors, status=400)
+    
+
+    
+@api_view(['PATCH'])
+def update_engine_api(request):
+    data = request.data
+    engine_id = data.get('id')
+    engine_instance = get_object_or_404(EngineInstance, id=engine_id)
+
+    if 'name' in data:
+        engine_instance.name = data['name']
+    if 'api_url' in data:
+        engine_instance.api_url = data['api_url']
+    if 'enabled' in data:
+        engine_instance.enabled = data['enabled']
+    if 'authentication_method' in data:
+        engine_instance.authentication_method = data['authentication_method']
+    if 'api_key' in data:
+        engine_instance.api_key = data['api_key']
+    if 'username' in data:
+        engine_instance.username = data['username']
+    if 'password' in data:
+        engine_instance.password = data['password']
+    if 'options' in data:
+        engine_instance.options = data['options']
+
+    engine_instance.save()
+    return JsonResponse('', status=200, safe=False)
+
+
+@api_view(['DELETE'])
+def delete_engine_instance_api(request, engine_id):
+    engine_instance = get_object_or_404(EngineInstance, id=engine_id)
+    engine_instance.delete()
+    return JsonResponse({'status': 'deleted'}, status=200)
+
+@api_view(['POST'])
+@user_passes_test(lambda u: u.groups.filter(name='visitante').count() == 0, login_url='/engines/deny/')
+@user_passes_test(lambda u: u.groups.filter(name='analista').count() == 0, login_url='/engines/deny/')
+@user_passes_test(lambda u: u.groups.filter(name='dpo').count() == 0, login_url='/engines/deny/')
+def add_engine_type_api(request):
+    form = EngineForm(request.data)
+    if form.is_valid():
+        engine_args = {
+            'name': form.cleaned_data['name'],
+            'description': form.cleaned_data['description'],
+            'allowed_asset_types': form.cleaned_data['allowed_asset_types']
+        }
+        engine = Engine(**engine_args)
+        engine.save()
+        return JsonResponse({'status': 'success', 'engine': model_to_dict(engine)}, status=201)
+    else:
+        return JsonResponse(form.errors, status=400)
+    
+@api_view(['PATCH'])
+def update_engine_type_api(request):
+    data = request.data
+    engine_id = data.get('id')
+    engine = get_object_or_404(Engine, id=engine_id)
+
+    if 'name' in data:
+        engine.name = data['name']
+    if 'description' in data:
+        engine.description = data['description']
+    if 'allowed_asset_types' in data:
+        engine.allowed_asset_types = data['allowed_asset_types']
+
+    engine.save()
+    return JsonResponse(model_to_dict(engine), status=200)
+
+
+@api_view(['DELETE'])
+def delete_engine_type_api(request, engine_id):
+    engine = get_object_or_404(Engine, id=engine_id)
+    engine.delete()
+    return JsonResponse({'status': 'deleted'}, status=200)

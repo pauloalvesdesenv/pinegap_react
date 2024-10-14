@@ -39,6 +39,12 @@ urlpatterns = [
     url(r'^api/v1/list$', apis.list_engines_api, name='list_engines_api'),
     # ex: /engines/api/v1/types
     url(r'^api/v1/types$', apis.list_engine_types_api, name='list_engine_types_api'),
+    # ex: /engines/api/v1/types/add/1
+    url(r'^api/v1/types/add', apis.add_engine_type_api, name='add_engine_type_api'),
+    # ex: /engines/api/v1/types/update/1
+    url(r'^api/v1/types/update', apis.update_engine_type_api, name='update_engine_type_api'),
+    # ex: /engines/api/v1/types/delete/1
+    url(r'^api/v1/types/delete/(?P<engine_id>[0-9]+)$', apis.delete_engine_type_api, name='delete_engine_type_api'),
     # ex: /engines/api/v1/refresh
     url(r'^api/v1/refresh$', apis.refresh_engines_status_api, name='refresh_engines_status_api'),
     # ex: /engines/api/v1/delete/1
@@ -63,6 +69,12 @@ urlpatterns = [
     url(r'^api/v1/instances/status/change/(?P<engine_id>[0-9]+)$', apis.toggle_engine_status_api, name='toggle_engine_status_api'),
     # ex: /engines/api/v1/instance/info/1
     url(r'^api/v1/instance/info/(?P<engine_id>[0-9]+)$', apis.info_engine_api, name='info_engine_api'),
+    # ex: /engines/api/v1/instances/add
+    url(r'^api/v1/instances/add$', apis.create_engine_api, name='create_engine_api'),
+    # ex: /engines/api/v1/instances/update
+    url(r'^api/v1/instances/update$', apis.update_engine_api, name='update_engine_api'),
+    # ex: /engines/api/v1/instances/delete
+    url(r'^api/v1/instances/delete/(?P<engine_id>[0-9]+)$', apis.delete_engine_instance_api, name='delete_engine_instance_api'),
     # ex: /engines/api/v1/policies/list
     url(r'^api/v1/policy/scopes/list$', apis.get_policy_scopes, name='get_policy_scopes'),
     # ex: /engines/api/v1/policies/by-id/2

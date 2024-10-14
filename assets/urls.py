@@ -110,6 +110,7 @@ urlpatterns = [
     url(r'^api/v1/asset_grade_refresh(?P<asset_id>[0-9]+)$', apis.refresh_asset_grade_api, name='refresh_asset_grade_api'),
 
     # ex: /assets/api/v1/groups/details/3/add_tag
+    url(r'^api/v1/groups/details/tereshsakljhalskfjhalkjhadlskf$', apis.add_asset_group_tags_api, name='add_asset_group_tags_api'),
     url(r'^api/v1/groups/details/(?P<assetgroup_id>[0-9]+)/add_tag$', apis.add_asset_group_tags_api, name='add_asset_group_tags_api'),
     # ex: /assets/api/v1/groups/details/3/del_tag
     url(r'^api/v1/groups/details/(?P<assetgroup_id>[0-9]+)/del_tag$', apis.delete_asset_group_tags_api, name='delete_asset_group_tags_api'),
@@ -129,9 +130,5 @@ urlpatterns = [
     url(r'^api/v1/owners/addcontact/(?P<asset_owner_id>[0-9]+)$', apis.add_asset_owner_contact_api, name='add_asset_owner_contact_api'),
     # ex: /assets/api/v1/owners/editcom/8
     url(r'^api/v1/owners/editcom/(?P<asset_owner_id>[0-9]+)$', apis.edit_asset_owner_comments_api, name='edit_asset_owner_comments_api'),
-    # ex: /scans/api/v1/defs/change_status/33
-#    url(r'^scans/api/v1/defs/change_status/(?P<scan_def_id>[0-9]+)$', apis.toggle_scan_def_status_api, name='toggle_scan_def_status_api'),
-#    # ex: /scans/api/v1/defs/change_status/33
-#    url(r'^api/v1/defs/change_status/(?P<scan_def_id>[0-9]+)$', apis.toggle_scan_def_status_api, name='toggle_scan_def_status_api'),
 
 ]

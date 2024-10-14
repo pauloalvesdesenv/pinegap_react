@@ -254,3 +254,4 @@ def enginepolicy_create_update_log(sender, **kwargs):
 def enginepolicy_delete_log(sender, **kwargs):
     Event.objects.create(message="[EnginePolicy] Engine policy '{}' deleted (id={})".format(kwargs['instance'], kwargs['instance'].id),
         type="DELETE", severity="DEBUG")
+
