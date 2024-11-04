@@ -51,7 +51,7 @@ services:
 
   pinegap-flutter:
     build:
-      context: /home/ubuntu/pinegap-flutter
+      context: ../pinegap-flutter
       dockerfile: Dockerfile
     container_name: pinegap-flutter
     ports:
