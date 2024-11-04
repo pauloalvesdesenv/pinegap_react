@@ -1,6 +1,5 @@
-version: '3'
+version: "3"
 services:
-
   rabbitmq:
     image: rabbitmq:3-alpine
     container_name: pinegap-rabbitmq
@@ -21,11 +20,6 @@ services:
       - "5432:5432"
     volumes:
       - ./dump_2024-08-28_14_26_17.sql:/docker-entrypoint-initdb.d/dump_2024-08-28_14_26_17.sql
-      # - ./var/db/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
-    #volumes:
-    #  - postgres_data:/var/lib/postgresql/data/
-
-
 
   web:
     container_name: pinegap-django
@@ -41,44 +35,26 @@ services:
       - rabbitmq
     ports:
       - "8003:8003"
-    volumes:
-      - ./staticfiles:/opt/pinegap-manager/staticfiles
-      - ./media:/opt/pinegap-manager/media
-      - ./app:/opt/pinegap-manager/app
-      - ./assets:/opt/pinegap-manager/assets
-      - ./common:/opt/pinegap-manager/common
-      - ./engines:/opt/pinegap-manager/engines
-      - ./events:/opt/pinegap-manager/events
-      - ./findings:/opt/pinegap-manager/findings
-      - ./img:/opt/pinegap-manager/img
-      - ./password_reset:/opt/pinegap-manager/password_reset
-      - ./radar:/opt/pinegap-manager/radar
-      - ./reportings:/opt/pinegap-manager/reportings
-      - ./rules:/opt/pinegap-manager/rules
-      - ./scans:/opt/pinegap-manager/scans
-      - ./search:/opt/pinegap-manager/search
-      - ./settings:/opt/pinegap-manager/settings
-      - ./static:/opt/pinegap-manager/static
-      - ./templates:/opt/pinegap-manager/templates
-      - ./templatetags:/opt/pinegap-manager/templatetags
-      - ./tests:/opt/pinegap-manager/tests
-      - ./users:/opt/pinegap-manager/users
-      - ./utils:/opt/pinegap-manager/utils
-      - ./var:/opt/pinegap-manager/var
-      - ./whitelabels:/opt/pinegap-manager/whitelabels
     links:
       - db
       - rabbitmq
 
-  nginx:
+  nginx-api:
     image: nginx:latest
     container_name: pinegap-nginx
     ports:
       - "8083:8083"
     volumes:
-      - ./staticfiles:/opt/pinegap-manager/staticfiles
-      - ./media:/opt/pinegap-manager/media
-      - ./var/log:/opt/pinegap-manager/var/log
       - ./nginx_docker.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - web
+
+  pinegap-flutter:
+    build:
+      context: /home/ubuntu/pinegap-flutter
+      dockerfile: Dockerfile
+    container_name: pinegap-flutter
+    ports:
+      - "80:80"
     depends_on:
       - web
